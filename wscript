@@ -106,3 +106,18 @@ def build (bld):
           includes = "ccnx scheduler src executor .",
           install_prefix = None,
           )
+
+@Configure.conf
+def add_supported_cxxflags(self, cxxflags):
+    """
+    Check which cxxflags are supported by compiler and add them to env.CXXFLAGS variable
+    """
+    self.start_msg('Checking allowed flags for c++ compiler')
+
+    supportedFlags = []
+    for flag in cxxflags:
+        if self.check_cxx (cxxflags=[flag], mandatory=False):
+            supportedFlags += [flag]
+
+    self.end_msg (' '.join (supportedFlags))
+    self.env.CXXFLAGS += supportedFlags
