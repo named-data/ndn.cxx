@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: libccnx-cpp
+Description: CPP API for Ccnx C library
+Version: @VERSION@
+Libs: -L${libdir} -lccnx-cpp
+Cflags: -I${includedir}
+

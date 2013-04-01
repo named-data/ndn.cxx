@@ -88,8 +88,8 @@ def build (bld):
         )
 
     libccnx = bld (
-        target="ccnx",
-        features=['cxx'],
+        target="ccnx-cpp",
+        features=['cxx', 'cxxshlib'],
         source = bld.path.ant_glob(['ccnx/**/*.cc', 'ccnx/**/*.cpp']),
         use = 'TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
         includes = "ccnx scheduler executor .",
@@ -102,10 +102,23 @@ def build (bld):
           features = "cxx cxxprogram",
           defines = "WAF",
           source = bld.path.ant_glob(['test/*.cc']),
-          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME LOG4CXX ccnx',
+          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME LOG4CXX ccnx-cpp',
           includes = "ccnx scheduler src executor .",
           install_prefix = None,
           )
+
+    headers = bld.path.ant_glob(['./ccnx/ccnx-*.h', './executor/*.h', './scheduler/*.h'])
+    bld.install_files("%s/ccnx-cpp" % bld.env['INCLUDEDIR'], headers)
+
+    pc = bld (
+        features = "subst",
+        source = 'libccnx-cpp.pc.in',
+        target= 'libccnx-cpp.pc',
+        install_path = '${LIBDIR}/pkgconfig',
+        PREFIX = bld.env['PREFIX'],
+        INCLUDEDIR = '%s/ccnx-cpp' % bld.env['INCLUDEDIR'],
+        VERSION = VERSION,
+        )
 
 @Configure.conf
 def add_supported_cxxflags(self, cxxflags):
