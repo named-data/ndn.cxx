@@ -11,6 +11,7 @@ def options(opt):
 
     opt.load('compiler_c compiler_cxx boost ccnx')
     opt.load('tinyxml', tooldir=['waf-tools'])
+    opt.load('gnu_dirs')
 
 def configure(conf):
     conf.load("compiler_c compiler_cxx")
@@ -54,6 +55,7 @@ def configure(conf):
 
     conf.load('boost')
 
+    conf.load('gnu_dirs')
     conf.check_boost(lib='system test iostreams filesystem thread date_time')
 
     boost_version = conf.env.BOOST_VERSION.split('_')
@@ -107,7 +109,7 @@ def build (bld):
           install_prefix = None,
           )
 
-    headers = bld.path.ant_glob(['./ccnx/ccnx-*.h', './executor/*.h', './scheduler/*.h'])
+    headers = bld.path.ant_glob(['ccnx/ccnx-*.h', 'executor/*.h', 'scheduler/*.h'])
     bld.install_files("%s/ccnx-cpp" % bld.env['INCLUDEDIR'], headers)
 
     pc = bld (
