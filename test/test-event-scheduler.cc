@@ -19,11 +19,7 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "scheduler.h"
-#include "simple-interval-generator.h"
-#include "one-time-task.h"
-#include "periodic-task.h"
-#include "random-interval-generator.h"
+#include "scheduler-all.h"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>

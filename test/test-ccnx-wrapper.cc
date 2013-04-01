@@ -19,11 +19,7 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-wrapper.h"
-#include "ccnx-closure.h"
-#include "ccnx-name.h"
-#include "ccnx-selectors.h"
-#include "ccnx-pco.h"
+#include "ccnx-all.h"
 #include <unistd.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
