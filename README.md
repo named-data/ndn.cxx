@@ -25,6 +25,8 @@ For default install, use
 sudo ./waf install
 ```
 
+### If you're using Mac OS X, Macport's g++ is not recommended. It may cause mysterious memory error with tinyxml. Use clang++ or Apple's g++ instead.
+
 Normally, default install goes to /usr/local.
 If you have added /usr/local/lib/pkgconfig to your `PKG_CONFIG_PATH`, then you can compile your code like this:
 ```bash
