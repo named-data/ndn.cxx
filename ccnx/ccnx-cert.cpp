@@ -60,10 +60,10 @@ Cert::updateMeta(const PcoPtr &metaObject)
 {
   if (metaObject)
   {
-    TiXmlDocument doc;
     Bytes xml = metaObject->content();
     // just make sure it's null terminated as it's required by TiXmlDocument::parse
     xml.push_back('\0');
+    TiXmlDocument doc;
     doc.Parse((const char *)(head(xml)));
     if (!doc.Error())
     {
@@ -75,14 +75,17 @@ Cert::updateMeta(const PcoPtr &metaObject)
         if (elemName == "Name")
         {
           m_meta.realworldID = text;
+          _LOG_TRACE("Name = " << text);
         }
         else if (elemName == "Affiliation")
         {
           m_meta.affiliation = text;
+          _LOG_TRACE("Affiliation = " << text);
         }
         else if (elemName == "Valid_to")
         {
           m_meta.validTo = boost::lexical_cast<time_t>(text);
+          _LOG_TRACE("Valid_to = " << text);
         }
         else if (elemName == "Valid_from")
         {
