@@ -108,8 +108,8 @@ def build (bld):
           install_prefix = None,
           )
 
-    headers = bld.path.ant_glob(['ccnx-cpp/*.h'])
-    bld.install_files("%s/ccnx-cpp" % bld.env['INCLUDEDIR'], headers)
+    headers = bld.path.ant_glob(['ccnx-cpp.h', 'ccnx-cpp/*.h'])
+    bld.install_files("%s" % bld.env['INCLUDEDIR'], headers, relative_trick=True)
 
     pc = bld (
         features = "subst",

@@ -19,12 +19,14 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-all.h"
+#include "ccnx-cpp.h"
 #include <unistd.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
+
+#include "logging.h"
 
 using namespace Ccnx;
 using namespace std;
@@ -32,8 +34,8 @@ using namespace boost;
 
 BOOST_AUTO_TEST_SUITE(TestCcnxWrapper)
 
-CcnxWrapperPtr c1;
-CcnxWrapperPtr c2;
+WrapperPtr c1;
+WrapperPtr c2;
 int g_timeout_counter = 0;
 int g_dataCallback_counter = 0;
 
@@ -80,11 +82,11 @@ setup()
 {
   if (!c1)
   {
-    c1 = make_shared<CcnxWrapper> ();
+    c1 = make_shared<Wrapper> ();
   }
   if (!c2)
   {
-    c2 = make_shared<CcnxWrapper> ();
+    c2 = make_shared<Wrapper> ();
   }
 }
 

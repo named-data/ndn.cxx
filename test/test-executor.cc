@@ -21,7 +21,7 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include "executor.h"
+#include "executor/executor.h"
 
 #include "logging.h"
 

@@ -18,13 +18,16 @@
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
+
 #ifndef SCHEDULE_ALL_H
 #define SCHEDULE_ALL_H
-#include <interval-generator.h>
-#include <one-time-task.h>
-#include <periodic-task.h>
-#include <random-interval-generator.h>
-#include <scheduler.h>
-#include <simple-interval-generator.h>
-#include <task.h>
+
+#include "scheduler/interval-generator.h"
+#include "scheduler/one-time-task.h"
+#include "scheduler/periodic-task.h"
+#include "scheduler/random-interval-generator.h"
+#include "scheduler/scheduler.h"
+#include "scheduler/simple-interval-generator.h"
+#include "scheduler/task.h"
+
 #endif

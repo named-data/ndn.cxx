@@ -19,7 +19,7 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "scheduler-all.h"
+#include "scheduler/scheduler-all.h"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
