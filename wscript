@@ -1,5 +1,5 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
-VERSION='0.5.0'
+VERSION='0.6.0'
 
 from waflib import Build, Logs, Utils, Task, TaskGen, Configure
 
@@ -91,7 +91,8 @@ def build (bld):
     libccnx = bld (
         target="ccnx-cpp",
         features=['cxx', 'cxxshlib'],
-        source = bld.path.ant_glob(['ccnx-cpp/**/*.cpp']),
+        source = bld.path.ant_glob(['ccnx-cpp/**/*.cpp',
+                                    'libccnx-cpp.pc.in']),
         use = 'TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
         includes = ".",
         )
@@ -110,16 +111,6 @@ def build (bld):
 
     headers = bld.path.ant_glob(['ccnx-cpp.h', 'ccnx-cpp/*.h'])
     bld.install_files("%s" % bld.env['INCLUDEDIR'], headers, relative_trick=True)
-
-    pc = bld (
-        features = "subst",
-        source = 'libccnx-cpp.pc.in',
-        target= 'libccnx-cpp.pc',
-        install_path = '${LIBDIR}/pkgconfig',
-        PREFIX = bld.env['PREFIX'],
-        INCLUDEDIR = '%s/ccnx-cpp' % bld.env['INCLUDEDIR'],
-        VERSION = VERSION,
-        )
 
 @Configure.conf
 def add_supported_cxxflags(self, cxxflags):
