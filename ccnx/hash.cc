@@ -19,7 +19,7 @@
  *         Zhenkai Zhu <zhenkai@cs.ucla.edu>
  */
 
-#include "hash-helper.h"
+#include "hash.h"
 
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
@@ -40,6 +40,13 @@ using namespace boost;
 using namespace boost::archive::iterators;
 using namespace std;
 namespace fs = boost::filesystem;
+
+// Other options: VP_md2, EVP_md5, EVP_sha, EVP_sha1, EVP_sha256, EVP_dss, EVP_dss1, EVP_mdc2, EVP_ripemd160
+#define HASH_FUNCTION EVP_sha256
+
+
+namespace Ccnx
+{
 
 template<class CharType>
 struct hex_from_4_bit
@@ -189,3 +196,5 @@ Hash::FromBytes (const Ccnx::Bytes &bytes)
 
   return retval;
 }
+
+} // Ccnx

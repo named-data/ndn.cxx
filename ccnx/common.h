@@ -45,8 +45,6 @@ extern "C" {
 #include <boost/range/iterator_range.hpp>
 #include <boost/make_shared.hpp>
 
-namespace io = boost::iostreams;
-
 namespace Ccnx {
 typedef std::vector<unsigned char> Bytes;
 typedef std::vector<std::string>Comps;

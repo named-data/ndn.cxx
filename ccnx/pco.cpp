@@ -19,8 +19,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-pco.h"
-#include "ccnx-cert.h"
+#include "pco.h"
+#include "ccnx/cert.h"
 
 namespace Ccnx {
 
@@ -106,7 +106,7 @@ ParsedContentObject::keyName() const
 {
   if (m_pco.offset[CCN_PCO_E_KeyName_Name] > m_pco.offset[CCN_PCO_B_KeyName_Name])
   {
-    CcnxCharbufPtr ptr = boost::make_shared<CcnxCharbuf>();
+    CharbufPtr ptr = boost::make_shared<Charbuf>();
     ccn_charbuf_append(ptr->getBuf(), head(m_bytes) + m_pco.offset[CCN_PCO_B_KeyName_Name], m_pco.offset[CCN_PCO_E_KeyName_Name] - m_pco.offset[CCN_PCO_B_KeyName_Name]);
 
     return Name(*ptr);

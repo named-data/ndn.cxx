@@ -19,18 +19,19 @@
  *         Zhenkai Zhu <zhenkai@cs.ucla.edu>
  */
 
-#ifndef HASH_HELPER_H
-#define HASH_HELPER_H
+#ifndef CCNX_HASH_H
+#define CCNX_HASH_H
 
 #include <string.h>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/exception/all.hpp>
 #include <boost/filesystem.hpp>
-#include "ccnx-common.h"
 
-// Other options: VP_md2, EVP_md5, EVP_sha, EVP_sha1, EVP_sha256, EVP_dss, EVP_dss1, EVP_mdc2, EVP_ripemd160
-#define HASH_FUNCTION EVP_sha256
+#include "ccnx/common.h"
+
+namespace Ccnx
+{
 
 class Hash;
 typedef boost::shared_ptr<Hash> HashPtr;
@@ -166,4 +167,6 @@ struct HashConversion : virtual boost::exception, virtual std::exception { };
 std::ostream &
 operator << (std::ostream &os, const Hash &digest);
 
-#endif // HASH_STRING_CONVERTER_H
+}
+
+#endif // CCNX_HASH_H

@@ -19,7 +19,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-wrapper.h"
+#include "wrapper.h"
+
 extern "C" {
 #include <ccn/fetch.h>
 }
@@ -31,7 +32,9 @@ extern "C" {
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 
-#include "ccnx-verifier.h"
+#include "ccnx/verifier.h"
+#include "executor/executor.h"
+
 #include "logging.h"
 
 INIT_LOGGER ("Ccnx.Wrapper");
@@ -106,7 +109,7 @@ ccn_pack_unsigned_ContentObject(struct ccn_charbuf *buf,
     return(res == 0 ? 0 : -1);
 }
 
-CcnxWrapper::CcnxWrapper()
+Wrapper::Wrapper()
   : m_handle (0)
   , m_running (true)
   , m_connected (false)
@@ -117,7 +120,7 @@ CcnxWrapper::CcnxWrapper()
 }
 
 void
-CcnxWrapper::connectCcnd()
+Wrapper::connectCcnd()
 {
   if (m_handle != 0) {
     ccn_disconnect (m_handle);
@@ -145,7 +148,7 @@ CcnxWrapper::connectCcnd()
   }
 }
 
-CcnxWrapper::~CcnxWrapper()
+Wrapper::~Wrapper()
 {
   shutdown ();
   if (m_verifier != 0)
@@ -156,15 +159,15 @@ CcnxWrapper::~CcnxWrapper()
 }
 
 void
-CcnxWrapper::start () // called automatically in constructor
+Wrapper::start () // called automatically in constructor
 {
   connectCcnd();
-  m_thread = thread (&CcnxWrapper::ccnLoop, this);
+  m_thread = thread (&Wrapper::ccnLoop, this);
   m_executor->start();
 }
 
 void
-CcnxWrapper::shutdown () // called in destructor, but can called manually
+Wrapper::shutdown () // called in destructor, but can called manually
 {
   m_executor->shutdown();
 
@@ -185,7 +188,7 @@ CcnxWrapper::shutdown () // called in destructor, but can called manually
 }
 
 void
-CcnxWrapper::ccnLoop ()
+Wrapper::ccnLoop ()
 {
   static boost::mt19937 randomGenerator (static_cast<unsigned int> (std::time (0)));
   static boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rangeUniformRandom (randomGenerator, uniform_int<> (0,1000));
@@ -268,7 +271,7 @@ CcnxWrapper::ccnLoop ()
 }
 
 Bytes
-CcnxWrapper::createContentObject(const Name  &name, const void *buf, size_t len, int freshness, const Name &keyNameParam)
+Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int freshness, const Name &keyNameParam)
 {
   {
     UniqueRecLock lock(m_mutex);
@@ -279,7 +282,7 @@ CcnxWrapper::createContentObject(const Name  &name, const void *buf, size_t len,
       }
   }
 
-  CcnxCharbufPtr ptr = name.toCcnxCharbuf();
+  CharbufPtr ptr = name.toCharbuf();
   ccn_charbuf *pname = ptr->getBuf();
   ccn_charbuf *content = ccn_charbuf_create();
 
@@ -291,7 +294,7 @@ CcnxWrapper::createContentObject(const Name  &name, const void *buf, size_t len,
   if (keyNameParam.size() == 0)
   {
     // use default key name
-    CcnxCharbufPtr defaultKeyNamePtr = boost::make_shared<CcnxCharbuf>();
+    CharbufPtr defaultKeyNamePtr = boost::make_shared<Charbuf>();
     ccn_get_public_key_and_name(m_handle, &sp, NULL, NULL, defaultKeyNamePtr->getBuf());
     keyName = Name(*defaultKeyNamePtr);
   }
@@ -311,7 +314,7 @@ CcnxWrapper::createContentObject(const Name  &name, const void *buf, size_t len,
   }
   ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
   ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
-  CcnxCharbufPtr keyPtr = keyName.toCcnxCharbuf();
+  CharbufPtr keyPtr = keyName.toCharbuf();
   ccn_charbuf *keyBuf = keyPtr->getBuf();
   ccn_charbuf_append(sp.template_ccnb, keyBuf->buf, keyBuf->length);
   ccn_charbuf_append_closer(sp.template_ccnb); // </KeyName>
@@ -337,7 +340,7 @@ CcnxWrapper::createContentObject(const Name  &name, const void *buf, size_t len,
 }
 
 int
-CcnxWrapper::putToCcnd (const Bytes &contentObject)
+Wrapper::putToCcnd (const Bytes &contentObject)
 {
   _LOG_TRACE (">> putToCcnd");
   UniqueRecLock lock(m_mutex);
@@ -362,14 +365,14 @@ CcnxWrapper::putToCcnd (const Bytes &contentObject)
 }
 
 int
-CcnxWrapper::publishData (const Name &name, const unsigned char *buf, size_t len, int freshness, const Name &keyName)
+Wrapper::publishData (const Name &name, const unsigned char *buf, size_t len, int freshness, const Name &keyName)
 {
   Bytes co = createContentObject(name, buf, len, freshness, keyName);
   return putToCcnd(co);
 }
 
 int
-CcnxWrapper::publishUnsignedData(const Name &name, const unsigned char *buf, size_t len, int freshness)
+Wrapper::publishUnsignedData(const Name &name, const unsigned char *buf, size_t len, int freshness)
 {
   {
     UniqueRecLock lock(m_mutex);
@@ -380,7 +383,7 @@ CcnxWrapper::publishUnsignedData(const Name &name, const unsigned char *buf, siz
       }
   }
 
-  CcnxCharbufPtr ptr = name.toCcnxCharbuf();
+  CharbufPtr ptr = name.toCharbuf();
   ccn_charbuf *pname = ptr->getBuf();
   ccn_charbuf *content = ccn_charbuf_create();
   ccn_charbuf *signed_info = ccn_charbuf_create();
@@ -408,7 +411,7 @@ CcnxWrapper::publishUnsignedData(const Name &name, const unsigned char *buf, siz
 
 
 static void
-deleterInInterestTuple (tuple<CcnxWrapper::InterestCallback *, ExecutorPtr> *tuple)
+deleterInInterestTuple (tuple<Wrapper::InterestCallback *, ExecutorPtr> *tuple)
 {
   delete tuple->get<0> ();
   delete tuple;
@@ -419,9 +422,9 @@ incomingInterest(ccn_closure *selfp,
                  ccn_upcall_kind kind,
                  ccn_upcall_info *info)
 {
-  CcnxWrapper::InterestCallback *f;
+  Wrapper::InterestCallback *f;
   ExecutorPtr executor;
-  tuple<CcnxWrapper::InterestCallback *, ExecutorPtr> *realData = reinterpret_cast< tuple<CcnxWrapper::InterestCallback *, ExecutorPtr>* > (selfp->data);
+  tuple<Wrapper::InterestCallback *, ExecutorPtr> *realData = reinterpret_cast< tuple<Wrapper::InterestCallback *, ExecutorPtr>* > (selfp->data);
   tie (f, executor) = *realData;
 
   switch (kind)
@@ -525,7 +528,7 @@ incomingData(ccn_closure *selfp,
   return CCN_UPCALL_RESULT_OK;
 }
 
-int CcnxWrapper::sendInterest (const Name &interest, const Closure &closure, const Selectors &selectors)
+int Wrapper::sendInterest (const Name &interest, const Closure &closure, const Selectors &selectors)
 {
   _LOG_TRACE (">> sendInterest: " << interest);
   {
@@ -537,7 +540,7 @@ int CcnxWrapper::sendInterest (const Name &interest, const Closure &closure, con
       }
   }
 
-  CcnxCharbufPtr namePtr = interest.toCcnxCharbuf();
+  CharbufPtr namePtr = interest.toCharbuf();
   ccn_charbuf *pname = namePtr->getBuf();
   ccn_closure *dataClosure = new ccn_closure;
 
@@ -547,7 +550,7 @@ int CcnxWrapper::sendInterest (const Name &interest, const Closure &closure, con
 
   dataClosure->p = &incomingData;
 
-  CcnxCharbufPtr selectorsPtr = selectors.toCcnxCharbuf();
+  CharbufPtr selectorsPtr = selectors.toCharbuf();
   ccn_charbuf *templ = NULL;
   if (selectorsPtr)
   {
@@ -563,7 +566,7 @@ int CcnxWrapper::sendInterest (const Name &interest, const Closure &closure, con
   return 0;
 }
 
-int CcnxWrapper::setInterestFilter (const Name &prefix, const InterestCallback &interestCallback, bool record/* = true*/)
+int Wrapper::setInterestFilter (const Name &prefix, const InterestCallback &interestCallback, bool record/* = true*/)
 {
   _LOG_TRACE (">> setInterestFilter");
   UniqueRecLock lock(m_mutex);
@@ -572,13 +575,13 @@ int CcnxWrapper::setInterestFilter (const Name &prefix, const InterestCallback &
     return -1;
   }
 
-  CcnxCharbufPtr ptr = prefix.toCcnxCharbuf();
+  CharbufPtr ptr = prefix.toCharbuf();
   ccn_charbuf *pname = ptr->getBuf();
   ccn_closure *interestClosure = new ccn_closure;
 
   // interestClosure->data = new ExecutorInterestClosure(interestCallback, m_executor);
 
-  interestClosure->data = new tuple<CcnxWrapper::InterestCallback *, ExecutorPtr> (new InterestCallback (interestCallback), m_executor); // should be removed when closure is removed
+  interestClosure->data = new tuple<Wrapper::InterestCallback *, ExecutorPtr> (new InterestCallback (interestCallback), m_executor); // should be removed when closure is removed
   interestClosure->p = &incomingInterest;
 
   int ret = ccn_set_interest_filter (m_handle, pname, interestClosure);
@@ -598,14 +601,14 @@ int CcnxWrapper::setInterestFilter (const Name &prefix, const InterestCallback &
 }
 
 void
-CcnxWrapper::clearInterestFilter (const Name &prefix, bool record/* = true*/)
+Wrapper::clearInterestFilter (const Name &prefix, bool record/* = true*/)
 {
   _LOG_TRACE (">> clearInterestFilter");
   UniqueRecLock lock(m_mutex);
   if (!m_running || !m_connected)
     return;
 
-  CcnxCharbufPtr ptr = prefix.toCcnxCharbuf();
+  CharbufPtr ptr = prefix.toCharbuf();
   ccn_charbuf *pname = ptr->getBuf();
 
   int ret = ccn_set_interest_filter (m_handle, pname, 0);
@@ -622,7 +625,7 @@ CcnxWrapper::clearInterestFilter (const Name &prefix, bool record/* = true*/)
 }
 
 Name
-CcnxWrapper::getLocalPrefix ()
+Wrapper::getLocalPrefix ()
 {
   struct ccn * tmp_handle = ccn_create ();
   int res = ccn_connect (tmp_handle, NULL);
@@ -705,7 +708,7 @@ CcnxWrapper::getLocalPrefix ()
 }
 
 bool
-CcnxWrapper::verify(PcoPtr &pco, double maxWait)
+Wrapper::verify(PcoPtr &pco, double maxWait)
 {
   return m_verifier->verify(pco, maxWait);
 }
@@ -761,7 +764,7 @@ private:
 
 
 PcoPtr
-CcnxWrapper::get(const Name &interest, const Selectors &selectors, double maxWait/* = 4.0*/)
+Wrapper::get(const Name &interest, const Selectors &selectors, double maxWait/* = 4.0*/)
 {
   _LOG_TRACE (">> get: " << interest);
   {

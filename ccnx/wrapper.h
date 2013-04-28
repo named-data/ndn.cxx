@@ -26,27 +26,29 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
 
-#include "ccnx-common.h"
-#include "ccnx-name.h"
-#include "ccnx-selectors.h"
-#include "ccnx-closure.h"
-#include "ccnx-pco.h"
-#include "executor.h"
+#include "ccnx/common.h"
+#include "ccnx/name.h"
+#include "ccnx/selectors.h"
+#include "ccnx/closure.h"
+#include "ccnx/pco.h"
+
+class Executor;
+typedef boost::shared_ptr<Executor> ExecutorPtr;
 
 namespace Ccnx {
 
 struct CcnxOperationException : boost::exception, std::exception { };
 
 class Verifier;
-class CcnxWrapper
+class Wrapper
 {
 public:
   const static int MAX_FRESHNESS = 2147; // max value for ccnx
   const static int DEFAULT_FRESHNESS = 60;
   typedef boost::function<void (Name, Selectors)> InterestCallback;
 
-  CcnxWrapper();
-  ~CcnxWrapper();
+  Wrapper();
+  ~Wrapper();
 
   void
   start (); // called automatically in constructor
@@ -100,7 +102,7 @@ public:
   get (const Name &interest, const Selectors &selector = Selectors(), double maxWait = 4.0/*seconds*/);
 
 private:
-  CcnxWrapper(const CcnxWrapper &other) {}
+  Wrapper(const Wrapper &other) {}
 
 protected:
   void
@@ -130,28 +132,28 @@ protected:
   Verifier *m_verifier;
 };
 
-typedef boost::shared_ptr<CcnxWrapper> CcnxWrapperPtr;
+typedef boost::shared_ptr<Wrapper> WrapperPtr;
 
 inline int
-CcnxWrapper::publishData (const Name &name, const Bytes &content, int freshness, const Name &keyName)
+Wrapper::publishData (const Name &name, const Bytes &content, int freshness, const Name &keyName)
 {
   return publishData(name, head(content), content.size(), freshness, keyName);
 }
 
 inline int
-CcnxWrapper::publishData (const Name &name, const std::string &content, int freshness, const Name &keyName)
+Wrapper::publishData (const Name &name, const std::string &content, int freshness, const Name &keyName)
 {
   return publishData(name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), freshness, keyName);
 }
 
 inline int
-CcnxWrapper::publishUnsignedData(const Name &name, const Bytes &content, int freshness)
+Wrapper::publishUnsignedData(const Name &name, const Bytes &content, int freshness)
 {
   return publishUnsignedData(name, head(content), content.size(), freshness);
 }
 
 inline int
-CcnxWrapper::publishUnsignedData(const Name &name, const std::string &content, int freshness)
+Wrapper::publishUnsignedData(const Name &name, const std::string &content, int freshness)
 {
   return publishUnsignedData(name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), freshness);
 }

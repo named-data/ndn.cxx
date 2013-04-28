@@ -22,10 +22,10 @@
 #ifndef CCNX_CERT_H
 #define CCNX_CERT_H
 
-#include "ccnx-common.h"
-#include "ccnx-name.h"
-#include "ccnx-pco.h"
-#include "hash-helper.h"
+#include "ccnx/common.h"
+#include "ccnx/name.h"
+#include "ccnx/pco.h"
+#include "ccnx/hash.h"
 #include <boost/shared_ptr.hpp>
 
 namespace Ccnx {

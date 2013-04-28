@@ -22,10 +22,10 @@
 #ifndef CCNX_DISCOVERY_H
 #define CCNX_DISCOVERY_H
 
-#include "ccnx-wrapper.h"
-#include "ccnx-common.h"
-#include "ccnx-name.h"
-#include "scheduler.h"
+#include "ccnx/wrapper.h"
+#include "ccnx/common.h"
+#include "ccnx/name.h"
+
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/random/random_device.hpp>
@@ -34,17 +34,20 @@
 #include <boost/thread/locks.hpp>
 #include <list>
 
+class Scheduler;
+typedef boost::shared_ptr<Scheduler> SchedulerPtr;
+
 namespace Ccnx
 {
 
-class CcnxDiscovery;
-typedef boost::shared_ptr<CcnxDiscovery> CcnxDiscoveryPtr;
+class Discovery;
+typedef boost::shared_ptr<Discovery> DiscoveryPtr;
 
 class TaggedFunction
 {
 public:
   typedef boost::function<void (const Name &)> Callback;
-  TaggedFunction(const Callback &callback, const string &tag = GetRandomTag());
+  TaggedFunction(const Callback &callback, const std::string &tag = GetRandomTag());
   ~TaggedFunction(){};
 
   bool
@@ -65,7 +68,7 @@ private:
   std::string m_tag;
 };
 
-class CcnxDiscovery
+class Discovery
 {
 public:
   const static double INTERVAL;
@@ -81,8 +84,8 @@ public:
   deregisterCallback(const TaggedFunction &callback);
 
 private:
-  CcnxDiscovery();
-  ~CcnxDiscovery();
+  Discovery();
+  ~Discovery();
 
   void
   poll();
@@ -98,7 +101,7 @@ private:
   typedef boost::unique_lock<Mutex> Lock;
   typedef std::list<TaggedFunction> List;
 
-  static CcnxDiscovery *instance;
+  static Discovery *instance;
   static Mutex mutex;
   List m_callbacks;
   SchedulerPtr m_scheduler;
@@ -106,4 +109,5 @@ private:
 };
 
 } // Ccnx
+
 #endif // CCNX_DISCOVERY_H

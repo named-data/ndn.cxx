@@ -19,8 +19,9 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-verifier.h"
-#include "ccnx-wrapper.h"
+#include "verifier.h"
+#include "ccnx/wrapper.h"
+#include "logging.h"
 
 INIT_LOGGER ("Ccnx.Verifier");
 namespace Ccnx {
@@ -30,7 +31,7 @@ static const unsigned char ROOT_KEY_DIGEST[ROOT_KEY_DIGEST_LEN] = {0xa7, 0xd9, 0
 0x56, 0xc5, 0xa6, 0x92, 0xb4, 0x44, 0x93, 0x6e, 0x56, 0x70, 0x9d, 0x52, 0x6f, 0x70,
 0xed, 0x39, 0xef, 0xb5, 0xe2, 0x3, 0x29, 0xa5, 0x53, 0x3e, 0x68};
 
-Verifier::Verifier(CcnxWrapper *ccnx)
+Verifier::Verifier(Wrapper *ccnx)
          : m_ccnx(ccnx)
          , m_rootKeyDigest(ROOT_KEY_DIGEST, ROOT_KEY_DIGEST_LEN)
 {
@@ -41,7 +42,7 @@ Verifier::~Verifier()
 }
 
 bool
-Verifier::verify(const PcoPtr &pco, double maxWait)
+Verifier::verify(PcoPtr pco, double maxWait)
 {
   _LOG_TRACE("Verifying content [" << pco->name() << "]");
   HashPtr publisherPublicKeyDigest = pco->publisherPublicKeyDigest();

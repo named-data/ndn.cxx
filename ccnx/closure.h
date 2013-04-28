@@ -22,10 +22,9 @@
 #ifndef CCNX_CLOSURE_H
 #define CCNX_CLOSURE_H
 
-#include "ccnx-common.h"
-#include "ccnx-name.h"
-#include "ccnx-selectors.h"
-#include "executor.h"
+#include "ccnx/common.h"
+#include "ccnx/name.h"
+#include "ccnx/selectors.h"
 
 namespace Ccnx {
 
@@ -55,41 +54,6 @@ public:
   TimeoutCallback m_timeoutCallback;
   DataCallback m_dataCallback;
 };
-
-// class ExecutorClosure : public Closure
-// {
-// public:
-//   ExecutorClosure(const Closure &closure, ExecutorPtr executor);
-//   virtual ~ExecutorClosure();
-
-//   virtual void
-//   runDataCallback(Name name, PcoPtr pco);
-
-// // private:
-// //   void
-// //   execute(Name nae, PcoPtr content);
-
-// private:
-//   ExecutorPtr m_executor;
-// };
-
-// class ExecutorInterestClosure
-// {
-// public:
-//   typedef boost::function<void (Name)> InterestCallback;
-//   ExecutorInterestClosure(const InterestCallback &callback, ExecutorPtr executor);
-//   virtual ~ExecutorInterestClosure() {}
-
-//   void
-//   runInterestCallback(Name interest);
-
-//   void
-//   execute(Name interest);
-
-// private:
-//   InterestCallback m_callback;
-//   ExecutorPtr m_executor;
-// };
 
 } // Ccnx
 

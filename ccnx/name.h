@@ -21,9 +21,10 @@
 
 #ifndef CCNX_NAME_H
 #define CCNX_NAME_H
+
 #include <boost/shared_ptr.hpp>
-#include "ccnx-common.h"
-#include "ccnx-charbuf.h"
+#include "ccnx/common.h"
+#include "ccnx/charbuf.h"
 
 namespace Ccnx {
 
@@ -39,17 +40,17 @@ public:
   Name(const Name &other);
   Name(const unsigned char *data, const ccn_indexbuf *comps);
   Name (const void *buf, const size_t length);
-  Name (const CcnxCharbuf &buf);
+  Name (const Charbuf &buf);
   Name (const ccn_charbuf *buf);
   virtual ~Name() {}
 
-  CcnxCharbufPtr
-  toCcnxCharbuf() const;
+  CharbufPtr
+  toCharbuf() const;
 
-  CcnxCharbuf*
-  toCcnxCharbufRaw () const;
+  Charbuf*
+  toCharbufRaw () const;
 
-  operator CcnxCharbufPtr () const { return toCcnxCharbuf (); }
+  operator CharbufPtr () const { return toCharbuf (); }
 
   Name &
   appendComp(const Name &comp);

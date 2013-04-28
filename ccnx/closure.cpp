@@ -19,53 +19,37 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-charbuf.h"
-
-using namespace std;
+#include "closure.h"
 
 namespace Ccnx {
 
+Closure::Closure(const DataCallback &dataCallback, const TimeoutCallback &timeoutCallback)
+  : m_timeoutCallback (timeoutCallback)
+  , m_dataCallback (dataCallback)
+{
+}
+
+Closure::~Closure ()
+{
+}
+
 void
-CcnxCharbuf::init(ccn_charbuf *buf)
+Closure::runTimeoutCallback(Name interest, const Closure &closure, Selectors selectors)
 {
-  if (buf != NULL)
-  {
-    m_buf = ccn_charbuf_create();
-    ccn_charbuf_reserve(m_buf, buf->length);
-    memcpy(m_buf->buf, buf->buf, buf->length);
-    m_buf->length = buf->length;
-  }
+  if (!m_timeoutCallback.empty ())
+    {
+      m_timeoutCallback (interest, closure, selectors);
+    }
 }
 
-CcnxCharbuf::CcnxCharbuf()
-            : m_buf(NULL)
+
+void
+Closure::runDataCallback(Name name, PcoPtr content)
 {
-  m_buf = ccn_charbuf_create();
+  if (!m_dataCallback.empty ())
+    {
+      m_dataCallback (name, content);
+    }
 }
 
-CcnxCharbuf::CcnxCharbuf(ccn_charbuf *buf)
-            : m_buf(NULL)
-{
-  init(buf);
-}
-
-CcnxCharbuf::CcnxCharbuf(const CcnxCharbuf &other)
-            : m_buf (NULL)
-{
-  init(other.m_buf);
-}
-
-CcnxCharbuf::CcnxCharbuf(const void *buf, size_t length)
-{
-  m_buf = ccn_charbuf_create ();
-  ccn_charbuf_reserve (m_buf, length);
-  memcpy (m_buf->buf, buf, length);
-  m_buf->length = length;
-}
-
-CcnxCharbuf::~CcnxCharbuf()
-{
-  ccn_charbuf_destroy(&m_buf);
-}
-
-}
+} // Ccnx

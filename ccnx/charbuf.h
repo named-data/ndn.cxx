@@ -22,24 +22,24 @@
 #ifndef CCNX_CCNX_CHARBUF_H
 #define CCNX_CCNX_CHARBUF_H
 
-#include "ccnx-common.h"
+#include "ccnx/common.h"
 #include <boost/shared_ptr.hpp>
 
 namespace Ccnx {
 
-class CcnxCharbuf;
-typedef boost::shared_ptr<CcnxCharbuf> CcnxCharbufPtr;
+class Charbuf;
+typedef boost::shared_ptr<Charbuf> CharbufPtr;
 
-//  This class is mostly used in CcnxWrapper; users should not be directly using this class
+//  This class is mostly used in Wrapper; users should not be directly using this class
 // The main purpose of this class to is avoid manually create and destroy charbuf everytime
-class CcnxCharbuf
+class Charbuf
 {
 public:
-  CcnxCharbuf();
-  CcnxCharbuf(ccn_charbuf *buf);
-  CcnxCharbuf(const CcnxCharbuf &other);
-  CcnxCharbuf(const void *buf, size_t length);
-  ~CcnxCharbuf();
+  Charbuf();
+  Charbuf(ccn_charbuf *buf);
+  Charbuf(const Charbuf &other);
+  Charbuf(const void *buf, size_t length);
+  ~Charbuf();
 
   // expose internal data structure, use with caution!!
   ccn_charbuf *

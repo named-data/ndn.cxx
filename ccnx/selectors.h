@@ -18,11 +18,12 @@
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
+
 #ifndef CCNX_SELECTORS_H
 #define CCNX_SELECTORS_H
 
-#include "ccnx-common.h"
-#include "ccnx-name.h"
+#include "ccnx/common.h"
+#include "ccnx/name.h"
 
 namespace Ccnx {
 
@@ -83,8 +84,8 @@ public:
   inline Selectors &
   publisherPublicKeyDigest(const Bytes &digest) {m_publisherPublicKeyDigest = digest; return *this;}
 
-  CcnxCharbufPtr
-  toCcnxCharbuf() const;
+  CharbufPtr
+  toCharbuf() const;
 
   bool
   isEmpty() const;

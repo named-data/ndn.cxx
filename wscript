@@ -6,7 +6,6 @@ from waflib import Build, Logs, Utils, Task, TaskGen, Configure
 def options(opt):
     opt.add_option('--debug',action='store_true',default=False,dest='debug',help='''debugging mode''')
     opt.add_option('--test', action='store_true',default=False,dest='_test',help='''build unit tests''')
-    opt.add_option('--yes',action='store_true',default=False) # for autoconf/automake/make compatibility
     opt.add_option('--log4cxx', action='store_true',default=False,dest='log4cxx',help='''Compile with log4cxx logging support''')
 
     opt.load('compiler_c compiler_cxx boost ccnx')
@@ -78,7 +77,7 @@ def build (bld):
         features = ["cxx"],
         source = bld.path.ant_glob(['executor/**/*.cc']),
         use = 'BOOST BOOST_THREAD LIBEVENT LIBEVENT_PTHREADS LOG4CXX',
-        includes = "executor .",
+        includes = ".",
         )
 
     scheduler = bld.objects (
@@ -86,7 +85,7 @@ def build (bld):
         features = ["cxx"],
         source = bld.path.ant_glob(['scheduler/**/*.cc']),
         use = 'BOOST BOOST_THREAD LIBEVENT LIBEVENT_PTHREADS LOG4CXX executor',
-        includes = "scheduler executor .",
+        includes = ".",
         )
 
     libccnx = bld (
@@ -94,7 +93,7 @@ def build (bld):
         features=['cxx', 'cxxshlib'],
         source = bld.path.ant_glob(['ccnx/**/*.cc', 'ccnx/**/*.cpp']),
         use = 'TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
-        includes = "ccnx scheduler executor .",
+        includes = ".",
         )
 
     # Unit tests
@@ -105,11 +104,11 @@ def build (bld):
           defines = "WAF",
           source = bld.path.ant_glob(['test/*.cc']),
           use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME LOG4CXX ccnx-cpp',
-          includes = "ccnx scheduler src executor .",
+          includes = ".",
           install_prefix = None,
           )
 
-    headers = bld.path.ant_glob(['ccnx/ccnx-*.h', 'executor/*.h', 'scheduler/*.h'])
+    headers = bld.path.ant_glob(['ccnx/*.h', 'executor/*.h', 'scheduler/*.h'])
     bld.install_files("%s/ccnx-cpp" % bld.env['INCLUDEDIR'], headers)
 
     pc = bld (

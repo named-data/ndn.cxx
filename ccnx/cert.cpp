@@ -18,9 +18,11 @@
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
-#include "ccnx-cert.h"
+#include "cert.h"
+
 #include <tinyxml.h>
 #include <boost/lexical_cast.hpp>
+
 #include "logging.h"
 
 INIT_LOGGER ("Ccnx.Cert");

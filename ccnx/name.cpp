@@ -19,7 +19,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-name.h"
+#include "name.h"
+
 #include <boost/lexical_cast.hpp>
 #include <ctype.h>
 #include <boost/algorithm/string/join.hpp>
@@ -93,7 +94,7 @@ Name::Name (const void *buf, const size_t length)
   ccn_indexbuf_destroy(&idx);
 }
 
-Name::Name (const CcnxCharbuf &buf)
+Name::Name (const Charbuf &buf)
 {
   ccn_indexbuf *idx = ccn_indexbuf_create();
   ccn_name_split (buf.getBuf (), idx);
@@ -163,10 +164,10 @@ Name::toString() const
   return ss.str();
 }
 
-CcnxCharbuf*
-Name::toCcnxCharbufRaw () const
+Charbuf*
+Name::toCharbufRaw () const
 {
-  CcnxCharbuf *ptr = new CcnxCharbuf ();
+  Charbuf *ptr = new Charbuf ();
 
   ccn_charbuf *cbuf = ptr->getBuf();
   ccn_name_init(cbuf);
@@ -179,10 +180,10 @@ Name::toCcnxCharbufRaw () const
 }
 
 
-CcnxCharbufPtr
-Name::toCcnxCharbuf () const
+CharbufPtr
+Name::toCharbuf () const
 {
-  return CcnxCharbufPtr (toCcnxCharbufRaw ());
+  return CharbufPtr (toCharbufRaw ());
 }
 
 Name &

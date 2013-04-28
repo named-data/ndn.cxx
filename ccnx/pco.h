@@ -22,10 +22,10 @@
 #ifndef CCNX_CONTENT_OBJECT_H
 #define CCNX_CONTENT_OBJECT_H
 
-#include "ccnx-wrapper.h"
-#include "ccnx-common.h"
-#include "ccnx-name.h"
-#include "hash-helper.h"
+#include "ccnx/wrapper.h"
+#include "ccnx/common.h"
+#include "ccnx/name.h"
+#include "ccnx/hash.h"
 
 namespace Ccnx {
 

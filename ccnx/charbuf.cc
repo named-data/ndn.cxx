@@ -19,42 +19,53 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_VERIFIER_H
-#define CCNX_VERIFIER_H
+#include "charbuf.h"
 
-#include "ccnx-common.h"
-#include "ccnx-name.h"
-#include "ccnx-cert.h"
-#include "ccnx-pco.h"
-#include <map>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/recursive_mutex.hpp>
-#include <boost/thread/thread.hpp>
+using namespace std;
 
 namespace Ccnx {
 
-class CcnxWrapper;
-
-class Verifier
+void
+Charbuf::init(ccn_charbuf *buf)
 {
-public:
-  Verifier(CcnxWrapper *ccnx);
-  ~Verifier();
+  if (buf != NULL)
+  {
+    m_buf = ccn_charbuf_create();
+    ccn_charbuf_reserve(m_buf, buf->length);
+    memcpy(m_buf->buf, buf->buf, buf->length);
+    m_buf->length = buf->length;
+  }
+}
 
-  bool verify(const PcoPtr &pco, double maxWait);
+Charbuf::Charbuf()
+            : m_buf(NULL)
+{
+  m_buf = ccn_charbuf_create();
+}
 
-private:
+Charbuf::Charbuf(ccn_charbuf *buf)
+            : m_buf(NULL)
+{
+  init(buf);
+}
 
-private:
-  CcnxWrapper *m_ccnx;
-  Hash m_rootKeyDigest;
-  typedef std::map<Hash, CertPtr> CertCache;
-  CertCache m_certCache;
-  typedef boost::recursive_mutex RecLock;
-  typedef boost::unique_lock<RecLock> UniqueRecLock;
-  RecLock m_cacheLock;
-};
+Charbuf::Charbuf(const Charbuf &other)
+            : m_buf (NULL)
+{
+  init(other.m_buf);
+}
 
-} // Ccnx
+Charbuf::Charbuf(const void *buf, size_t length)
+{
+  m_buf = ccn_charbuf_create ();
+  ccn_charbuf_reserve (m_buf, length);
+  memcpy (m_buf->buf, buf, length);
+  m_buf->length = length;
+}
 
-#endif // CCNX_VERIFIER_H
+Charbuf::~Charbuf()
+{
+  ccn_charbuf_destroy(&m_buf);
+}
+
+}

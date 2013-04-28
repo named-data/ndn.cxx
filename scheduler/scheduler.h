@@ -37,9 +37,9 @@
 #include <map>
 #include <sys/time.h>
 
-#include "task.h"
-#include "interval-generator.h"
-#include "executor.h"
+#include "scheduler/task.h"
+#include "scheduler/interval-generator.h"
+#include "executor/executor.h"
 
 class Scheduler;
 typedef boost::shared_ptr<Scheduler> SchedulerPtr;
