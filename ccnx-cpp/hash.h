@@ -28,7 +28,7 @@
 #include <boost/exception/all.hpp>
 #include <boost/filesystem.hpp>
 
-#include "ccnx/common.h"
+#include "ccnx-cpp/common.h"
 
 namespace Ccnx
 {

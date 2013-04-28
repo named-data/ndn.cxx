@@ -20,7 +20,7 @@
  */
 
 #include "pco.h"
-#include "ccnx/cert.h"
+#include "ccnx-cpp/cert.h"
 
 namespace Ccnx {
 

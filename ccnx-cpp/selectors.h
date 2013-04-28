@@ -22,8 +22,8 @@
 #ifndef CCNX_SELECTORS_H
 #define CCNX_SELECTORS_H
 
-#include "ccnx/common.h"
-#include "ccnx/name.h"
+#include "ccnx-cpp/common.h"
+#include "ccnx-cpp/name.h"
 
 namespace Ccnx {
 

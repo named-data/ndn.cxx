@@ -91,7 +91,7 @@ def build (bld):
     libccnx = bld (
         target="ccnx-cpp",
         features=['cxx', 'cxxshlib'],
-        source = bld.path.ant_glob(['ccnx/**/*.cc', 'ccnx/**/*.cpp']),
+        source = bld.path.ant_glob(['ccnx-cpp/**/*.cpp']),
         use = 'TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
         includes = ".",
         )
@@ -108,7 +108,7 @@ def build (bld):
           install_prefix = None,
           )
 
-    headers = bld.path.ant_glob(['ccnx/*.h', 'executor/*.h', 'scheduler/*.h'])
+    headers = bld.path.ant_glob(['ccnx-cpp/*.h'])
     bld.install_files("%s/ccnx-cpp" % bld.env['INCLUDEDIR'], headers)
 
     pc = bld (

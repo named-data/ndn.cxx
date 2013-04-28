@@ -18,18 +18,43 @@
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
-#ifndef CCNX_ALL_H
-#define CCNX_ALL_H
-#include <ccnx-cert.h>
-#include <ccnx-charbuf.h>
-#include <ccnx-closure.h>
-#include <ccnx-common.h>
-#include <ccnx-discovery.h>
-#include <ccnx-name.h>
-#include <ccnx-pco.h>
-#include <ccnx-selectors.h>
-#include <ccnx-verifier.h>
-#include <ccnx-wrapper.h>
-#include <scheduler-all.h>
-#include <executor.h>
+
+#ifndef CCNX_CLOSURE_H
+#define CCNX_CLOSURE_H
+
+#include "ccnx-cpp/common.h"
+#include "ccnx-cpp/name.h"
+#include "ccnx-cpp/selectors.h"
+
+namespace Ccnx {
+
+class ParsedContentObject;
+typedef boost::shared_ptr<ParsedContentObject> PcoPtr;
+
+class Closure
+{
+public:
+  typedef boost::function<void (Name, PcoPtr pco)> DataCallback;
+
+  typedef boost::function<void (Name, const Closure &, Selectors)> TimeoutCallback;
+
+  Closure(const DataCallback &dataCallback, const TimeoutCallback &timeoutCallback = TimeoutCallback());
+  virtual ~Closure();
+
+  virtual void
+  runDataCallback(Name name, Ccnx::PcoPtr pco);
+
+  virtual void
+  runTimeoutCallback(Name interest, const Closure &closure, Selectors selectors);
+
+  virtual Closure *
+  dup () const { return new Closure (*this); }
+
+public:
+  TimeoutCallback m_timeoutCallback;
+  DataCallback m_dataCallback;
+};
+
+} // Ccnx
+
 #endif

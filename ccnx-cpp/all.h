@@ -18,43 +18,18 @@
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
+#ifndef CCNX_ALL_H
+#define CCNX_ALL_H
 
-#ifndef CCNX_VERIFIER_H
-#define CCNX_VERIFIER_H
+#include <ccnx-cpp/cert.h>
+#include <ccnx-cpp/charbuf.h>
+#include <ccnx-cpp/closure.h>
+#include <ccnx-cpp/common.h>
+#include <ccnx-cpp/discovery.h>
+#include <ccnx-cpp/name.h>
+#include <ccnx-cpp/pco.h>
+#include <ccnx-cpp/selectors.h>
+#include <ccnx-cpp/verifier.h>
+#include <ccnx-cpp/wrapper.h>
 
-#include "ccnx/common.h"
-#include "ccnx/name.h"
-#include "ccnx/cert.h"
-#include "ccnx/pco.h"
-#include <map>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/recursive_mutex.hpp>
-#include <boost/thread/thread.hpp>
-
-namespace Ccnx {
-
-class Wrapper;
-
-class Verifier
-{
-public:
-  Verifier(Wrapper *ccnx);
-  ~Verifier();
-
-  bool verify(PcoPtr pco, double maxWait);
-
-private:
-
-private:
-  Wrapper *m_ccnx;
-  Hash m_rootKeyDigest;
-  typedef std::map<Hash, CertPtr> CertCache;
-  CertCache m_certCache;
-  typedef boost::recursive_mutex RecLock;
-  typedef boost::unique_lock<RecLock> UniqueRecLock;
-  RecLock m_cacheLock;
-};
-
-} // Ccnx
-
-#endif // CCNX_VERIFIER_H
+#endif

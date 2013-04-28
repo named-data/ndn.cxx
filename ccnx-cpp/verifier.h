@@ -19,42 +19,42 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_CLOSURE_H
-#define CCNX_CLOSURE_H
+#ifndef CCNX_VERIFIER_H
+#define CCNX_VERIFIER_H
 
-#include "ccnx/common.h"
-#include "ccnx/name.h"
-#include "ccnx/selectors.h"
+#include "ccnx-cpp/common.h"
+#include "ccnx-cpp/name.h"
+#include "ccnx-cpp/cert.h"
+#include "ccnx-cpp/pco.h"
+#include <map>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/thread.hpp>
 
 namespace Ccnx {
 
-class ParsedContentObject;
-typedef boost::shared_ptr<ParsedContentObject> PcoPtr;
+class Wrapper;
 
-class Closure
+class Verifier
 {
 public:
-  typedef boost::function<void (Name, PcoPtr pco)> DataCallback;
+  Verifier(Wrapper *ccnx);
+  ~Verifier();
 
-  typedef boost::function<void (Name, const Closure &, Selectors)> TimeoutCallback;
+  bool verify(PcoPtr pco, double maxWait);
 
-  Closure(const DataCallback &dataCallback, const TimeoutCallback &timeoutCallback = TimeoutCallback());
-  virtual ~Closure();
+private:
 
-  virtual void
-  runDataCallback(Name name, Ccnx::PcoPtr pco);
-
-  virtual void
-  runTimeoutCallback(Name interest, const Closure &closure, Selectors selectors);
-
-  virtual Closure *
-  dup () const { return new Closure (*this); }
-
-public:
-  TimeoutCallback m_timeoutCallback;
-  DataCallback m_dataCallback;
+private:
+  Wrapper *m_ccnx;
+  Hash m_rootKeyDigest;
+  typedef std::map<Hash, CertPtr> CertCache;
+  CertCache m_certCache;
+  typedef boost::recursive_mutex RecLock;
+  typedef boost::unique_lock<RecLock> UniqueRecLock;
+  RecLock m_cacheLock;
 };
 
 } // Ccnx
 
-#endif
+#endif // CCNX_VERIFIER_H

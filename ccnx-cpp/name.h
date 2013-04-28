@@ -23,8 +23,8 @@
 #define CCNX_NAME_H
 
 #include <boost/shared_ptr.hpp>
-#include "ccnx/common.h"
-#include "ccnx/charbuf.h"
+#include "ccnx-cpp/common.h"
+#include "ccnx-cpp/charbuf.h"
 
 namespace Ccnx {
 

@@ -20,7 +20,7 @@
  */
 
 #include "verifier.h"
-#include "ccnx/wrapper.h"
+#include "ccnx-cpp/wrapper.h"
 #include "logging.h"
 
 INIT_LOGGER ("Ccnx.Verifier");

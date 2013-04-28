@@ -22,7 +22,7 @@
 #ifndef CCNX_CCNX_CHARBUF_H
 #define CCNX_CCNX_CHARBUF_H
 
-#include "ccnx/common.h"
+#include "ccnx-cpp/common.h"
 #include <boost/shared_ptr.hpp>
 
 namespace Ccnx {

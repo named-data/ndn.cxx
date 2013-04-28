@@ -32,7 +32,7 @@ extern "C" {
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 
-#include "ccnx/verifier.h"
+#include "ccnx-cpp/verifier.h"
 #include "executor/executor.h"
 
 #include "logging.h"

@@ -26,11 +26,11 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
 
-#include "ccnx/common.h"
-#include "ccnx/name.h"
-#include "ccnx/selectors.h"
-#include "ccnx/closure.h"
-#include "ccnx/pco.h"
+#include "ccnx-cpp/common.h"
+#include "ccnx-cpp/name.h"
+#include "ccnx-cpp/selectors.h"
+#include "ccnx-cpp/closure.h"
+#include "ccnx-cpp/pco.h"
 
 class Executor;
 typedef boost::shared_ptr<Executor> ExecutorPtr;
