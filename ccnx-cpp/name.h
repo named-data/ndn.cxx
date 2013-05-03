@@ -26,105 +26,419 @@
 #include "ccnx-cpp/common.h"
 #include "ccnx-cpp/charbuf.h"
 
-namespace Ccnx {
+namespace ndn {
 
+/**
+ * @brief An exception indicating an unrecoverable error with Name
+ *
+ * @todo Show an example how to get an extended error message
+ */
 struct NameException:
     virtual boost::exception, virtual std::exception {};
 
+/**
+ * @brief Class for NDN Name
+ */
 class Name
 {
 public:
-  Name();
-  Name(const std::string &name);
-  Name(const std::vector<Bytes> &comps);
-  Name(const Name &other);
-  Name(const unsigned char *data, const ccn_indexbuf *comps);
-  Name (const void *buf, const size_t length);
-  Name (const Charbuf &buf);
-  Name (const ccn_charbuf *buf);
-  virtual ~Name() {}
-
-  CharbufPtr
-  toCharbuf() const;
-
-  Charbuf*
-  toCharbufRaw () const;
-
-  operator CharbufPtr () const { return toCharbuf (); }
-
-  Name &
-  appendComp(const Name &comp);
-
-  Name &
-  appendComp(const Bytes &comp);
-
-  Name &
-  appendComp(const std::string &compStr);
-
-  Name &
-  appendComp(const void *buf, size_t size);
+  typedef std::vector<Bytes>::iterator iterator;
+  typedef std::vector<Bytes>::const_iterator const_iterator;
+  typedef std::vector<Bytes>::reverse_iterator reverse_iterator;
+  typedef std::vector<Bytes>::const_reverse_iterator const_reverse_iterator;
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //                              CONSTRUCTORS                                 //
+  ///////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Append int component
+   * @brief Default constructor to create an empty name (zero components, or "/")
+   */
+  Name ();
+
+  /**
+   * @brief Copy constructor
    *
-   * Difference between this and appendComp call is that data is appended in network order
+   * @param other reference to a NDN name object
+   */
+  Name (const Name &other);
+
+  /**
+   * @brief Create a name from URL string
    *
-   * Also, this function honors naming convention (%00 prefix is added)
+   * @param url URI-represented name
+   */
+  Name (const std::string &url);
+
+  /**
+   * @brief Create a name from a vector of binary blobs, representing name components
+   *
+   * @param comps vector of binary blobs
+   */
+  Name (const std::vector<Bytes> &comps);
+
+  /**
+   * @brief Create a name from CCNB-formatted binary blob
+   *
+   * @param data pointer to the first byte of name in CCNB-formatted binary blob format
+   * @param comps array of indices of name components inside the binary blob (@see ccn_indexbuf)
+   */
+  Name (const unsigned char *data, const ccn_indexbuf *comps);
+
+  /**
+   * @brief Create a name from CCNB-formatted binary blob
+   *
+   * @param data pointer to the first byte of name in CCNB-formatted binary blob format
+   * @param length length of CCNB-formatted binary blob
+   *
+   * This version of the constructor first parses CCNB-formatted binary blob, discovers
+   * the number of name components and their offsets, and then creates a new name object
+   * based on the discovered information
+   */
+  Name (const void *data, const size_t length);
+
+  /**
+   * @brief Create a name from CCNB-formatted binary blob, represented by ndn::Charbuf object
+   *
+   * @param buf reference to ndn::Charbuf object, pointing to a buffer with CCNB-formatted binary blob
+   */
+  Name (const Charbuf &buf);
+
+  /**
+   * @brief Create a name from CCNB-formatted binary blob, represented by ccn_charbuf structure
+   *
+   * @param buf pointer to ccn_charbuf structure, pointing to a buffer with CCNB-formatted binary blob
+   */
+  Name (const ccn_charbuf *buf);
+
+  /**
+   * @brief Assignment operator
    */
   Name &
-  appendComp(uint64_t number);
+  operator= (const Name &other);
 
-  template<class T>
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  //                                SETTERS                                    //
+  ///////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @brief Append components from another ndn::Name object
+   *
+   * @param comp reference to Name object
+   * @returns reference to self (to allow chaining of append methods)
+   */
   Name &
-  operator ()(const T &comp) { return appendComp (comp); }
+  append (const Name &comp);
 
+  /**
+   * @brief Append a binary blob as a name component
+   *
+   * @param comp a binary blob
+   * @returns reference to self (to allow chaining of append methods)
+   */
   Name &
-  operator ()(const void *buf, size_t size) { return appendComp (buf, size); }
+  append (const Bytes &comp);
 
-  int
-  size() const {return m_comps.size();}
+  /**
+   * @brief Append a string as a name component
+   *
+   * @param compStr a string
+   * @returns reference to self (to allow chaining of append methods)
+   *
+   * No conversions will be done to the string.  The string is included in raw form,
+   * without any leading '\0' symbols.
+   */
+  Name &
+  append (const std::string &compStr);
 
+  /**
+   * @brief Append a binary blob as a name component
+   *
+   * @param buf pointer to the first byte of the binary blob
+   * @param size length of the binary blob
+   * @returns reference to self (to allow chaining of append methods)
+   */
+  Name &
+  append (const void *buf, size_t size);
+
+  /**
+   * @brief Append network-ordered numeric component to the name
+   *
+   * @param number number to be encoded and added as a component
+   *
+   * Number is encoded and added in network order. Tail zero-bytes are not included.
+   * For example, if the number is 1, then 1-byte binary blob will be added  0x01.
+   * If the number is 256, then 2 binary blob will be added: 0x01 0x01
+   *
+   * If the number is zero, an empty component will be added
+   */
+  Name &
+  appendNumber (uint64_t number);
+
+  /**
+   * @brief Append network-ordered numeric component to the name with marker
+   *
+   * @param number number to be encoded and added as a component
+   * @param marker byte marker, specified by the desired naming convention
+   *
+   * Currently defined naming conventions of the marker:
+   * - 0x00  sequence number
+   * - 0xC1  control number
+   * - 0xFB  block id
+   * - 0xFD  version number
+   *
+   * This version is almost exactly as appendNumber, with exception that it adds initial marker.
+   * The number is formatted in the exactly the same way.
+   *
+   * @see appendNumber
+   */
+  Name &
+  appendNumberWithMarker (uint64_t number, unsigned char marker);
+
+  /**
+   * @brief Helper method to add sequence number to the name (marker = 0x00)
+   * @param seqno sequence number
+   * @see appendNumberWithMarker
+   */
+  inline Name &
+  appendSeqNum (uint64_t seqno);
+
+  /**
+   * @brief Helper method to add control number to the name (marker = 0xC1)
+   * @param control control number
+   * @see appendNumberWithMarker
+   */
+  inline Name &
+  appendControlNum (uint64_t control);
+
+  /**
+   * @brief Helper method to add block ID to the name (marker = 0xFB)
+   * @param blkid block ID
+   * @see appendNumberWithMarker
+   */
+  inline Name &
+  appendBlkId (uint64_t blkid);
+
+  /**
+   * @brief Helper method to add version to the name (marker = 0xFD)
+   * @param version fully formatted version in a desired format (e.g., timestamp).
+   *                If version is Name::nversion, then the version number is automatically
+   *                assigned based on UTC timestamp
+   * @see appendNumberWithMarker
+   */
+  Name &
+  appendVersion (uint64_t version = Name::nversion);
+
+  ///////////////////////////////////////////////////////////////////////////////
+  //                                GETTERS                                    //
+  ///////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @brief Get number of the name components
+   * @return number of name components
+   */
+  inline size_t
+  size () const;
+
+  /**
+   * @brief Get binary blob of name component
+   * @param index index of the name component.  If less than 0, then getting component from the back
+   * @returns const reference to binary blob of the requested name component
+   *
+   * If index is out of range, an exception will be thrown
+   */
   const Bytes &
-  getComp (int index) const;
+  get (int index) const;
 
-  inline const Bytes &
-  getCompFromBack (int index) const;
+  /**
+   * @brief Get binary blob of name component
+   * @param index index of the name component.  If less than 0, then getting component from the back
+   * @returns reference to binary blob of the requested name component
+   *
+   * If index is out of range, an exception will be thrown
+   */
+  Bytes &
+  get (int index);
 
-  // return std::string format of the comp
-  // if all characters are printable, simply returns the string
-  // if not, print the bytes in hex string format
-  std::string
-  getCompAsString(int index) const;
+  /////
+  ///// Iterator interface to name components
+  /////
+  inline Name::const_iterator
+  begin () const;           ///< @brief Begin iterator (const)
 
-  uint64_t
-  getCompAsInt (int index) const;
+  inline Name::iterator
+  begin ();                 ///< @brief Begin iterator
 
-  inline std::string
-  getCompFromBackAsString(int index) const;
+  inline Name::const_iterator
+  end () const;             ///< @brief End iterator (const)
 
-  inline uint64_t
-  getCompFromBackAsInt (int index) const;
+  inline Name::iterator
+  end ();                   ///< @brief End iterator
 
+  inline Name::const_reverse_iterator
+  rbegin () const;          ///< @brief Reverse begin iterator (const)
+
+  inline Name::reverse_iterator
+  rbegin ();                ///< @brief Reverse begin iterator
+
+  inline Name::const_reverse_iterator
+  rend () const;            ///< @brief Reverse end iterator (const)
+
+  inline Name::reverse_iterator
+  rend ();                  ///< @brief Reverse end iterator
+  
+
+  /////
+  ///// Static helpers to convert name component to appropriate value
+  /////
+
+  /**
+   * @brief Convert binary blob name component to std::string
+   * @param comp name component to be converted
+   */  
+  inline static std::string
+  asString (const Bytes &comp);
+
+  /**
+   * @brief Convert binary blob name component (network-ordered number) to number
+   * @param comp name component to be converted
+   */  
+  static uint64_t
+  asNumber (const Bytes &comp);
+
+  /**
+   * @brief Convert binary blob name component (network-ordered number) to number, using appropriate marker from the naming convention
+   * @param comp name component to be converted
+   * @param marker required marker from the naming convention
+   *
+   * If the required marker does not exist, an exception will be thrown
+   */  
+  static uint64_t
+  asNumberWithMarker (const Bytes &comp, unsigned char marker);
+
+  /**
+   * @brief Convert binary blob name component, assuming sequence number naming convention (marker = 0x00)
+   * @param comp name component to be converted
+   * @see asNumberWithMarker
+   */
+  inline static uint64_t
+  asSeqNum (const Bytes &);
+  
+  /**
+   * @brief Convert binary blob name component, assuming control number naming convention (marker = 0xC1)
+   * @param comp name component to be converted
+   * @see asNumberWithMarker
+   */
+  inline static uint64_t
+  asControlNum (const Bytes &);
+
+  /**
+   * @brief Convert binary blob name component, assuming block ID naming convention (marker = 0xFB)
+   * @param comp name component to be converted
+   * @see asNumberWithMarker
+   */
+  inline static uint64_t
+  asBlkId (const Bytes &);
+
+  /**
+   * @brief Convert binary blob name component, assuming time-stamping version naming convention (marker = 0xFD)
+   * @param comp name component to be converted
+   * @see asNumberWithMarker
+   */
+  inline static uint64_t
+  asVersion (const Bytes &);
+
+  /**
+   * @brief Get a new name, constructed as a subset of components
+   * @param pos Position of the first component to be copied to the subname
+   * @param len Number of components to be copied. Value Name::npos indicates that all components till the end of the name.
+   */
   Name
-  getPartialName(int start, int n = -1) const;
+  getSubName (size_t pos = 0, size_t len = npos) const;
 
+  /**
+   * @brief Get prefix of the name
+   * @param len length of the prefix
+   * @param skip number of components to skip from beginning of the name
+   */
   inline Name
-  getPartialNameFromBack(int start, int n = -1) const;
+  getPrefix (size_t len, size_t skip = 0) const;
 
+  /**
+   * @brief Get postfix of the name
+   * @param len length of the postfix
+   * @param skip number of components to skip from end of the name
+   */
+  inline Name
+  getPostfix (size_t len, size_t skip = 0) const;
+
+  
+  /**
+   * @brief Get text representation of the name (URI)
+   */
   std::string
-  toString() const;
+  toUri () const;
 
-  Name &
-  operator=(const Name &other);
+  /**
+   * @brief Convert to wire format and return it in form of ndn::CharbufPtr
+   */
+  CharbufPtr
+  toCharbuf () const;
 
+  /////////////////////////////////////////////////
+  // Helpers and compatibility wrappers
+  /**
+   * @brief Check if to Name objects are equal (have the same number of components with the same binary data)
+   */
   bool
-  operator==(const std::string &str) const;
+  operator == (const Name &name) const;
 
+  /**
+   * @brief Check if two Name objects are not equal
+   */
   bool
-  operator!=(const std::string &str) const;
+  operator != (const Name &name) const;
+  
+  /**
+   * @brief Compare two name object
+   * @todo Right now implementation converts name to URI and uses lexicographic order to compare, which is wrong
+   */
+  bool
+  operator < (const Name &name) const;
 
-  friend Name
-  operator+(const Name &n1, const Name &n2);
+  /**
+   * @brief Operator [] to simplify access to name components
+   * @see get
+   */
+  inline Bytes &
+  operator [] (int index);
+  
+  /**
+   * @brief Operator [] to simplify access to name components
+   * @see get
+   */
+  inline const Bytes &
+  operator [] (int index) const;
+
+  /**
+   * @brief Create a new Name object, by copying components from first and second name
+   */
+  Name
+  operator + (const Name &name) const;
+
+  /**
+   * @brief A wrapper for append method
+   */
+  template<class T>
+  inline void
+  push_back (const T &comp);
+
+public:
+  // Data Members (public):
+  ///  Value returned by various member functions when they fail.
+  const size_t npos = static_cast<size_t> (-1);
+  const uint64_t nversion = static_cast<uint64_t> (-1);
 
 private:
   std::vector<Bytes> m_comps;
@@ -135,40 +449,160 @@ typedef boost::shared_ptr<Name> NamePtr;
 std::ostream&
 operator <<(std::ostream &os, const Name &name);
 
-bool
-operator ==(const Name &n1, const Name &n2);
 
-bool
-operator !=(const Name &n1, const Name &n2);
-
-bool
-operator <(const Name &n1, const Name &n2);
-
-
-std::string
-Name::getCompFromBackAsString(int index) const
+inline Name &
+Name::appendSeqNum (uint64_t seqno)
 {
-  return getCompAsString (m_comps.size () - 1 - index);
+  return appendNumberWithMarker (seqno, 0x00);
 }
 
-uint64_t
-Name::getCompFromBackAsInt (int index) const
+inline Name &
+Name::appendControlNum (uint64_t control)
 {
-  return getCompAsInt (m_comps.size () - 1 - index);
+  return appendNumberWithMarker (control, 0xC1);
 }
 
-Name
-Name::getPartialNameFromBack(int start, int n/* = -1*/) const
+inline Name &
+Name::appendBlkId (uint64_t blkid)
 {
-  return getPartialName (m_comps.size () - 1 - start, n);
+  return appendNumberWithMarker (blkid, 0xFB);
 }
 
-const Bytes &
-Name::getCompFromBack (int index) const
+inline size_t
+Name::size () const
 {
-  return getComp (m_comps.size () - 1 - index);
+  return m_comps.size ();
+}
+
+/////
+///// Iterator interface to name components
+/////
+inline Name::const_iterator
+Name::begin () const
+{
+  return m_comps.begin ();
+}
+
+inline Name::iterator
+Name::begin ()
+{
+  return m_comps.begin ();
+}
+
+inline Name::const_iterator
+Name::end () const
+{
+  return m_comps.end ();
+}
+
+inline Name::iterator
+Name::end ()
+{
+  return m_comps.end ();
+}
+
+inline Name::const_reverse_iterator
+Name::rbegin () const
+{
+  return m_comps.rbegin ();
+}
+
+inline Name::reverse_iterator
+Name::rbegin ()
+{
+  return m_comps.rbegin ();
+}
+
+inline Name::const_reverse_iterator
+Name::rend () const
+{
+  return m_comps.rend ();
 }
 
 
-} // Ccnx
+inline Name::reverse_iterator
+Name::rend ()
+{
+  return m_comps.rend ();
+}
+
+
+//// helpers
+
+inline std::string
+Name::asString (const Bytes &bytes)
+{
+  return std::string (reinterpret_cast<const char*> (head (bytes)), bytes.size ());
+}
+
+inline uint64_t
+Name::asSeqNum (const Bytes &bytes)
+{
+  return Name::asNumberWithMarker (bytes, 0x00);
+}
+  
+inline uint64_t
+Name::asControlNum (const Bytes &bytes)
+{
+  return Name::asNumberWithMarker (bytes, 0xC1);
+}
+
+inline uint64_t
+Name::asBlkId (const Bytes &bytes)
+{
+  return Name::asNumberWithMarker (bytes, 0xFB);
+}
+
+inline uint64_t
+Name::asVersion (const Bytes &bytes)
+{
+  return Name::asNumberWithMarker (bytes, 0xFD);
+}
+
+
+inline Name
+Name::getPrefix (size_t len, size_t skip/* = 0*/) const
+{
+  return getSubName (skip, len);
+}
+
+inline Name
+Name::getPostfix (size_t len, size_t skip/* = 0*/) const
+{
+  return getSubName (size () - len - skip, len);
+}
+
+
+template<class T>
+inline void
+Name::push_back (const T &comp)
+{
+  append (comp);
+}
+
+inline void
+Name::push_back (const void *buf, size_t size)
+{
+  append (buf, size);
+}
+
+inline Bytes &
+Name::operator [] (int index)
+{
+  return get (index);
+}
+  
+/**
+ * @brief Operator [] to simplify access to name components
+ * @see get
+ */
+inline const Bytes &
+Name::operator [] (int index) const
+{
+  return get (index);
+}
+
+
+} // ndn
+
 #endif

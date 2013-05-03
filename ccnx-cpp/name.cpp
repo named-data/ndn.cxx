@@ -25,16 +25,22 @@
 #include <ctype.h>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 using namespace std;
 
-namespace Ccnx{
+namespace ndn
+{
 
-Name::Name()
+///////////////////////////////////////////////////////////////////////////////
+//                              CONSTRUCTORS                                 //
+///////////////////////////////////////////////////////////////////////////////
+
+Name::Name ()
 {
 }
 
-Name::Name(const string &name)
+Name::Name (const string &name)
 {
   stringstream ss(name);
   string compStr;
@@ -52,17 +58,17 @@ Name::Name(const string &name)
   }
 }
 
-Name::Name(const vector<Bytes> &comps)
+Name::Name (const vector<Bytes> &comps)
 {
   m_comps = comps;
 }
 
-Name::Name(const Name &other)
+Name::Name (const Name &other)
 {
   m_comps = other.m_comps;
 }
 
-Name::Name(const unsigned char *data, const ccn_indexbuf *comps)
+Name::Name (const unsigned char *data, const ccn_indexbuf *comps)
 {
   for (unsigned int i = 0; i < comps->n - 1; i++)
   {
@@ -131,43 +137,231 @@ Name::Name (const ccn_charbuf *buf)
 }
 
 Name &
-Name::operator=(const Name &other)
+Name::operator= (const Name &other)
 {
   m_comps = other.m_comps;
   return *this;
 }
-bool
-Name::operator==(const string &str) const
+
+///////////////////////////////////////////////////////////////////////////////
+//                                SETTERS                                    //
+///////////////////////////////////////////////////////////////////////////////
+
+Name &
+Name::append (const Name &comp)
 {
-  return this->toString() == str;
+  m_comps.insert (m_comps.end (),
+                  comp.m_comps.begin (), comp.m_comps.end ());
+  return *this;
 }
 
-bool
-Name::operator!=(const string &str) const
+Name &
+Name::append (const Bytes &comp)
 {
-  return !(*this == str);
+  m_comps.push_back(comp);
+  return *this;
 }
 
-Name
-operator+(const Name &n1, const Name &n2)
+Name &
+Name::append (const string &compStr)
 {
-  vector<Bytes> comps = n1.m_comps;
-  copy(n2.m_comps.begin(), n2.m_comps.end(), back_inserter(comps));
-  return Name(comps);
+  Bytes comp (compStr.begin(), compStr.end());
+  return append (comp);
 }
 
-string
-Name::toString() const
+Name &
+Name::append (const void *buf, size_t size)
 {
-  stringstream ss(stringstream::out);
-  ss << *this;
+  Bytes comp (reinterpret_cast<const unsigned char*> (buf), reinterpret_cast<const unsigned char*> (buf) + size);
+  return append (comp);
+}
+
+Name &
+Name::appendNumber (uint64_t number)
+{
+  Bytes comp;
+  while (number > 0)
+    {
+      comp.push_back (static_cast<unsigned char> (number & 0xFF));
+      number >>= 8;
+    }
+  return append (comp);
+}
+
+Name &
+Name::appendNumberWithMarker (uint64_t number, unsigned char marker)
+{
+  Bytes comp;
+  comp.push_back (marker);
+
+  while (number > 0)
+    {
+      comp.push_back (static_cast<unsigned char> (number & 0xFF));
+      number >>= 8;
+    }
+  return append (comp);
+}
+
+inline Name &
+Name::appendVersion (uint64_t version/* = Name::nversion*/)
+{
+  if (version != Name::nversion)
+    return appendNumberWithMarker (version, 0xFD);
+  else
+    {
+      boost::posix_time::ptime now (boost::posix_time::microsec_clock::universal_time ());
+      version = (now.total_seconds () << 12) | (0xFFF & (now.fractional_seconds () / 244 /*( 1000,000 microseconds / 4096.0 resolution = last 12 bits)*/));
+      return appendNumberWithMarker (version, 0xFD);
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                GETTERS                                    //
+///////////////////////////////////////////////////////////////////////////////
+
+const Bytes &
+Name::get (int index) const
+{
+  if (index < 0)
+    {
+      index = m_comps.size () - 1 - index;
+    }
+
+  if (static_cast<unsigned int> (index) >= m_comps.size ())
+    {
+      boost::throw_exception (NameException() << error_info_str("Index out of range: " + boost::lexical_cast<string> (index)));
+    }
+  return m_comps [index];
+}
+
+Bytes &
+Name::get (int index)
+{
+  if (index < 0)
+    {
+      index = m_comps.size () - 1 - index;
+    }
+
+  if (static_cast<unsigned int> (index) >= m_comps.size())
+    {
+      boost::throw_exception(NameException() << error_info_str("Index out of range: " + boost::lexical_cast<string>(index)));
+    }
+  return m_comps[index];
+}
+
+
+/////
+///// Static helpers to convert name component to appropriate value
+/////
+
+std::string
+Name::asString (const Bytes &comp)
+{
+  ostringstream ss;
+  for (Bytes::const_iterator ch = comp.begin (); ch != comp.end (); ch++)
+  {
+    if (isprint(*ch))
+    {
+      ss << static_cast<char> (*ch);
+    }
+    else
+    {
+      ss << "%" << hex << setfill('0') << setw(2) << static_cast<unsigned int> (*ch);
+    }
+  }
+
   return ss.str();
 }
 
-Charbuf*
-Name::toCharbufRaw () const
+uint64_t
+Name::asNumber (const Bytes &comp) const
 {
-  Charbuf *ptr = new Charbuf ();
+  uint64_t ret = 0;
+  for (Bytes::const_reverse_iterator i = comp.rbegin (); i != comp.rend (); i++)
+    {
+      ret <<= 8;
+      ret |= *i;
+    }
+  return ret;
+}
+
+uint64_t
+Name::asNumberWithMarker (const Bytes &comp, unsigned char marker) const
+{
+  if (comp.empty () ||
+      *(comp.begin ()) != marker)
+    {
+      boost::throw_exception (NameException ()
+                              << error_info_str("Name component does not have required marker: " + Name::asString (comp)));
+    }
+  uint64_t ret = 0;
+  Bytes::const_reverse_iterator i = comp.rbegin ();
+  unsigned char value = *i;
+  i++;
+  for (; i != comp.rend (); i++)
+    {
+      ret <<= 8;
+      ret |= value;
+
+      value = *i;
+    }
+  return ret;
+}
+
+Name
+Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
+{
+  Name retval;
+
+  if (len == npos)
+    {
+      len = m_comps.size () - pos;
+    }
+  
+  if (pos + len > m_comps.size ())
+    {
+      boost::throw_exception (NameException() <<
+                              error_info_str ("getSubName parameter out of range"));
+    }
+
+  for (size_t i = pos; i < pos + len; i++)
+    {
+      retval.append (get (i));
+    }
+
+  return retval;
+}
+
+
+bool
+Name::operator==(const Name &name) const
+{
+  const_iterator i = begin ();
+  const_iterator j = name.begin ();
+
+  for (; i != end () && j != name.end (); i++, j++)
+    {
+      if (*i != *j)
+        return false;
+    }
+
+  return i == end () && j == name.end ();
+}
+
+Name
+Name::operator+ (const Name &name) const
+{
+  Name newName (*this);
+  copy (name.m_comps.begin(), name.m_comps.end(), back_inserter (newName));
+  return newName;
+}
+
+
+CharbufPtr
+Name::toCharbuf () const
+{
+  CharbufPtr ptr = make_shared<Charbuf> ();
 
   ccn_charbuf *cbuf = ptr->getBuf();
   ccn_name_init(cbuf);
@@ -179,147 +373,14 @@ Name::toCharbufRaw () const
   return ptr;
 }
 
-
-CharbufPtr
-Name::toCharbuf () const
+std::string
+Name::toUri () const
 {
-  return CharbufPtr (toCharbufRaw ());
-}
-
-Name &
-Name::appendComp(const Name &comp)
-{
-  m_comps.insert (m_comps.end (),
-                  comp.m_comps.begin (), comp.m_comps.end ());
-  return *this;
-}
-
-Name &
-Name::appendComp(const Bytes &comp)
-{
-  m_comps.push_back(comp);
-  return *this;
-}
-
-Name &
-Name::appendComp(const string &compStr)
-{
-  Bytes comp(compStr.begin(), compStr.end());
-  return appendComp(comp);
-}
-
-Name &
-Name::appendComp (const void *buf, size_t size)
-{
-  Bytes comp (reinterpret_cast<const unsigned char*> (buf), reinterpret_cast<const unsigned char*> (buf) + size);
-  return appendComp(comp);
-}
-
-Name &
-Name::appendComp(uint64_t number)
-{
-  Bytes comp;
-  comp.push_back (0);
-
-  while (number > 0)
-    {
-      comp.push_back (static_cast<unsigned char> (number & 0xFF));
-      number >>= 8;
-    }
-  return appendComp (comp);
-}
-
-uint64_t
-Name::getCompAsInt (int index) const
-{
-  Bytes comp = getComp(index);
-  if (comp.size () < 1 ||
-      comp[0] != 0)
-    {
-      boost::throw_exception(NameException()
-                             << error_info_str("Non integer component: " + getCompAsString(index)));
-    }
-  uint64_t ret = 0;
-  for (int i = comp.size () - 1; i >= 1; i--)
-    {
-      ret <<= 8;
-      ret |= comp [i];
-    }
-  return ret;
-}
-
-const Bytes &
-Name::getComp(int index) const
-{
-  if (index < 0)
-    {
-      boost::throw_exception(NameException() << error_info_str("Negative index: " + boost::lexical_cast<string>(index)));
-    }
-
-  if (static_cast<unsigned int> (index) >= m_comps.size())
-    {
-      boost::throw_exception(NameException() << error_info_str("Index out of range: " + boost::lexical_cast<string>(index)));
-    }
-  return m_comps[index];
-}
-
-string
-Name::getCompAsString(int index) const
-{
-  Bytes comp = getComp(index);
-  stringstream ss(stringstream::out);
-  int size = comp.size();
-  for (int i = 0; i < size; i++)
-  {
-    unsigned char ch = comp[i];
-    if (isprint(ch))
-    {
-      ss << (char) ch;
-    }
-    else
-    {
-      ss << "%" << hex << setfill('0') << setw(2) << (unsigned int)ch;
-    }
-  }
-
-  return ss.str();
-}
-
-Name
-Name::getPartialName(int start, int n) const
-{
-  int size = m_comps.size();
-  if (start < 0 || start >= size || (n > 0 && start + n > size))
-  {
-    stringstream ss(stringstream::out);
-    ss << "getPartialName() parameter out of range! ";
-    ss << "start = " << start;
-    ss << "n = " << n;
-    ss << "size = " << size;
-    boost::throw_exception(NameException() << error_info_str(ss.str()));
-  }
-
-  vector<Bytes> comps;
-  int end;
-  if (n > 0)
-  {
-    end = start + n;
-  }
-  else
-  {
-    end = size;
-  }
-
-  for (int i = start; i < end; i++)
-  {
-    comps.push_back(m_comps[i]);
-  }
-
-  return Name(comps);
+  return boost::lexical_cast<std::string> (*this)
 }
 
 ostream &
-operator <<(ostream &os, const Name &name)
+operator << (ostream &os, const Name &name)
 {
   int size = name.size();
   vector<string> strComps;
@@ -333,30 +394,29 @@ operator <<(ostream &os, const Name &name)
 }
 
 bool
-operator ==(const Name &n1, const Name &n2)
+Name::operator !=(const Name &name) const
 {
-  stringstream ss1(stringstream::out);
-  stringstream ss2(stringstream::out);
-  ss1 << n1;
-  ss2 << n2;
-  return ss1.str() == ss2.str();
+  return !(*this == name);
 }
 
 bool
-operator !=(const Name &n1, const Name &n2)
+Name::operator < (const Name &name) const
 {
-  return !(n1 == n2);
+  /// @todo implement comparison in the right way, without converting to URI
+  // const_iterator i = begin ();
+  // const_iterator j = name.begin ();
+
+  // for (; i != end () && j != name.end (); i++, j++)
+  //   {
+  //     if (*i ??? *j)
+  //       return false;
+  //   }
+
+  // return i == end () && j == name.end ();
+
+  
+  return toUri () < name.toUri ();
 }
 
-bool
-operator <(const Name &n1, const Name &n2)
-{
-  stringstream ss1(stringstream::out);
-  stringstream ss2(stringstream::out);
-  ss1 << n1;
-  ss2 << n2;
-  return ss1.str() < ss2.str();
-}
 
-
-} // Ccnx
+} // ndn
