@@ -63,7 +63,6 @@ def configure(conf):
         return
 
     conf.check_ccnx (path=conf.options.ccnx_dir)
-    conf.define ('CCNX_PATH', conf.env.CCNX_ROOT)
 
     if conf.options._test:
         conf.define ('_TESTS', 1)
@@ -88,11 +87,11 @@ def build (bld):
         includes = ".",
         )
 
-    libccnx = bld (
-        target="ccnx-cpp",
+    libndn_cxx = bld (
+        target="ndn.cxx",
         features=['cxx', 'cxxshlib'],
-        source = bld.path.ant_glob(['ccnx-cpp/**/*.cpp',
-                                    'libccnx-cpp.pc.in']),
+        source = bld.path.ant_glob(['ndn.cxx/**/*.cpp',
+                                    'libndn.cxx.pc.in']),
         use = 'TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
         includes = ".",
         )
@@ -104,12 +103,12 @@ def build (bld):
           features = "cxx cxxprogram",
           defines = "WAF",
           source = bld.path.ant_glob(['test/*.cc']),
-          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME LOG4CXX ccnx-cpp',
+          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME LOG4CXX ndn.cxx',
           includes = ".",
           install_prefix = None,
           )
 
-    headers = bld.path.ant_glob(['ccnx-cpp.h', 'ccnx-cpp/*.h'])
+    headers = bld.path.ant_glob(['ndn.cxx.h', 'ndn.cxx/*.h'])
     bld.install_files("%s" % bld.env['INCLUDEDIR'], headers, relative_trick=True)
 
 @Configure.conf

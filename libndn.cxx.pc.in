@@ -3,8 +3,7 @@ libdir=@LIBDIR@
 includedir=@INCLUDEDIR@
 
 Name: libccnx-cpp
-Description: C++ API for CCNx C library
+Description: C++ NDN API (currently a wrapper on top of CCNx C library)
 Version: @VERSION@
-Libs: -L${libdir} -lccnx-cpp
+Libs: -L${libdir} -lndn.cxx
 Cflags: -I${includedir}
-
