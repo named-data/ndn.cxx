@@ -19,7 +19,7 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ccnx-cpp.h"
+#include "ndn.cxx.h"
 #include <unistd.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -28,11 +28,11 @@
 
 #include "logging.h"
 
-using namespace Ccnx;
+using namespace ndn;
 using namespace std;
 using namespace boost;
 
-BOOST_AUTO_TEST_SUITE(TestCcnxWrapper)
+BOOST_AUTO_TEST_SUITE(TestndnWrapper)
 
 WrapperPtr c1;
 WrapperPtr c2;
@@ -41,17 +41,17 @@ int g_dataCallback_counter = 0;
 
 void publish1(const Name &name)
 {
-  string content = name.toString();
+  string content = name.toUri();
   c1->publishData(name, (const unsigned char*)content.c_str(), content.size(), 5);
 }
 
 void publish2(const Name &name)
 {
-  string content = name.toString();
+  string content = name.toUri();
   c2->publishData(name, (const unsigned char*)content.c_str(), content.size(), 5);
 }
 
-void dataCallback(const Name &name, Ccnx::PcoPtr pco)
+void dataCallback(const Name &name, ndn::PcoPtr pco)
 {
   cout << " in data callback" << endl;
   BytesPtr content = pco->contentPtr ();
@@ -60,7 +60,7 @@ void dataCallback(const Name &name, Ccnx::PcoPtr pco)
   BOOST_CHECK_EQUAL(name, msg);
 }
 
-void encapCallback(const Name &name, Ccnx::PcoPtr pco)
+void encapCallback(const Name &name, ndn::PcoPtr pco)
 {
   cout << " in encap data callback" << endl;
   BOOST_CHECK(!c1->verify(pco));
@@ -104,7 +104,7 @@ teardown()
 }
 
 
-BOOST_AUTO_TEST_CASE (BlaCcnxWrapperTest)
+BOOST_AUTO_TEST_CASE (BlandnWrapperTest)
 {
   INIT_LOGGERS ();
   
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE (BlaCcnxWrapperTest)
   teardown();
 }
 
-BOOST_AUTO_TEST_CASE (CcnxWrapperSelector)
+BOOST_AUTO_TEST_CASE (ndnWrapperSelector)
 {
 
   setup();
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE (TestUnsigned)
 
 
  /*
- BOOST_AUTO_TEST_CASE (CcnxWrapperUnsigningTest)
+ BOOST_AUTO_TEST_CASE (ndnWrapperUnsigningTest)
  {
    setup();
    Bytes data;

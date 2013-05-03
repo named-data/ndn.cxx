@@ -20,11 +20,11 @@
  */
 
 #include "verifier.h"
-#include "ccnx-cpp/wrapper.h"
+#include "ndn.cxx/wrapper.h"
 #include "logging.h"
 
-INIT_LOGGER ("Ccnx.Verifier");
-namespace Ccnx {
+INIT_LOGGER ("ndn.Verifier");
+namespace ndn {
 
 static const size_t ROOT_KEY_DIGEST_LEN = 32;  // SHA-256
 static const unsigned char ROOT_KEY_DIGEST[ROOT_KEY_DIGEST_LEN] = {0xa7, 0xd9, 0x8b, 0x81, 0xde, 0x13, 0xfc,
@@ -81,8 +81,8 @@ Verifier::verify(PcoPtr pco, double maxWait)
   {
     Name contentName = pco->name();
     // when checking for prefix, do not include the hash in the key name (which is the last component)
-    Name keyNamePrefix = keyName.getPartialName(0, keyNameSize - 1);
-    if (keyNamePrefix.size() >= contentName.size() || contentName.getPartialName(0, keyNamePrefix.size()) != keyNamePrefix)
+    Name keyNamePrefix = keyName.getPrefix (keyNameSize - 1);
+    if (keyNamePrefix.size() >= contentName.size() || contentName.getPrefix (keyNamePrefix.size()) != keyNamePrefix)
     {
       _LOG_ERROR("Key name prefix [" << keyNamePrefix << "] is not the prefix of content name [" << contentName << "]");
       return false;
@@ -93,7 +93,7 @@ Verifier::verify(PcoPtr pco, double maxWait)
     // for now, user can assign any data using his key
   }
 
-  Name metaName = keyName.getPartialName(0, keyNameSize - 1) + Name("/info") + keyName.getPartialName(keyNameSize - 1);
+  Name metaName = keyName.getPrefix (keyNameSize - 1) + Name("/info") + keyName.getSubName(keyNameSize - 1);
 
   Selectors selectors;
 
@@ -167,4 +167,4 @@ Verifier::verify(PcoPtr pco, double maxWait)
   return pco->verified();
 }
 
-} // Ccnx
+} // ndn

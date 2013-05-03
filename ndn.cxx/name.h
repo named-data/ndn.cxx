@@ -19,12 +19,12 @@
  *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_NAME_H
-#define CCNX_NAME_H
+#ifndef NDN_NAME_H
+#define NDN_NAME_H
 
 #include <boost/shared_ptr.hpp>
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/charbuf.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/charbuf.h"
 
 namespace ndn {
 
@@ -46,6 +46,8 @@ public:
   typedef std::vector<Bytes>::const_iterator const_iterator;
   typedef std::vector<Bytes>::reverse_iterator reverse_iterator;
   typedef std::vector<Bytes>::const_reverse_iterator const_reverse_iterator;
+  typedef std::vector<Bytes>::reference reference;
+  typedef std::vector<Bytes>::const_reference const_reference;
   
   ///////////////////////////////////////////////////////////////////////////////
   //                              CONSTRUCTORS                                 //
@@ -437,8 +439,8 @@ public:
 public:
   // Data Members (public):
   ///  Value returned by various member functions when they fail.
-  const size_t npos = static_cast<size_t> (-1);
-  const uint64_t nversion = static_cast<uint64_t> (-1);
+  const static size_t npos = static_cast<size_t> (-1);
+  const static uint64_t nversion = static_cast<uint64_t> (-1);
 
 private:
   std::vector<Bytes> m_comps;
@@ -529,12 +531,6 @@ Name::rend ()
 
 //// helpers
 
-inline std::string
-Name::asString (const Bytes &bytes)
-{
-  return std::string (reinterpret_cast<const char*> (head (bytes)), bytes.size ());
-}
-
 inline uint64_t
 Name::asSeqNum (const Bytes &bytes)
 {
@@ -578,12 +574,6 @@ inline void
 Name::push_back (const T &comp)
 {
   append (comp);
-}
-
-inline void
-Name::push_back (const void *buf, size_t size)
-{
-  append (buf, size);
 }
 
 inline Bytes &

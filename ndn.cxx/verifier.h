@@ -19,19 +19,19 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_VERIFIER_H
-#define CCNX_VERIFIER_H
+#ifndef NDN_VERIFIER_H
+#define NDN_VERIFIER_H
 
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/name.h"
-#include "ccnx-cpp/cert.h"
-#include "ccnx-cpp/pco.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/name.h"
+#include "ndn.cxx/cert.h"
+#include "ndn.cxx/pco.h"
 #include <map>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
 
-namespace Ccnx {
+namespace ndn {
 
 class Wrapper;
 
@@ -55,6 +55,6 @@ private:
   RecLock m_cacheLock;
 };
 
-} // Ccnx
+} // ndn
 
-#endif // CCNX_VERIFIER_H
+#endif // NDN_VERIFIER_H

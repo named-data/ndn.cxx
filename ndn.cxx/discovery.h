@@ -19,12 +19,12 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_DISCOVERY_H
-#define CCNX_DISCOVERY_H
+#ifndef NDN_DISCOVERY_H
+#define NDN_DISCOVERY_H
 
-#include "ccnx-cpp/wrapper.h"
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/name.h"
+#include "ndn.cxx/wrapper.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/name.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
@@ -37,7 +37,7 @@
 class Scheduler;
 typedef boost::shared_ptr<Scheduler> SchedulerPtr;
 
-namespace Ccnx
+namespace ndn
 {
 
 class Discovery;
@@ -108,6 +108,6 @@ private:
   Name m_localPrefix;
 };
 
-} // Ccnx
+} // ndn
 
-#endif // CCNX_DISCOVERY_H
+#endif // NDN_DISCOVERY_H

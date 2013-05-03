@@ -19,8 +19,8 @@
  *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_COMMON_H
-#define CCNX_COMMON_H
+#ifndef NDN_COMMON_H
+#define NDN_COMMON_H
 
 extern "C" {
 #include <ccn/ccn.h>
@@ -45,7 +45,7 @@ extern "C" {
 #include <boost/range/iterator_range.hpp>
 #include <boost/make_shared.hpp>
 
-namespace Ccnx {
+namespace ndn {
 typedef std::vector<unsigned char> Bytes;
 typedef std::vector<std::string>Comps;
 
@@ -170,5 +170,5 @@ deserializeGZipMsg(const Bytes &bytes)
 // Exceptions
 typedef boost::error_info<struct tag_errmsg, std::string> error_info_str;
 
-} // Ccnx
-#endif // CCNX_COMMON_H
+} // ndn
+#endif // NDN_COMMON_H

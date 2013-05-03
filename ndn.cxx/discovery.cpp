@@ -32,7 +32,7 @@
 
 using namespace std;
 
-namespace Ccnx
+namespace ndn
 {
 
 const string

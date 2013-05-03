@@ -32,12 +32,12 @@ extern "C" {
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 
-#include "ccnx-cpp/verifier.h"
+#include "ndn.cxx/verifier.h"
 #include "executor/executor.h"
 
 #include "logging.h"
 
-INIT_LOGGER ("Ccnx.Wrapper");
+INIT_LOGGER ("ndn.Wrapper");
 
 typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info_str;
 typedef boost::error_info<struct tag_errmsg, int> errmsg_info_int;
@@ -45,7 +45,7 @@ typedef boost::error_info<struct tag_errmsg, int> errmsg_info_int;
 using namespace std;
 using namespace boost;
 
-namespace Ccnx {
+namespace ndn {
 
 // hack to enable fake signatures
 // min length for signature field is 16, as defined in ccn_buf_decoder.c:728
@@ -134,7 +134,7 @@ Wrapper::connectCcnd()
   UniqueRecLock lock(m_mutex);
   if (ccn_connect(m_handle, NULL) < 0)
   {
-    BOOST_THROW_EXCEPTION (CcnxOperationException() << errmsg_info_str("connection to ccnd failed"));
+    BOOST_THROW_EXCEPTION (ndnOperationException() << errmsg_info_str("connection to ccnd failed"));
   }
   m_connected = true;
 
@@ -208,7 +208,7 @@ Wrapper::ccnLoop ()
           if (res < 0) {
             _LOG_ERROR ("ccn_run returned negative status: " << res);
 
-            BOOST_THROW_EXCEPTION (CcnxOperationException()
+            BOOST_THROW_EXCEPTION (ndnOperationException()
                                    << errmsg_info_str("ccn_run returned error"));
           }
 
@@ -226,10 +226,10 @@ Wrapper::ccnLoop ()
           int ret = poll (pfds, 1, 1);
           if (ret < 0)
             {
-              BOOST_THROW_EXCEPTION (CcnxOperationException() << errmsg_info_str("ccnd socket failed (probably ccnd got stopped)"));
+              BOOST_THROW_EXCEPTION (ndnOperationException() << errmsg_info_str("ccnd socket failed (probably ccnd got stopped)"));
             }
         }
-        catch (CcnxOperationException &e)
+        catch (ndnOperationException &e)
         {
           m_connected = false;
           // probably ccnd has been stopped
@@ -246,7 +246,7 @@ Wrapper::ccnLoop ()
               _LOG_DEBUG("reconnect to ccnd succeeded");
               break;
             }
-            catch (CcnxOperationException &e)
+            catch (ndnOperationException &e)
             {
               this_thread::sleep (boost::get_system_time () +  boost::posix_time::seconds (interval) + boost::posix_time::milliseconds (rangeUniformRandom ()));
 
@@ -324,7 +324,7 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
 
   if (ccn_sign_content(m_handle, content, pname, &sp, buf, len) != 0)
   {
-    BOOST_THROW_EXCEPTION(CcnxOperationException() << errmsg_info_str("sign content failed"));
+    BOOST_THROW_EXCEPTION(ndnOperationException() << errmsg_info_str("sign content failed"));
   }
 
   Bytes bytes;
@@ -354,7 +354,7 @@ Wrapper::putToCcnd (const Bytes &contentObject)
   if (ccn_put(m_handle, head(contentObject), contentObject.size()) < 0)
   {
     _LOG_ERROR ("ccn_put failed");
-    // BOOST_THROW_EXCEPTION(CcnxOperationException() << errmsg_info_str("ccnput failed"));
+    // BOOST_THROW_EXCEPTION(ndnOperationException() << errmsg_info_str("ccnput failed"));
   }
   else
     {

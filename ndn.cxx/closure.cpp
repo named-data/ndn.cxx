@@ -21,7 +21,7 @@
 
 #include "closure.h"
 
-namespace Ccnx {
+namespace ndn {
 
 Closure::Closure(const DataCallback &dataCallback, const TimeoutCallback &timeoutCallback)
   : m_timeoutCallback (timeoutCallback)
@@ -52,4 +52,4 @@ Closure::runDataCallback(Name name, PcoPtr content)
     }
 }
 
-} // Ccnx
+} // ndn

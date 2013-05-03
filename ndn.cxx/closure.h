@@ -19,14 +19,14 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_CLOSURE_H
-#define CCNX_CLOSURE_H
+#ifndef NDN_CLOSURE_H
+#define NDN_CLOSURE_H
 
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/name.h"
-#include "ccnx-cpp/selectors.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/name.h"
+#include "ndn.cxx/selectors.h"
 
-namespace Ccnx {
+namespace ndn {
 
 class ParsedContentObject;
 typedef boost::shared_ptr<ParsedContentObject> PcoPtr;
@@ -42,7 +42,7 @@ public:
   virtual ~Closure();
 
   virtual void
-  runDataCallback(Name name, Ccnx::PcoPtr pco);
+  runDataCallback(Name name, ndn::PcoPtr pco);
 
   virtual void
   runTimeoutCallback(Name interest, const Closure &closure, Selectors selectors);
@@ -55,6 +55,6 @@ public:
   DataCallback m_dataCallback;
 };
 
-} // Ccnx
+} // ndn
 
 #endif

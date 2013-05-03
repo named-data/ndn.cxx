@@ -19,15 +19,15 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_CONTENT_OBJECT_H
-#define CCNX_CONTENT_OBJECT_H
+#ifndef NDN_CONTENT_OBJECT_H
+#define NDN_CONTENT_OBJECT_H
 
-#include "ccnx-cpp/wrapper.h"
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/name.h"
-#include "ccnx-cpp/hash.h"
+#include "ndn.cxx/wrapper.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/name.h"
+#include "ndn.cxx/hash.h"
 
-namespace Ccnx {
+namespace ndn {
 
 struct MisformedContentObjectException : virtual boost::exception, virtual std::exception { };
 
@@ -105,4 +105,4 @@ typedef boost::shared_ptr<ParsedContentObject> PcoPtr;
 
 }
 
-#endif // CCNX_CONTENT_OBJECT_H
+#endif // NDN_CONTENT_OBJECT_H

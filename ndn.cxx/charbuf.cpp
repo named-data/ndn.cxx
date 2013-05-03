@@ -23,7 +23,7 @@
 
 using namespace std;
 
-namespace Ccnx {
+namespace ndn {
 
 void
 Charbuf::init(ccn_charbuf *buf)

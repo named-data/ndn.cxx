@@ -25,11 +25,11 @@
 
 #include "logging.h"
 
-INIT_LOGGER ("Ccnx.Cert");
+INIT_LOGGER ("ndn.Cert");
 
 using namespace std;
 
-namespace Ccnx {
+namespace ndn {
 
 Cert::Cert()
     : m_pkey(0)
@@ -129,4 +129,4 @@ Cert::validity()
   return WITHIN_VALID_TIME_SPAN;
 }
 
-} // Ccnx
+} // ndn

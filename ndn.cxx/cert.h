@@ -19,16 +19,16 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_CERT_H
-#define CCNX_CERT_H
+#ifndef NDN_CERT_H
+#define NDN_CERT_H
 
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/name.h"
-#include "ccnx-cpp/pco.h"
-#include "ccnx-cpp/hash.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/name.h"
+#include "ndn.cxx/pco.h"
+#include "ndn.cxx/hash.h"
 #include <boost/shared_ptr.hpp>
 
-namespace Ccnx {
+namespace ndn {
 
 class Cert
 {
@@ -96,4 +96,4 @@ typedef boost::shared_ptr<Cert> CertPtr;
 
 }
 
-#endif // CCNX_CERT_H
+#endif // NDN_CERT_H

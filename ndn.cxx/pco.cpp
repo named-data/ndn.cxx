@@ -20,9 +20,9 @@
  */
 
 #include "pco.h"
-#include "ccnx-cpp/cert.h"
+#include "ndn.cxx/cert.h"
 
-namespace Ccnx {
+namespace ndn {
 
 void
 ParsedContentObject::init(const unsigned char *data, size_t len)

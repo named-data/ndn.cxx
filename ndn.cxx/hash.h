@@ -19,8 +19,8 @@
  *         Zhenkai Zhu <zhenkai@cs.ucla.edu>
  */
 
-#ifndef CCNX_HASH_H
-#define CCNX_HASH_H
+#ifndef NDN_HASH_H
+#define NDN_HASH_H
 
 #include <string.h>
 #include <iostream>
@@ -28,9 +28,9 @@
 #include <boost/exception/all.hpp>
 #include <boost/filesystem.hpp>
 
-#include "ccnx-cpp/common.h"
+#include "ndn.cxx/common.h"
 
-namespace Ccnx
+namespace ndn
 {
 
 class Hash;
@@ -75,7 +75,7 @@ public:
   FromFileContent (const boost::filesystem::path &fileName);
 
   static HashPtr
-  FromBytes (const Ccnx::Bytes &bytes);
+  FromBytes (const ndn::Bytes &bytes);
 
   ~Hash ()
   {
@@ -169,4 +169,4 @@ operator << (std::ostream &os, const Hash &digest);
 
 }
 
-#endif // CCNX_HASH_H
+#endif // NDN_HASH_H

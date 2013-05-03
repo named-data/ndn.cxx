@@ -19,25 +19,25 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_WRAPPER_H
-#define CCNX_WRAPPER_H
+#ifndef NDN_WRAPPER_H
+#define NDN_WRAPPER_H
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
 
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/name.h"
-#include "ccnx-cpp/selectors.h"
-#include "ccnx-cpp/closure.h"
-#include "ccnx-cpp/pco.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/name.h"
+#include "ndn.cxx/selectors.h"
+#include "ndn.cxx/closure.h"
+#include "ndn.cxx/pco.h"
 
 class Executor;
 typedef boost::shared_ptr<Executor> ExecutorPtr;
 
-namespace Ccnx {
+namespace ndn {
 
-struct CcnxOperationException : boost::exception, std::exception { };
+struct ndnOperationException : boost::exception, std::exception { };
 
 class Verifier;
 class Wrapper
@@ -159,6 +159,6 @@ Wrapper::publishUnsignedData(const Name &name, const std::string &content, int f
 }
 
 
-} // Ccnx
+} // ndn
 
 #endif

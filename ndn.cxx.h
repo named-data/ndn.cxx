@@ -19,18 +19,18 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_ALL_H
-#define CCNX_ALL_H
+#ifndef NDN_CXX_ALL_H
+#define NDN_CXX_ALL_H
 
-#include <ccnx-cpp/cert.h>
-#include <ccnx-cpp/charbuf.h>
-#include <ccnx-cpp/closure.h>
-#include <ccnx-cpp/common.h>
-#include <ccnx-cpp/discovery.h>
-#include <ccnx-cpp/name.h>
-#include <ccnx-cpp/pco.h>
-#include <ccnx-cpp/selectors.h>
-#include <ccnx-cpp/verifier.h>
-#include <ccnx-cpp/wrapper.h>
+#include <ndn.cxx/cert.h>
+#include <ndn.cxx/charbuf.h>
+#include <ndn.cxx/closure.h>
+#include <ndn.cxx/common.h>
+#include <ndn.cxx/discovery.h>
+#include <ndn.cxx/name.h>
+#include <ndn.cxx/pco.h>
+#include <ndn.cxx/selectors.h>
+#include <ndn.cxx/verifier.h>
+#include <ndn.cxx/wrapper.h>
 
 #endif

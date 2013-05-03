@@ -209,7 +209,8 @@ Name::appendVersion (uint64_t version/* = Name::nversion*/)
     return appendNumberWithMarker (version, 0xFD);
   else
     {
-      boost::posix_time::ptime now (boost::posix_time::microsec_clock::universal_time ());
+      boost::posix_time::time_duration now (boost::posix_time::microsec_clock::universal_time () -
+                                            boost::posix_time::ptime (boost::gregorian::date (1970, boost::gregorian::Jan, 1)));
       version = (now.total_seconds () << 12) | (0xFFF & (now.fractional_seconds () / 244 /*( 1000,000 microseconds / 4096.0 resolution = last 12 bits)*/));
       return appendNumberWithMarker (version, 0xFD);
     }
@@ -275,7 +276,7 @@ Name::asString (const Bytes &comp)
 }
 
 uint64_t
-Name::asNumber (const Bytes &comp) const
+Name::asNumber (const Bytes &comp)
 {
   uint64_t ret = 0;
   for (Bytes::const_reverse_iterator i = comp.rbegin (); i != comp.rend (); i++)
@@ -287,7 +288,7 @@ Name::asNumber (const Bytes &comp) const
 }
 
 uint64_t
-Name::asNumberWithMarker (const Bytes &comp, unsigned char marker) const
+Name::asNumberWithMarker (const Bytes &comp, unsigned char marker)
 {
   if (comp.empty () ||
       *(comp.begin ()) != marker)
@@ -361,7 +362,7 @@ Name::operator+ (const Name &name) const
 CharbufPtr
 Name::toCharbuf () const
 {
-  CharbufPtr ptr = make_shared<Charbuf> ();
+  CharbufPtr ptr = boost::make_shared<Charbuf> ();
 
   ccn_charbuf *cbuf = ptr->getBuf();
   ccn_name_init(cbuf);
@@ -376,20 +377,18 @@ Name::toCharbuf () const
 std::string
 Name::toUri () const
 {
-  return boost::lexical_cast<std::string> (*this)
+  return boost::lexical_cast<std::string> (*this);
 }
 
 ostream &
 operator << (ostream &os, const Name &name)
 {
-  int size = name.size();
-  vector<string> strComps;
-  for (int i = 0; i < size; i++)
-  {
-    strComps.push_back(name.getCompAsString(i));
-  }
-  string joined = boost::algorithm::join(strComps, "/");
-  os << "/" << joined;
+  for (Name::const_iterator comp = name.begin (); comp != name.end (); comp++)
+    {
+      os << "/" << Name::asString (*comp);
+    }
+  if (name.size () == 0)
+    os << "/";
   return os;
 }
 

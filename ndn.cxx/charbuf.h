@@ -19,13 +19,13 @@
  *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_CCNX_CHARBUF_H
-#define CCNX_CCNX_CHARBUF_H
+#ifndef NDN_NDN_CHARBUF_H
+#define NDN_NDN_CHARBUF_H
 
-#include "ccnx-cpp/common.h"
+#include "ndn.cxx/common.h"
 #include <boost/shared_ptr.hpp>
 
-namespace Ccnx {
+namespace ndn {
 
 class Charbuf;
 typedef boost::shared_ptr<Charbuf> CharbufPtr;
@@ -65,4 +65,4 @@ protected:
 
 }
 
-#endif // CCNX_CCNX_CHARBUF_H
+#endif // NDN_NDN_CHARBUF_H

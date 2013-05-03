@@ -19,13 +19,13 @@
  *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef CCNX_SELECTORS_H
-#define CCNX_SELECTORS_H
+#ifndef NDN_SELECTORS_H
+#define NDN_SELECTORS_H
 
-#include "ccnx-cpp/common.h"
-#include "ccnx-cpp/name.h"
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/name.h"
 
-namespace Ccnx {
+namespace ndn {
 
 struct InterestSelectorException:
     virtual boost::exception, virtual std::exception {};
@@ -104,6 +104,6 @@ private:
   Bytes m_publisherPublicKeyDigest;
 };
 
-} // Ccnx
+} // ndn
 
 #endif

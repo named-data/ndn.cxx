@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace Ccnx {
+namespace ndn {
 
 Selectors::Selectors()
           : m_maxSuffixComps(-1)
@@ -154,12 +154,12 @@ Selectors::toCharbuf() const
 
   if (m_interestLifetime > 0.0)
   {
-    // Ccnx timestamp unit is weird 1/4096 second
+    // ndn timestamp unit is weird 1/4096 second
     // this is from their code
     unsigned lifetime = 4096 * (m_interestLifetime + 1.0/8192.0);
     if (lifetime == 0 || lifetime > (30 << 12))
     {
-      boost::throw_exception(InterestSelectorException() << error_info_str("Ccnx requires 0 < lifetime < 30.0. lifetime= " + boost::lexical_cast<string>(m_interestLifetime)));
+      boost::throw_exception(InterestSelectorException() << error_info_str("ndn requires 0 < lifetime < 30.0. lifetime= " + boost::lexical_cast<string>(m_interestLifetime)));
     }
     unsigned char buf[3] = {0};
     for (int i = sizeof(buf) - 1; i >= 0; i--, lifetime >>= 8)
@@ -174,4 +174,4 @@ Selectors::toCharbuf() const
   return ptr;
 }
 
-} // Ccnx
+} // ndn
