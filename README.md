@@ -30,7 +30,7 @@ sudo ./waf install
 Normally, default install goes to /usr/local.
 If you have added /usr/local/lib/pkgconfig to your `PKG_CONFIG_PATH`, then you can compile your code like this:
 ```bash
-g++ code.cpp `pkg-config --cflags --libs libccnx-cpp`
+g++ code.cpp `pkg-config --cflags --libs libndn.cxx`
 ```
 
 4. Examples
