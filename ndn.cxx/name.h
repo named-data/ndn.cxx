@@ -388,6 +388,12 @@ public:
   CharbufPtr
   toCharbuf () const;
 
+  /**
+   * @brief Convert to wire format   
+   */
+  std::ostream &
+  toWire (std::ostream &os) const;
+  
   /////////////////////////////////////////////////
   // Helpers and compatibility wrappers
   /**

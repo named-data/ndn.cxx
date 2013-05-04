@@ -34,11 +34,11 @@ Closure::~Closure ()
 }
 
 void
-Closure::runTimeoutCallback(Name interest, const Closure &closure, Selectors selectors)
+Closure::runTimeoutCallback(Name interest, const Closure &closure, InterestPtr origInterest)
 {
   if (!m_timeoutCallback.empty ())
     {
-      m_timeoutCallback (interest, closure, selectors);
+      m_timeoutCallback (interest, closure, origInterest);
     }
 }
 

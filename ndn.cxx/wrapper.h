@@ -28,7 +28,7 @@
 
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/name.h"
-#include "ndn.cxx/selectors.h"
+#include "ndn.cxx/interest.h"
 #include "ndn.cxx/closure.h"
 #include "ndn.cxx/pco.h"
 
@@ -45,7 +45,7 @@ class Wrapper
 public:
   const static int MAX_FRESHNESS = 2147; // max value for ccnx
   const static int DEFAULT_FRESHNESS = 60;
-  typedef boost::function<void (Name, Selectors)> InterestCallback;
+  typedef boost::function<void (InterestPtr)> InterestCallback;
 
   Wrapper();
   ~Wrapper();
@@ -66,7 +66,7 @@ public:
   clearInterestFilter (const Name &prefix, bool record = true);
 
   int
-  sendInterest (const Name &interest, const Closure &closure, const Selectors &selector = Selectors());
+  sendInterest (const Interest &interest, const Closure &closure);
 
   int
   publishData (const Name &name, const unsigned char *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &keyName=Name());
@@ -99,7 +99,7 @@ public:
   verify(PcoPtr &pco, double maxWait = 1 /*seconds*/);
 
   PcoPtr
-  get (const Name &interest, const Selectors &selector = Selectors(), double maxWait = 4.0/*seconds*/);
+  get (const Interest &interest, double maxWait = 4.0/*seconds*/);
 
 private:
   Wrapper(const Wrapper &other) {}

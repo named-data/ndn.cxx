@@ -27,6 +27,8 @@
 #include <boost/make_shared.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
+#include <ndn.cxx/ccnb.h>
+
 using namespace std;
 
 namespace ndn
@@ -366,12 +368,18 @@ Name::toCharbuf () const
 
   ccn_charbuf *cbuf = ptr->getBuf();
   ccn_name_init(cbuf);
-  int size = m_comps.size();
-  for (int i = 0; i < size; i++)
+  for (const_iterator comp = begin (); comp != end (); comp ++)
   {
-    ccn_name_append(cbuf, head(m_comps[i]), m_comps[i].size());
+    ccn_name_append (cbuf, head(*comp), comp->size ());
   }
   return ptr;
+}
+
+std::ostream &
+Name::toWire (std::ostream &os) const
+{
+  Ccnb::AppendName (os, *this);
+  return os;
 }
 
 std::string

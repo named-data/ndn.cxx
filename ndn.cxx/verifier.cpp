@@ -95,13 +95,13 @@ Verifier::verify(PcoPtr pco, double maxWait)
 
   Name metaName = keyName.getPrefix (keyNameSize - 1) + Name("/info") + keyName.getSubName(keyNameSize - 1);
 
-  Selectors selectors;
+  Interest interest (metaName);
 
-  selectors.childSelector(Selectors::RIGHT)
-           .interestLifetime(maxWait);
+  interest.setChildSelector (Interest::CHILD_RIGHT)
+    .setInterestLifetime(maxWait);
 
-  PcoPtr keyObject = m_ccnx->get(keyName, selectors, maxWait);
-  PcoPtr metaObject = m_ccnx->get(metaName, selectors, maxWait);
+  PcoPtr keyObject = m_ccnx->get(keyName, maxWait);
+  PcoPtr metaObject = m_ccnx->get(metaName, maxWait);
   if (!keyObject || !metaObject )
   {
     _LOG_ERROR("can not fetch key or meta");

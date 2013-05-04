@@ -446,10 +446,10 @@ incomingInterest(ccn_closure *selfp,
       return CCN_UPCALL_RESULT_OK;
     }
 
-  Name interest(info->interest_ccnb, info->interest_comps);
-  Selectors selectors(info->pi);
+  InterestPtr interest = make_shared<Interest> (info->pi);
+  interest->setName (Name (info->interest_ccnb, info->interest_comps));
 
-  executor->execute (bind (*f, interest, selectors));
+  executor->execute (bind (*f, interest));
   // this will be run in executor
   // (*f) (interest);
   // closure->runInterestCallback(interest);
@@ -458,7 +458,7 @@ incomingInterest(ccn_closure *selfp,
 }
 
 static void
-deleterInDataTuple (tuple<Closure *, ExecutorPtr, Selectors> *tuple)
+deleterInDataTuple (tuple<Closure *, ExecutorPtr, InterestPtr> *tuple)
 {
   delete tuple->get<0> ();
   delete tuple;
@@ -472,9 +472,9 @@ incomingData(ccn_closure *selfp,
   // Closure *cp = static_cast<Closure *> (selfp->data);
   Closure *cp;
   ExecutorPtr executor;
-  Selectors selectors;
-  tuple<Closure *, ExecutorPtr, Selectors> *realData = reinterpret_cast< tuple<Closure*, ExecutorPtr, Selectors>* > (selfp->data);
-  tie (cp, executor, selectors) = *realData;
+  InterestPtr interest;
+  tuple<Closure *, ExecutorPtr, InterestPtr> *realData = reinterpret_cast< tuple<Closure*, ExecutorPtr, InterestPtr>* > (selfp->data);
+  tie (cp, executor, interest) = *realData;
 
   switch (kind)
     {
@@ -503,9 +503,9 @@ incomingData(ccn_closure *selfp,
     case CCN_UPCALL_INTEREST_TIMED_OUT: {
       if (cp != NULL)
       {
-        Name interest(info->interest_ccnb, info->interest_comps);
+        Name interestName (info->interest_ccnb, info->interest_comps);
         _LOG_TRACE ("<< incomingData timeout: " << Name (info->interest_ccnb, info->interest_comps));
-        executor->execute (bind (&Closure::runTimeoutCallback, cp, interest, *cp, selectors));
+        executor->execute (bind (&Closure::runTimeoutCallback, cp, interestName, *cp, interest));
       }
       else
         {
@@ -528,9 +528,9 @@ incomingData(ccn_closure *selfp,
   return CCN_UPCALL_RESULT_OK;
 }
 
-int Wrapper::sendInterest (const Name &interest, const Closure &closure, const Selectors &selectors)
+int Wrapper::sendInterest (const Interest &interest, const Closure &closure)
 {
-  _LOG_TRACE (">> sendInterest: " << interest);
+  _LOG_TRACE (">> sendInterest: " << interest.getName ());
   {
     UniqueRecLock lock(m_mutex);
     if (!m_running || !m_connected)
@@ -540,25 +540,19 @@ int Wrapper::sendInterest (const Name &interest, const Closure &closure, const S
       }
   }
 
-  CharbufPtr namePtr = interest.toCharbuf();
-  ccn_charbuf *pname = namePtr->getBuf();
   ccn_closure *dataClosure = new ccn_closure;
 
   // Closure *myClosure = new ExecutorClosure(closure, m_executor);
   Closure *myClosure = closure.dup ();
-  dataClosure->data = new tuple<Closure*, ExecutorPtr, Selectors> (myClosure, m_executor, selectors);
+  dataClosure->data = new tuple<Closure*, ExecutorPtr, InterestPtr> (myClosure, m_executor, make_shared<Interest> (interest));
 
   dataClosure->p = &incomingData;
 
-  CharbufPtr selectorsPtr = selectors.toCharbuf();
-  ccn_charbuf *templ = NULL;
-  if (selectorsPtr)
-  {
-    templ = selectorsPtr->getBuf();
-  }
-
   UniqueRecLock lock(m_mutex);
-  if (ccn_express_interest (m_handle, pname, dataClosure, templ) < 0)
+  if (ccn_express_interest (m_handle, interest.getName ().toCharbuf ()->getBuf (),
+                            dataClosure,
+                            interest.toCharbuf ()->getBuf ()
+                            ) < 0)
   {
     _LOG_ERROR ("<< sendInterest: ccn_express_interest FAILED!!!");
   }
@@ -764,9 +758,9 @@ private:
 
 
 PcoPtr
-Wrapper::get(const Name &interest, const Selectors &selectors, double maxWait/* = 4.0*/)
+Wrapper::get(const Interest &interest, double maxWait/* = 4.0*/)
 {
-  _LOG_TRACE (">> get: " << interest);
+  _LOG_TRACE (">> get: " << interest.getName ());
   {
     UniqueRecLock lock(m_mutex);
     if (!m_running || !m_connected)
@@ -778,8 +772,7 @@ Wrapper::get(const Name &interest, const Selectors &selectors, double maxWait/* 
 
   GetState state (maxWait);
   this->sendInterest (interest, Closure (boost::bind (&GetState::DataCallback, &state, _1, _2),
-                                         boost::bind (&GetState::TimeoutCallback, &state, _1)),
-                      selectors);
+                                         boost::bind (&GetState::TimeoutCallback, &state, _1)));
   return state.WaitForResult ();
 }
 

@@ -24,7 +24,7 @@
 
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/name.h"
-#include "ndn.cxx/selectors.h"
+#include "ndn.cxx/interest.h"
 
 namespace ndn {
 
@@ -36,7 +36,7 @@ class Closure
 public:
   typedef boost::function<void (Name, PcoPtr pco)> DataCallback;
 
-  typedef boost::function<void (Name, const Closure &, Selectors)> TimeoutCallback;
+  typedef boost::function<void (Name, const Closure &, InterestPtr)> TimeoutCallback;
 
   Closure(const DataCallback &dataCallback, const TimeoutCallback &timeoutCallback = TimeoutCallback());
   virtual ~Closure();
@@ -45,7 +45,7 @@ public:
   runDataCallback(Name name, ndn::PcoPtr pco);
 
   virtual void
-  runTimeoutCallback(Name interest, const Closure &closure, Selectors selectors);
+  runTimeoutCallback(Name interest, const Closure &closure, InterestPtr originalInterest);
 
   virtual Closure *
   dup () const { return new Closure (*this); }

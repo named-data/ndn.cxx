@@ -29,7 +29,7 @@
 #include <ndn.cxx/discovery.h>
 #include <ndn.cxx/name.h>
 #include <ndn.cxx/pco.h>
-#include <ndn.cxx/selectors.h>
+#include <ndn.cxx/interest.h>
 #include <ndn.cxx/verifier.h>
 #include <ndn.cxx/wrapper.h>
 

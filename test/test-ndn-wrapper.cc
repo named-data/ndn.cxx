@@ -39,16 +39,16 @@ WrapperPtr c2;
 int g_timeout_counter = 0;
 int g_dataCallback_counter = 0;
 
-void publish1(const Name &name)
+void publish1(InterestPtr interest)
 {
-  string content = name.toUri();
-  c1->publishData(name, (const unsigned char*)content.c_str(), content.size(), 5);
+  string content = interest->getName ().toUri();
+  c1->publishData(interest->getName (), (const unsigned char*)content.c_str(), content.size(), 5);
 }
 
-void publish2(const Name &name)
+void publish2(InterestPtr interest)
 {
-  string content = name.toUri();
-  c2->publishData(name, (const unsigned char*)content.c_str(), content.size(), 5);
+  string content = interest->getName ().toUri();
+  c2->publishData(interest->getName (), (const unsigned char*)content.c_str(), content.size(), 5);
 }
 
 void dataCallback(const Name &name, ndn::PcoPtr pco)
@@ -72,7 +72,7 @@ void encapCallback(const Name &name, ndn::PcoPtr pco)
 }
 
 void
-timeout(const Name &name, const Closure &closure, Selectors selectors)
+timeout(const Name &name, const Closure &closure, InterestPtr origInterest)
 {
   g_timeout_counter ++;
 }
@@ -132,17 +132,16 @@ BOOST_AUTO_TEST_CASE (BlandnWrapperTest)
 
 BOOST_AUTO_TEST_CASE (ndnWrapperSelector)
 {
-
   setup();
   Closure closure (bind(dataCallback, _1, _2), bind(timeout, _1, _2, _3));
 
-  Selectors selectors;
-  selectors
-    .interestLifetime(1)
-    .childSelector(Selectors::RIGHT);
+  Interest interest;
+  interest
+    .setInterestLifetime(1)
+    .setChildSelector (Interest::CHILD_RIGHT);
 
   string n1 = "/random/01";
-  c1->sendInterest(Name(n1), closure, selectors);
+  c1->sendInterest (Interest (interest).setName (Name(n1)), closure);
   sleep(2);
   c2->publishData(Name(n1), (const unsigned char *)n1.c_str(), n1.size(), 1);
   usleep(100000);
@@ -150,8 +149,8 @@ BOOST_AUTO_TEST_CASE (ndnWrapperSelector)
   BOOST_CHECK_EQUAL(g_dataCallback_counter, 0);
 
   string n2 = "/random/02";
-  selectors.interestLifetime(2);
-  c1->sendInterest(Name(n2), closure, selectors);
+  interest.setInterestLifetime(2);
+  c1->sendInterest(Interest (interest).setName (Name(n2)), closure);
   sleep(1);
   c2->publishData(Name(n2), (const unsigned char *)n2.c_str(), n2.size(), 1);
   usleep(100000);
@@ -167,10 +166,10 @@ BOOST_AUTO_TEST_CASE (ndnWrapperSelector)
 }
 
 void
-reexpress(const Name &name, const Closure &closure, Selectors selectors)
+reexpress(const Name &name, const Closure &closure, InterestPtr origInterest)
 {
   g_timeout_counter ++;
-  c1->sendInterest(name, closure, selectors);
+  c1->sendInterest (*origInterest, closure);
 }
 
 BOOST_AUTO_TEST_CASE (TestTimeout)
@@ -180,11 +179,14 @@ BOOST_AUTO_TEST_CASE (TestTimeout)
   g_timeout_counter = 0;
   Closure closure (bind(dataCallback, _1, _2), bind(reexpress, _1, _2, _3));
 
-  Selectors selectors;
-  selectors.interestLifetime(1);
-
   string n1 = "/random/04";
-  c1->sendInterest(Name(n1), closure, selectors);
+
+  Interest interest;
+  interest
+    .setInterestLifetime(1)
+    .setName (n1);
+
+  c1->sendInterest(interest, closure);
   usleep(3500000);
   c2->publishData(Name(n1), (const unsigned char *)n1.c_str(), n1.size(), 1);
   usleep(100000);
