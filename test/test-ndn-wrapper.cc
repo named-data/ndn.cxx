@@ -21,6 +21,7 @@
 
 #include "ndn.cxx.h"
 #include <unistd.h>
+#include <fstream>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/test/unit_test.hpp>
@@ -123,6 +124,7 @@ BOOST_AUTO_TEST_CASE (BlandnWrapperTest)
   c2->sendInterest(Name("/c1/hi"), closure);
   sleep(1);
   BOOST_CHECK_EQUAL(g_dataCallback_counter, 2);
+  
   // reset
   g_dataCallback_counter = 0;
   g_timeout_counter = 0;
@@ -198,7 +200,7 @@ BOOST_AUTO_TEST_CASE (TestTimeout)
 BOOST_AUTO_TEST_CASE (TestUnsigned)
 {
   setup();
-  string n1 = "/xxxxxx/unsigned/01";
+  string n1 = "/xxxxxx/unsigned/001";
   Closure closure (bind(dataCallback, _1, _2), bind(timeout, _1, _2, _3));
 
   g_dataCallback_counter = 0;
@@ -208,8 +210,9 @@ BOOST_AUTO_TEST_CASE (TestUnsigned)
   usleep(100000);
   BOOST_CHECK_EQUAL(g_dataCallback_counter, 1);
 
-  string n2 = "/xxxxxx/signed/01";
+  string n2 = "/xxxxxx/signed/001";
   Bytes content = c1->createContentObject(Name(n1), (const unsigned char *)n2.c_str(), n2.size(), 1);
+
   c1->publishUnsignedData(Name(n2), head(content), content.size(), 1);
   Closure encapClosure(bind(encapCallback, _1, _2), bind(timeout, _1, _2, _3));
   c2->sendInterest(Name(n2), encapClosure);

@@ -297,6 +297,8 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
     CharbufPtr defaultKeyNamePtr = boost::make_shared<Charbuf>();
     ccn_get_public_key_and_name(m_handle, &sp, NULL, NULL, defaultKeyNamePtr->getBuf());
     keyName = Name(*defaultKeyNamePtr);
+
+    _LOG_DEBUG ("DEFAULT KEY NAME: " << keyName);
   }
   else
   {
@@ -367,6 +369,7 @@ Wrapper::putToCcnd (const Bytes &contentObject)
 int
 Wrapper::publishData (const Name &name, const unsigned char *buf, size_t len, int freshness, const Name &keyName)
 {
+  _LOG_TRACE ("publishData: " << name);
   Bytes co = createContentObject(name, buf, len, freshness, keyName);
   return putToCcnd(co);
 }
@@ -374,6 +377,7 @@ Wrapper::publishData (const Name &name, const unsigned char *buf, size_t len, in
 int
 Wrapper::publishUnsignedData(const Name &name, const unsigned char *buf, size_t len, int freshness)
 {
+  _LOG_TRACE ("publishUnsignedData: " << name);
   {
     UniqueRecLock lock(m_mutex);
     if (!m_running || !m_connected)

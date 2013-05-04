@@ -9,16 +9,16 @@ ndn::Name InterestBaseName;
 // create a global handler
 ndn::Wrapper handler;
 
-void OnInterest (ndn::Name name, ndn::Selectors selectors)
+void OnInterest (ndn::InterestPtr interest)
 {
-  cerr << name << endl;
+  cerr << interest->getName () << endl;
   
   static int COUNTER = 0;
 
   ostringstream os;
   os << "C++ LINE #" << (COUNTER++) << endl;
   
-  handler.publishData (name, os.str (), 5);
+  handler.publishData (interest->getName (), os.str (), 5);
 }
 
 int

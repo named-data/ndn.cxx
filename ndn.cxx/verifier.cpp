@@ -93,15 +93,18 @@ Verifier::verify(PcoPtr pco, double maxWait)
     // for now, user can assign any data using his key
   }
 
-  Name metaName = keyName.getPrefix (keyNameSize - 1) + Name("/info") + keyName.getSubName(keyNameSize - 1);
+  Name metaName;
+  metaName
+    .append (keyName.getPrefix (keyNameSize - 1))
+    .append ("info")
+    .append (keyName.getSubName (keyNameSize - 1));
 
-  Interest interest (metaName);
-
+  Interest interest;
   interest.setChildSelector (Interest::CHILD_RIGHT)
     .setInterestLifetime(maxWait);
 
-  PcoPtr keyObject = m_ccnx->get(keyName, maxWait);
-  PcoPtr metaObject = m_ccnx->get(metaName, maxWait);
+  PcoPtr keyObject = m_ccnx->get(Interest (interest).setName (keyName), maxWait);
+  PcoPtr metaObject = m_ccnx->get(Interest (interest).setName (metaName), maxWait);
   if (!keyObject || !metaObject )
   {
     _LOG_ERROR("can not fetch key or meta");

@@ -163,7 +163,9 @@ Interest::toCharbuf() const
 
   if (!m_interestLifetime.is_negative ())
   {
-    double interestLifetime = m_interestLifetime.total_seconds () + (m_interestLifetime.total_microseconds () / 1000000.0);
+    double interestLifetime =
+      m_interestLifetime.total_seconds () +
+      ((m_interestLifetime.total_microseconds () % 1000000) / 1000000.0);
     
     // ndn timestamp unit is weird 1/4096 second
     // this is from their code

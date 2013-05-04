@@ -11,7 +11,7 @@ ndn::Name InterestBaseName;
 ndn::Wrapper handler;
 
 void OnData (ndn::Name name, ndn::PcoPtr pco);
-void OnTimeout (ndn::Name name, const ndn::Closure &closure, ndn::Selectors selectors);
+void OnTimeout (ndn::Name name, const ndn::Closure &closure, ndn::InterestPtr origInterest);
 
 void OnData (ndn::Name name, ndn::PcoPtr pco)
 {
@@ -25,15 +25,16 @@ void OnData (ndn::Name name, ndn::PcoPtr pco)
     }
 
   cerr << ">> C++ " << ndn::Name (InterestBaseName).appendSeqNum (seqnum + 1) << endl; // a shortcut to construct name
-  handler.sendInterest (ndn::Name (InterestBaseName).appendSeqNum (seqnum + 1),
-                        ndn::Closure (OnData, OnTimeout),
-                        ndn::Selectors ().scope (ndn::Selectors::SCOPE_LOCAL_HOST));
+  handler.sendInterest (ndn::Interest ()
+                        .setName (ndn::Name (InterestBaseName).appendSeqNum (seqnum + 1))
+                        .setScope (ndn::Interest::SCOPE_LOCAL_HOST),
+                        ndn::Closure (OnData, OnTimeout));
 }
 
-void OnTimeout (ndn::Name name, const ndn::Closure &closure, ndn::Selectors selectors)
+void OnTimeout (ndn::Name name, const ndn::Closure &closure, ndn::InterestPtr origInterest)
 {
   // re-express interest
-  handler.sendInterest (name, closure, selectors);
+  handler.sendInterest (*origInterest, closure);
 }
 
 int
@@ -52,9 +53,10 @@ main (int argc, char **argv)
   InterestBaseName.append (FILENAME);
 
   cerr << ">> C++ " << ndn::Name (InterestBaseName).appendSeqNum (0) << endl;
-  handler.sendInterest (ndn::Name (InterestBaseName).appendSeqNum (0),
-                        ndn::Closure (OnData, OnTimeout),
-                        ndn::Selectors ().scope (ndn::Selectors::SCOPE_LOCAL_HOST));
+  handler.sendInterest (ndn::Interest ()
+                        .setName (ndn::Name (InterestBaseName).appendSeqNum (0))
+                        .setScope (ndn::Interest::SCOPE_LOCAL_HOST),
+                        ndn::Closure (OnData, OnTimeout));
 
   sleep (3);
   return 0;

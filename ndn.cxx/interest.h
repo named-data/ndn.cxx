@@ -154,7 +154,7 @@ public:
    */
   enum Scope
     {
-      NO_SCOPE = -1,
+      NO_SCOPE = 255,
       SCOPE_LOCAL_CCND = 0,
       SCOPE_LOCAL_HOST = 1,
       SCOPE_NEXT_HOST = 2
