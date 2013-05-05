@@ -8,12 +8,11 @@ def options(opt):
     opt.add_option('--test', action='store_true',default=False,dest='_test',help='''build unit tests''')
     opt.add_option('--log4cxx', action='store_true',default=False,dest='log4cxx',help='''Compile with log4cxx logging support''')
 
-    opt.load('compiler_c compiler_cxx boost ccnx')
+    opt.load('compiler_c compiler_cxx boost ccnx doxygen gnu_dirs')
     opt.load('tinyxml', tooldir=['waf-tools'])
-    opt.load('gnu_dirs')
 
 def configure(conf):
-    conf.load("compiler_c compiler_cxx")
+    conf.load("compiler_c compiler_cxx boost ccnx gnu_dirs tinyxml doxygen")
 
     if conf.options.debug:
         conf.define ('_DEBUG', 1)
@@ -47,14 +46,8 @@ def configure(conf):
         conf.check_cfg(package='liblog4cxx', args=['--cflags', '--libs'], uselib_store='LOG4CXX', mandatory=True)
         conf.define ("HAVE_LOG4CXX", 1)
 
-    conf.load('tinyxml')
     conf.check_tinyxml(path=conf.options.tinyxml_dir)
 
-    conf.load ('ccnx')
-
-    conf.load('boost')
-
-    conf.load('gnu_dirs')
     conf.check_boost(lib='system test iostreams filesystem thread date_time')
 
     boost_version = conf.env.BOOST_VERSION.split('_')
@@ -126,3 +119,29 @@ def add_supported_cxxflags(self, cxxflags):
 
     self.end_msg (' '.join (supportedFlags))
     self.env.CXXFLAGS += supportedFlags
+
+
+# doxygen docs
+from waflib.Build import BuildContext
+class doxy (BuildContext):
+    cmd = "doxygen"
+    fun = "doxygen"
+
+def doxygen (bld):
+    if not bld.env.DOXYGEN:
+        bld.fatal ("ERROR: cannot build documentation (`doxygen' is not found in $PATH)")
+    bld (features="doxygen",
+         doxyfile='doc/doxygen.conf')
+
+# doxygen docs
+from waflib.Build import BuildContext
+class sphinx (BuildContext):
+    cmd = "sphinx"
+    fun = "sphinx"
+
+def sphinx (bld):
+    bld.load('sphinx_build', tooldir=['waf-tools'])
+
+    bld (features="sphinx",
+         outdir = "doc/html",
+         source = "doc/source/conf.py")
