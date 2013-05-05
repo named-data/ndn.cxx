@@ -126,7 +126,7 @@ Interest::toCharbuf() const
 
   if (m_maxSuffixComponents < m_minSuffixComponents)
   {
-    boost::throw_exception(InterestException() << error_info_str("MaxSuffixComps = " + boost::lexical_cast<string>(m_maxSuffixComponents) + " is smaller than  MinSuffixComps = " + boost::lexical_cast<string>(m_minSuffixComponents)));
+    boost::throw_exception(Error::Interest() << error_info_str("MaxSuffixComps = " + boost::lexical_cast<string>(m_maxSuffixComponents) + " is smaller than  MinSuffixComps = " + boost::lexical_cast<string>(m_minSuffixComponents)));
   }
 
   if (m_minSuffixComponents != Interest::ncomps)
@@ -172,7 +172,7 @@ Interest::toCharbuf() const
     unsigned lifetime = 4096 * (interestLifetime + 1.0/8192.0);
     if (lifetime == 0 || lifetime > (30 << 12))
     {
-      boost::throw_exception (InterestException() << error_info_str("ndn requires 0 < lifetime < 30.0. lifetime= " + boost::lexical_cast<string>(interestLifetime)));
+      boost::throw_exception (Error::Interest() << error_info_str("ndn requires 0 < lifetime < 30.0. lifetime= " + boost::lexical_cast<string>(interestLifetime)));
     }
     unsigned char buf[3] = {0};
     for (int i = sizeof(buf) - 1; i >= 0; i--, lifetime >>= 8)

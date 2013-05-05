@@ -48,6 +48,7 @@ namespace fs = boost::filesystem;
 namespace ndn
 {
 
+/// @cond include_hidden
 template<class CharType>
 struct hex_from_4_bit
 {
@@ -63,6 +64,7 @@ struct hex_from_4_bit
 
 typedef transform_iterator<hex_from_4_bit<string::const_iterator::value_type>,
                            transform_width<string::const_iterator, 4, 8, string::const_iterator::value_type> > string_from_binary;
+
 
 
 template<class CharType>
@@ -94,7 +96,7 @@ struct hex_to_4_bit
 };
 
 typedef transform_width<transform_iterator<hex_to_4_bit<string::const_iterator::value_type>, string::const_iterator>, 8, 4> string_to_binary;
-
+/// @endcond
 
 std::ostream &
 operator << (std::ostream &os, const Hash &hash)

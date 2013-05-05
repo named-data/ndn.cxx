@@ -33,7 +33,7 @@ ParsedContentObject::init(const unsigned char *data, size_t len)
   int res = ccn_parse_ContentObject(head (m_bytes), len, &m_pco, m_comps);
   if (res < 0)
   {
-    boost::throw_exception(MisformedContentObjectException());
+    boost::throw_exception(Error::MisformedContentObject());
   }
 
 }
@@ -73,7 +73,7 @@ ParsedContentObject::content() const
   int res = ccn_content_get_value(head(m_bytes), m_pco.offset[CCN_PCO_E], &m_pco, &content, &len);
   if (res < 0)
   {
-    boost::throw_exception(MisformedContentObjectException());
+    boost::throw_exception(Error::MisformedContentObject());
   }
 
   Bytes bytes;
@@ -89,7 +89,7 @@ ParsedContentObject::contentPtr() const
   int res = ccn_content_get_value(head(m_bytes), m_pco.offset[CCN_PCO_E], &m_pco, &content, &len);
   if (res < 0)
   {
-    boost::throw_exception(MisformedContentObjectException());
+    boost::throw_exception(Error::MisformedContentObject());
   }
 
   return readRawPtr (content, len);

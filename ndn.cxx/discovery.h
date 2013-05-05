@@ -43,6 +43,9 @@ namespace ndn
 class Discovery;
 typedef boost::shared_ptr<Discovery> DiscoveryPtr;
 
+namespace discovery
+{
+
 class TaggedFunction
 {
 public:
@@ -68,6 +71,8 @@ private:
   std::string m_tag;
 };
 
+}
+
 class Discovery
 {
 public:
@@ -77,11 +82,11 @@ public:
   // otherwise you may have undefined behavior if the callback is
   // bind to a member function of an object and the object is deleted
   static void
-  registerCallback(const TaggedFunction &callback);
+  registerCallback(const discovery::TaggedFunction &callback);
 
   // remember to call this before you quit
   static void
-  deregisterCallback(const TaggedFunction &callback);
+  deregisterCallback(const discovery::TaggedFunction &callback);
 
 private:
   Discovery();
@@ -91,15 +96,15 @@ private:
   poll();
 
   void
-  addCallback(const TaggedFunction &callback);
+  addCallback(const discovery::TaggedFunction &callback);
 
   int
-  deleteCallback(const TaggedFunction &callback);
+  deleteCallback(const discovery::TaggedFunction &callback);
 
 private:
   typedef boost::mutex Mutex;
   typedef boost::unique_lock<Mutex> Lock;
-  typedef std::list<TaggedFunction> List;
+  typedef std::list<discovery::TaggedFunction> List;
 
   static Discovery *instance;
   static Mutex mutex;

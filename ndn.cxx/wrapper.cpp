@@ -134,7 +134,7 @@ Wrapper::connectCcnd()
   UniqueRecLock lock(m_mutex);
   if (ccn_connect(m_handle, NULL) < 0)
   {
-    BOOST_THROW_EXCEPTION (ndnOperationException() << errmsg_info_str("connection to ccnd failed"));
+    BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("connection to ccnd failed"));
   }
   m_connected = true;
 
@@ -208,7 +208,7 @@ Wrapper::ccnLoop ()
           if (res < 0) {
             _LOG_ERROR ("ccn_run returned negative status: " << res);
 
-            BOOST_THROW_EXCEPTION (ndnOperationException()
+            BOOST_THROW_EXCEPTION (Error::ndnOperation()
                                    << errmsg_info_str("ccn_run returned error"));
           }
 
@@ -226,10 +226,10 @@ Wrapper::ccnLoop ()
           int ret = poll (pfds, 1, 1);
           if (ret < 0)
             {
-              BOOST_THROW_EXCEPTION (ndnOperationException() << errmsg_info_str("ccnd socket failed (probably ccnd got stopped)"));
+              BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("ccnd socket failed (probably ccnd got stopped)"));
             }
         }
-        catch (ndnOperationException &e)
+        catch (Error::ndnOperation &e)
         {
           m_connected = false;
           // probably ccnd has been stopped
@@ -246,7 +246,7 @@ Wrapper::ccnLoop ()
               _LOG_DEBUG("reconnect to ccnd succeeded");
               break;
             }
-            catch (ndnOperationException &e)
+            catch (Error::ndnOperation &e)
             {
               this_thread::sleep (boost::get_system_time () +  boost::posix_time::seconds (interval) + boost::posix_time::milliseconds (rangeUniformRandom ()));
 
@@ -326,7 +326,7 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
 
   if (ccn_sign_content(m_handle, content, pname, &sp, buf, len) != 0)
   {
-    BOOST_THROW_EXCEPTION(ndnOperationException() << errmsg_info_str("sign content failed"));
+    BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("sign content failed"));
   }
 
   Bytes bytes;
@@ -356,7 +356,7 @@ Wrapper::putToCcnd (const Bytes &contentObject)
   if (ccn_put(m_handle, head(contentObject), contentObject.size()) < 0)
   {
     _LOG_ERROR ("ccn_put failed");
-    // BOOST_THROW_EXCEPTION(ndnOperationException() << errmsg_info_str("ccnput failed"));
+    // BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("ccnput failed"));
   }
   else
     {
@@ -711,6 +711,7 @@ Wrapper::verify(PcoPtr &pco, double maxWait)
   return m_verifier->verify(pco, maxWait);
 }
 
+/// @cond include_hidden
 // This is needed just for get function implementation
 struct GetState
 {
@@ -759,7 +760,7 @@ private:
 
   PcoPtr  m_retval;
 };
-
+/// @endcond
 
 PcoPtr
 Wrapper::get(const Interest &interest, double maxWait/* = 4.0*/)

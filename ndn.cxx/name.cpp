@@ -233,7 +233,7 @@ Name::get (int index) const
 
   if (static_cast<unsigned int> (index) >= m_comps.size ())
     {
-      boost::throw_exception (NameException() << error_info_str("Index out of range: " + boost::lexical_cast<string> (index)));
+      boost::throw_exception (Error::Name() << error_info_str("Index out of range: " + boost::lexical_cast<string> (index)));
     }
   return m_comps [index];
 }
@@ -248,7 +248,7 @@ Name::get (int index)
 
   if (static_cast<unsigned int> (index) >= m_comps.size())
     {
-      boost::throw_exception(NameException() << error_info_str("Index out of range: " + boost::lexical_cast<string>(index)));
+      boost::throw_exception(Error::Name() << error_info_str("Index out of range: " + boost::lexical_cast<string>(index)));
     }
   return m_comps[index];
 }
@@ -295,7 +295,7 @@ Name::asNumberWithMarker (const Bytes &comp, unsigned char marker)
   if (comp.empty () ||
       *(comp.begin ()) != marker)
     {
-      boost::throw_exception (NameException ()
+      boost::throw_exception (Error::Name ()
                               << error_info_str("Name component does not have required marker: " + Name::asString (comp)));
     }
   uint64_t ret = 0;
@@ -324,7 +324,7 @@ Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
   
   if (pos + len > m_comps.size ())
     {
-      boost::throw_exception (NameException() <<
+      boost::throw_exception (Error::Name() <<
                               error_info_str ("getSubName parameter out of range"));
     }
 

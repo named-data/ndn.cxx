@@ -35,6 +35,9 @@ using namespace std;
 namespace ndn
 {
 
+namespace discovery
+{
+
 const string
 TaggedFunction::CHAR_SET = string("abcdefghijklmnopqtrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
 
@@ -66,6 +69,8 @@ TaggedFunction::operator()(const Name &name)
   }
 }
 
+} // namespace discovery
+
 const double
 Discovery::INTERVAL = 15.0;
 
@@ -94,13 +99,13 @@ Discovery::~Discovery()
 }
 
 void
-Discovery::addCallback(const TaggedFunction &callback)
+Discovery::addCallback(const discovery::TaggedFunction &callback)
 {
   m_callbacks.push_back(callback);
 }
 
 int
-Discovery::deleteCallback(const TaggedFunction &callback)
+Discovery::deleteCallback(const discovery::TaggedFunction &callback)
 {
   List::iterator it = m_callbacks.begin();
   while (it != m_callbacks.end())
@@ -133,7 +138,7 @@ Discovery::poll()
 }
 
 void
-Discovery::registerCallback(const TaggedFunction &callback)
+Discovery::registerCallback(const discovery::TaggedFunction &callback)
 {
   Lock lock(mutex);
   if (instance == NULL)
@@ -145,7 +150,7 @@ Discovery::registerCallback(const TaggedFunction &callback)
 }
 
 void
-Discovery::deregisterCallback(const TaggedFunction &callback)
+Discovery::deregisterCallback(const discovery::TaggedFunction &callback)
 {
   Lock lock(mutex);
   if (instance == NULL)

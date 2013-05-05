@@ -29,14 +29,6 @@
 namespace ndn {
 
 /**
- * @brief An exception indicating an unrecoverable error with Name
- *
- * @todo Show an example how to get an extended error message
- */
-struct NameException:
-    virtual boost::exception, virtual std::exception {};
-
-/**
  * @brief Class for NDN Name
  */
 class Name
@@ -453,6 +445,18 @@ private:
 };
 
 typedef boost::shared_ptr<Name> NamePtr;
+
+namespace Error
+{
+/**
+ * @brief An exception indicating an unrecoverable error with Name
+ *
+ * @todo Show an example how to get an extended error message
+ */
+struct Name:
+    virtual boost::exception, virtual std::exception {};
+
+}
 
 std::ostream&
 operator <<(std::ostream &os, const Name &name);

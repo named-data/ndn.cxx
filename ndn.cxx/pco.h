@@ -29,8 +29,6 @@
 
 namespace ndn {
 
-struct MisformedContentObjectException : virtual boost::exception, virtual std::exception { };
-
 class Cert;
 typedef boost::shared_ptr<Cert> CertPtr;
 
@@ -94,14 +92,18 @@ protected:
   bool m_integrityChecked;
 };
 
+typedef boost::shared_ptr<ParsedContentObject> PcoPtr;
+
+namespace Error {
+struct MisformedContentObject : virtual boost::exception, virtual std::exception { };
+}
+
 const Bytes &
 ParsedContentObject::buf () const
 {
   return m_bytes;
 }
 
-
-typedef boost::shared_ptr<ParsedContentObject> PcoPtr;
 
 }
 

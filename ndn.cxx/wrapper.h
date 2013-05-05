@@ -37,8 +37,6 @@ typedef boost::shared_ptr<Executor> ExecutorPtr;
 
 namespace ndn {
 
-struct ndnOperationException : boost::exception, std::exception { };
-
 class Verifier;
 class Wrapper
 {
@@ -133,6 +131,14 @@ protected:
 };
 
 typedef boost::shared_ptr<Wrapper> WrapperPtr;
+
+/**
+ * @brief Namespace holding all exceptions that can be fired by the library
+ */
+namespace Error
+{
+struct ndnOperation : boost::exception, std::exception { };
+}
 
 inline int
 Wrapper::publishData (const Name &name, const Bytes &content, int freshness, const Name &keyName)

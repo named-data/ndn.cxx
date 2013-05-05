@@ -31,11 +31,8 @@
 namespace ndn {
 
 /**
- * @brief Exception that is thrown in case of error during interest construction or parsing
+ * @brief Class abstracting operations with Interests (constructing and getting access to Interest fields)
  */
-struct InterestException:
-    virtual boost::exception, virtual std::exception {};
-
 class Interest
 {
 public:
@@ -132,11 +129,11 @@ public:
    */
   enum AnswerOriginKind
   {
-    AOK_CS = 0x1,
-    AOK_NEW = 0x2,
-    AOK_DEFAULT = 0x3, // (AOK_CS | AOK_NEW)
-    AOK_STALE = 0x4,
-    AOK_EXPIRE = 0x10
+    AOK_CS = 0x1,      ///< @brief request item from the content store
+    AOK_NEW = 0x2,     ///< @brief request item from the original producer
+    AOK_DEFAULT = 0x3, ///< @brief default: either from content store or original producer
+    AOK_STALE = 0x4,   ///< @brief Allow stale data
+    AOK_EXPIRE = 0x10  ///< @brief Allow expired data (?)
   };
 
   /**
@@ -144,9 +141,9 @@ public:
    */
   enum ChildSelector
     {
-      CHILD_LEFT = 0,
-      CHILD_RIGHT = 1,
-      CHILD_DEFAULT = 2
+      CHILD_LEFT = 0,   ///< @brief request left child
+      CHILD_RIGHT = 1,  ///< @brief request right child
+      CHILD_DEFAULT = 2 ///< @brief do not specify which child is requested
     };
 
   /**
@@ -154,10 +151,10 @@ public:
    */
   enum Scope
     {
-      NO_SCOPE = 255,
-      SCOPE_LOCAL_CCND = 0,
-      SCOPE_LOCAL_HOST = 1,
-      SCOPE_NEXT_HOST = 2
+      NO_SCOPE = 255,        ///< @brief Interest scope is not defined
+      SCOPE_LOCAL_CCND = 0,  ///< @brief Interest scope is only toward local NDN daemon
+      SCOPE_LOCAL_HOST = 1,  ///< @brief Interest scope is within local host (any local application only)
+      SCOPE_NEXT_HOST = 2    ///< @brief Interest scope is within local host and immediate neighboring node
     };
 
   /**
@@ -203,7 +200,10 @@ public:
    */
   inline Interest &
   setAnswerOriginKind (uint32_t answerOriginKind);
-  
+
+  /**
+   * @brief Get interest selector for answer origin kind
+   */
   inline uint32_t
   getAnswerOriginKind () const;
 
@@ -270,7 +270,7 @@ public:
 
 public:
   // Data Members (public):
-  ///  Value returned by various member functions when they fail.
+  /// @brief Value indicating that number of components parameter is invalid
   const static uint32_t ncomps = static_cast<uint32_t> (-1);
 
 private:
@@ -287,6 +287,17 @@ private:
 };
 
 typedef boost::shared_ptr<Interest> InterestPtr;
+
+namespace Error
+{
+/**
+ * @brief Exception that is thrown in case of error during interest construction or parsing
+ */
+struct Interest:
+    virtual boost::exception, virtual std::exception {};
+}
+
+
 
 inline Interest &
 Interest::setName (const Name &name)
