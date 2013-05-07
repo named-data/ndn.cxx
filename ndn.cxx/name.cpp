@@ -228,7 +228,7 @@ Name::get (int index) const
 {
   if (index < 0)
     {
-      index = m_comps.size () - 1 - index;
+      index = m_comps.size () - (-index);
     }
 
   if (static_cast<unsigned int> (index) >= m_comps.size ())
@@ -243,7 +243,7 @@ Name::get (int index)
 {
   if (index < 0)
     {
-      index = m_comps.size () - 1 - index;
+      index = m_comps.size () - (-index);
     }
 
   if (static_cast<unsigned int> (index) >= m_comps.size())
@@ -260,6 +260,12 @@ Name::get (int index)
 
 std::string
 Name::asString (const Bytes &comp)
+{
+  return std::string (reinterpret_cast<const char*> (head(comp)), comp.size ());
+}
+
+std::string
+Name::asUriString (const Bytes &comp)
 {
   ostringstream ss;
   for (Bytes::const_iterator ch = comp.begin (); ch != comp.end (); ch++)
@@ -393,7 +399,7 @@ operator << (ostream &os, const Name &name)
 {
   for (Name::const_iterator comp = name.begin (); comp != name.end (); comp++)
     {
-      os << "/" << Name::asString (*comp);
+      os << "/" << Name::asUriString (*comp);
     }
   if (name.size () == 0)
     os << "/";

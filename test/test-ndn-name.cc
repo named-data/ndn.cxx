@@ -62,7 +62,8 @@ BOOST_AUTO_TEST_CASE (ndnNameTest)
   BOOST_CHECK_EQUAL (Name::asSeqNum (name.get (4)), 256);
   BOOST_CHECK_EQUAL (Name::asSeqNum (name.get (3)), 255);
   BOOST_CHECK_EQUAL (Name::asSeqNum (name.get (2)), 1);
-  
+
+  BOOST_CHECK_EQUAL (Name::asUriString (name.get (-1)), "%00%d2%02%96I");
   // Charbuf related stuff will be checked in other place
 }
 

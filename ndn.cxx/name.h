@@ -237,7 +237,8 @@ public:
 
   /**
    * @brief Get binary blob of name component
-   * @param index index of the name component.  If less than 0, then getting component from the back
+   * @param index index of the name component.  If less than 0, then getting component from the back:
+   *              get(-1) getting the last component, get(-2) is getting second component from back, etc.
    * @returns const reference to binary blob of the requested name component
    *
    * If index is out of range, an exception will be thrown
@@ -288,12 +289,21 @@ public:
   /////
 
   /**
-   * @brief Convert binary blob name component to std::string
+   * @brief Convert binary blob name component to std::string (no conversion is made)
    * @param comp name component to be converted
+   * @see asUriString
    */  
-  inline static std::string
+  static std::string
   asString (const Bytes &comp);
 
+  /**
+   * @brief Convert binary blob name component to std::string, escaping all non-printable characters in URI format
+   * @param comp name component to be converted
+   * @see asString
+   */
+  static std::string
+  asUriString (const Bytes &comp);
+  
   /**
    * @brief Convert binary blob name component (network-ordered number) to number
    * @param comp name component to be converted
@@ -451,10 +461,19 @@ namespace Error
 /**
  * @brief An exception indicating an unrecoverable error with Name
  *
- * @todo Show an example how to get an extended error message
+ * Example how to print out diagnostic information when the exception is thrown
+ * @code
+ *     try
+ *       {
+ *         ... operations with ndn::Name
+ *       }
+ *     catch (boost::exception &e)
+ *       {
+ *         std::cerr << boost::diagnostic_information (e) << std::endl;
+ *       }
+ * @endcode
  */
-struct Name:
-    virtual boost::exception, virtual std::exception {};
+struct Name : public virtual boost::exception, public virtual std::exception {};
 
 }
 
