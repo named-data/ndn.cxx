@@ -204,7 +204,7 @@ Name::appendNumberWithMarker (uint64_t number, unsigned char marker)
   return append (comp);
 }
 
-inline Name &
+Name &
 Name::appendVersion (uint64_t version/* = Name::nversion*/)
 {
   if (version != Name::nversion)
