@@ -44,6 +44,10 @@ Name::Name ()
 
 Name::Name (const string &name)
 {
+  /**
+   * @todo Implement proper URI conversion. Right now it is not really doing a good job
+   */
+
   stringstream ss(name);
   string compStr;
   bool first = true;
@@ -327,7 +331,7 @@ Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
     {
       len = m_comps.size () - pos;
     }
-  
+
   if (pos + len > m_comps.size ())
     {
       boost::throw_exception (Error::Name() <<
@@ -342,21 +346,6 @@ Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
   return retval;
 }
 
-
-bool
-Name::operator==(const Name &name) const
-{
-  const_iterator i = begin ();
-  const_iterator j = name.begin ();
-
-  for (; i != end () && j != name.end (); i++, j++)
-    {
-      if (*i != *j)
-        return false;
-    }
-
-  return i == end () && j == name.end ();
-}
 
 Name
 Name::operator+ (const Name &name) const
@@ -407,29 +396,97 @@ operator << (ostream &os, const Name &name)
 }
 
 bool
-Name::operator !=(const Name &name) const
+Name::operator == (const Name &name) const
 {
-  return !(*this == name);
+  if (this->size () != name.size ())
+    return false;
+
+  const_iterator i = this->begin ();
+  const_iterator j = name.begin ();
+
+  for (; i != end () && j != name.end (); i++, j++)
+    {
+      if (*i != *j)
+        return false;
+    }
+
+  return true;
+}
+
+bool
+Name::canonical_compare (const Bytes &comp1, const Bytes &comp2)
+{
+  if (comp1.size () < comp2.size ())
+    return true;
+
+  if (comp1.size () > comp2.size ())
+    return false;
+
+  // now we know that sizes are equal
+
+  pair<Bytes::const_iterator, Bytes::const_iterator> diff = std::mismatch (comp1.begin (), comp1.end (), comp2.begin ());
+  if (diff.first == comp1.end ()) // components are actually equal
+    return true;
+
+  return std::lexicographical_compare (diff.first, comp2.end (), diff.second, comp2.end ());
+}
+
+bool
+Name::operator <= (const Name &name) const
+{
+  Name::const_iterator i = this->begin ();
+  Name::const_iterator j = name.begin ();
+
+  for (; i != this->end () && j != this->end (); i++, j++)
+    {
+      // this is necessary "reimplementation" to optimize process of comparison
+
+      if (i->size () < j->size ())
+        return true;
+
+      if (i->size () > j->size ())
+        return false;
+
+      pair<Bytes::const_iterator, Bytes::const_iterator> diff = std::mismatch (i->begin (), i->end (), j->begin ());
+      if (diff.first == i->end ()) // components are actually equal
+        continue;
+
+      return std::lexicographical_compare (diff.first, i->end (), diff.second, j->end ());
+    }
+
+  if (i == this->end () && j == name.end ())
+    return true;
+
+  return (i == this->end ()); // any prefix of a name is "less" than the name
 }
 
 bool
 Name::operator < (const Name &name) const
 {
-  /// @todo implement comparison in the right way, without converting to URI
-  // const_iterator i = begin ();
-  // const_iterator j = name.begin ();
+  Name::const_iterator i = this->begin ();
+  Name::const_iterator j = name.begin ();
 
-  // for (; i != end () && j != name.end (); i++, j++)
-  //   {
-  //     if (*i ??? *j)
-  //       return false;
-  //   }
+  for (; i != this->end () && j != this->end (); i++, j++)
+    {
+      // this is necessary "reimplementation" to optimize process of comparison
 
-  // return i == end () && j == name.end ();
+      if (i->size () < j->size ())
+        return true;
 
-  
-  return toUri () < name.toUri ();
+      if (i->size () > j->size ())
+        return false;
+
+      pair<Bytes::const_iterator, Bytes::const_iterator> diff = std::mismatch (i->begin (), i->end (), j->begin ());
+      if (diff.first == i->end ()) // components are actually equal
+        continue;
+
+      return std::lexicographical_compare (diff.first, i->end (), diff.second, j->end ());
+    }
+
+  if (i == this->end () && j == name.end ())
+    return false;
+
+  return (i == this->end ()); // any prefix of a name is "less" than the name
 }
-
 
 } // ndn

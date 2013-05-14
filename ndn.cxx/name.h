@@ -398,6 +398,16 @@ public:
   
   /////////////////////////////////////////////////
   // Helpers and compatibility wrappers
+  
+  /**
+   * @brief Canonical comparison of two sequences
+   *
+   * Similar to <= comparison, but using CCNx canonical ordering
+   * @see http://www.ccnx.org/releases/latest/doc/technical/CanonicalOrder.html
+   */
+  static bool
+  canonical_compare (const Bytes &comp1, const Bytes &comp2);
+  
   /**
    * @brief Check if to Name objects are equal (have the same number of components with the same binary data)
    */
@@ -407,16 +417,33 @@ public:
   /**
    * @brief Check if two Name objects are not equal
    */
-  bool
+  inline bool
   operator != (const Name &name) const;
   
   /**
-   * @brief Compare two name object
-   * @todo Right now implementation converts name to URI and uses lexicographic order to compare, which is wrong
+   * @brief Less or equal comparison of two name objects
+   */
+  bool
+  operator <= (const Name &name) const;
+
+  /**
+   * @brief Less comparison of two name objects
    */
   bool
   operator < (const Name &name) const;
 
+  /**
+   * @brief Great or equal comparison of two name objects
+   */
+  inline bool
+  operator >= (const Name &name) const;
+
+  /**
+   * @brief Great comparison of two name objects
+   */
+  inline bool
+  operator > (const Name &name) const;
+  
   /**
    * @brief Operator [] to simplify access to name components
    * @see get
@@ -605,22 +632,35 @@ Name::push_back (const T &comp)
   append (comp);
 }
 
+inline bool
+Name::operator !=(const Name &name) const
+{
+  return ! (*this == name);
+}
+
+inline bool
+Name::operator >= (const Name &name) const
+{
+  return ! (*this < name);
+}
+
+inline bool
+Name::operator > (const Name &name) const
+{
+  return ! (*this <= name);
+}
+
 inline Bytes &
 Name::operator [] (int index)
 {
   return get (index);
 }
   
-/**
- * @brief Operator [] to simplify access to name components
- * @see get
- */
 inline const Bytes &
 Name::operator [] (int index) const
 {
   return get (index);
 }
-
 
 } // ndn
 

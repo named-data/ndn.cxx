@@ -64,6 +64,21 @@ BOOST_AUTO_TEST_CASE (ndnNameTest)
   BOOST_CHECK_EQUAL (Name::asSeqNum (name.get (2)), 1);
 
   BOOST_CHECK_EQUAL (Name::asUriString (name.get (-1)), "%00%d2%02%96I");
+
+  // check "canonical" ordering
+  BOOST_CHECK_EQUAL (Name ("/test"), Name ("/test"));
+  BOOST_CHECK_GE (Name ("/test"), Name ("/aaaa"));
+  BOOST_CHECK_GT (Name ("/test"), Name ("/aaaa"));
+  BOOST_CHECK_GT (Name ("/test/test/test"), Name ("/test/test"));
+  BOOST_CHECK_GE (Name ("/test/test/test"), Name ("/test/test"));
+  BOOST_CHECK_GE (Name ("/test/test/test"), Name ("/test/test/test"));
+  
+  BOOST_CHECK_LE (Name ("/test"), Name ("/aaaaa"));
+  BOOST_CHECK_LT (Name ("/test"), Name ("/aaaaa"));
+  BOOST_CHECK_LT (Name ("/test/test"), Name ("/test/test/test"));
+  BOOST_CHECK_LE (Name ("/test/test"), Name ("/test/test/test"));
+  BOOST_CHECK_LE (Name ("/test/test/test"), Name ("/test/test/test"));
+  
   // Charbuf related stuff will be checked in other place
 }
 
