@@ -47,6 +47,7 @@ def configure(conf):
         conf.define ("HAVE_LOG4CXX", 1)
 
     conf.check_tinyxml(path=conf.options.tinyxml_dir)
+    conf.check_doxygen(mandatory=False)
 
     conf.check_boost(lib='system test iostreams filesystem thread date_time')
 
