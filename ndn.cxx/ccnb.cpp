@@ -74,10 +74,13 @@ size_t
 Ccnb::AppendName (std::ostream &os, const Name &name)
 {
   size_t written = 0;
+  written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Name, Ccnb::CCN_DTAG); // <Name>
   for (Name::const_iterator component = name.begin (); component != name.end (); component ++)
     {
       written += AppendTaggedBlob (os, Ccnb::CCN_DTAG_Component, head (*component), component->size ());
     }
+  written += Ccnb::AppendCloser (os);                                        // </Name>
+  
   return written;
 }
 
@@ -139,5 +142,76 @@ Ccnb::AppendString (std::ostream &os, Ccnb::ccn_dtag dtag, const std::string &st
 
   return written;
 }
+
+size_t
+Ccnb::AppendInterest (std::ostream &os, const Interest &interest)
+{
+  size_t written = 0;
+  written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Interest, Ccnb::CCN_DTAG); // <Interest>
+
+  // this is used for now as an interest template. Name should be empty
+  // written += Ccnb::AppendName (os, interest.getName ());
+  written += Ccnb::AppendName (os, Name ());                              // <Component>...</Component>...
+
+  if (interest.getMinSuffixComponents () != Interest::ncomps)
+    {
+      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_MinSuffixComponents, Ccnb::CCN_DTAG);
+      written += Ccnb::AppendNumber (os, interest.getMinSuffixComponents ());
+      written += Ccnb::AppendCloser (os);
+    }
+  if (interest.getMaxSuffixComponents () != Interest::ncomps)
+    {
+      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_MaxSuffixComponents, Ccnb::CCN_DTAG);
+      written += Ccnb::AppendNumber (os, interest.getMaxSuffixComponents ());
+      written += Ccnb::AppendCloser (os);
+    }
+  // if (IsEnabledExclude() && interest.GetExclude().size() > 0)
+  //   {
+  //     written += AppendBlockHeader (start, Ccnb::CCN_DTAG_Exclude, Ccnb::CCN_DTAG); // <Exclude>
+  //     written += AppendName (start, interest.GetExclude());                // <Component>...</Component>...
+  //     written += AppendCloser (start);                                  // </Exclude>
+  //   }
+  if (interest.getChildSelector () != Interest::CHILD_DEFAULT)
+    {
+      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_ChildSelector, Ccnb::CCN_DTAG);
+      written += Ccnb::AppendNumber (os, interest.getChildSelector ());
+      written += Ccnb::AppendCloser (os);
+    }
+  if (interest.getAnswerOriginKind () != Interest::AOK_DEFAULT)
+    {
+      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_AnswerOriginKind, Ccnb::CCN_DTAG);
+      written += Ccnb::AppendNumber (os, interest.getAnswerOriginKind ());
+      written += Ccnb::AppendCloser (os);
+    }
+  if (interest.getScope () != Interest::NO_SCOPE)
+    {
+      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Scope, Ccnb::CCN_DTAG);
+      written += Ccnb::AppendNumber (os, interest.getScope ());
+      written += Ccnb::AppendCloser (os);
+    }
+  if (!interest.getInterestLifetime ().is_negative ())
+    {
+      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_InterestLifetime, Ccnb::CCN_DTAG);
+      written += Ccnb::AppendTimestampBlob (os, interest.getInterestLifetime ());
+      written += Ccnb::AppendCloser (os);
+    }
+  // if (GetNonce()>0)
+  //   {
+  //     uint32_t nonce = interest.GetNonce();
+  //     written += AppendTaggedBlob (start, Ccnb::CCN_DTAG_Nonce, nonce);
+  //   }
+    
+  // if (GetNack ()>0)
+  //   {
+  //     written += AppendBlockHeader (start, Ccnb::CCN_DTAG_Nack, Ccnb::CCN_DTAG);
+  //     written += AppendNumber (start, interest.GetNack ());
+  //     written += AppendCloser (start);
+  //   }
+  written += Ccnb::AppendCloser (os); // </Interest>
+
+  return written;
+ 
+}
+
 
 } // namespace ndn

@@ -111,150 +111,150 @@ Interest::operator == (const Interest &other)
 }
 
 
-CharbufPtr
-Interest::toCharbuf() const
-{
-  CharbufPtr ptr(new Charbuf());
-  ccn_charbuf *cbuf = ptr->getBuf();
-  ccn_charbuf_append_tt(cbuf, CCN_DTAG_Interest, CCN_DTAG);
-  ccn_charbuf_append_tt(cbuf, CCN_DTAG_Name, CCN_DTAG);
+// CharbufPtr
+// Interest::toCharbuf() const
+// {
+//   CharbufPtr ptr(new Charbuf());
+//   ccn_charbuf *cbuf = ptr->getBuf();
+//   ccn_charbuf_append_tt(cbuf, CCN_DTAG_Interest, CCN_DTAG);
+//   ccn_charbuf_append_tt(cbuf, CCN_DTAG_Name, CCN_DTAG);
 
-  // not necessary. the resulting charbuf is used as a template
-  // ccn_charbuf_append_charbuf(cbuf, getName ().toCharbuf ()->getBuf ());
+//   // not necessary. the resulting charbuf is used as a template
+//   // ccn_charbuf_append_charbuf(cbuf, getName ().toCharbuf ()->getBuf ());
   
-  ccn_charbuf_append_closer(cbuf); // </Name>
+//   ccn_charbuf_append_closer(cbuf); // </Name>
 
-  if (m_maxSuffixComponents < m_minSuffixComponents)
-  {
-    boost::throw_exception(Error::Interest() << error_info_str("MaxSuffixComps = " + boost::lexical_cast<string>(m_maxSuffixComponents) + " is smaller than  MinSuffixComps = " + boost::lexical_cast<string>(m_minSuffixComponents)));
-  }
+//   if (m_maxSuffixComponents < m_minSuffixComponents)
+//   {
+//     boost::throw_exception(Error::Interest() << error_info_str("MaxSuffixComps = " + boost::lexical_cast<string>(m_maxSuffixComponents) + " is smaller than  MinSuffixComps = " + boost::lexical_cast<string>(m_minSuffixComponents)));
+//   }
 
-  if (m_minSuffixComponents != Interest::ncomps)
-  {
-    ccnb_tagged_putf(cbuf, CCN_DTAG_MinSuffixComponents, "%d", m_minSuffixComponents);
-  }
+//   if (m_minSuffixComponents != Interest::ncomps)
+//   {
+//     ccnb_tagged_putf(cbuf, CCN_DTAG_MinSuffixComponents, "%d", m_minSuffixComponents);
+//   }
 
-  if (m_maxSuffixComponents != Interest::ncomps)
-  {
-    ccnb_tagged_putf(cbuf, CCN_DTAG_MaxSuffixComponents, "%d", m_maxSuffixComponents);
-  }
+//   if (m_maxSuffixComponents != Interest::ncomps)
+//   {
+//     ccnb_tagged_putf(cbuf, CCN_DTAG_MaxSuffixComponents, "%d", m_maxSuffixComponents);
+//   }
 
-  // publisher digest
+//   // publisher digest
 
-  // exclude
+//   // exclude
 
-  if (m_childSelector != CHILD_DEFAULT)
-  {
-    ccnb_tagged_putf(cbuf, CCN_DTAG_ChildSelector, "%d", (int)m_childSelector);
-  }
+//   if (m_childSelector != CHILD_DEFAULT)
+//   {
+//     ccnb_tagged_putf(cbuf, CCN_DTAG_ChildSelector, "%d", (int)m_childSelector);
+//   }
   
-  if (m_answerOriginKind != AOK_DEFAULT)
-  {
-    // it was not using "ccnb_tagged_putf" in ccnx c code, no idea why
-    ccn_charbuf_append_tt(cbuf, CCN_DTAG_AnswerOriginKind, CCN_DTAG);
-    ccnb_append_number(cbuf, m_answerOriginKind);
-    ccn_charbuf_append_closer(cbuf); // <AnswerOriginKind>
-  }
+//   if (m_answerOriginKind != AOK_DEFAULT)
+//   {
+//     // it was not using "ccnb_tagged_putf" in ccnx c code, no idea why
+//     ccn_charbuf_append_tt(cbuf, CCN_DTAG_AnswerOriginKind, CCN_DTAG);
+//     ccnb_append_number(cbuf, m_answerOriginKind);
+//     ccn_charbuf_append_closer(cbuf); // <AnswerOriginKind>
+//   }
 
-  if (m_scope != NO_SCOPE)
-  {
-    ccnb_tagged_putf(cbuf, CCN_DTAG_Scope, "%d", m_scope);
-  }
+//   if (m_scope != NO_SCOPE)
+//   {
+//     ccnb_tagged_putf(cbuf, CCN_DTAG_Scope, "%d", m_scope);
+//   }
 
-  if (!m_interestLifetime.is_negative ())
-  {
-    double interestLifetime =
-      m_interestLifetime.total_seconds () +
-      ((m_interestLifetime.total_microseconds () % 1000000) / 1000000.0);
+//   if (!m_interestLifetime.is_negative ())
+//   {
+//     double interestLifetime =
+//       m_interestLifetime.total_seconds () +
+//       ((m_interestLifetime.total_microseconds () % 1000000) / 1000000.0);
     
-    // ndn timestamp unit is weird 1/4096 second
-    // this is from their code
-    unsigned lifetime = 4096 * (interestLifetime + 1.0/8192.0);
-    if (lifetime == 0 || lifetime > (30 << 12))
-    {
-      boost::throw_exception (Error::Interest() << error_info_str("ndn requires 0 < lifetime < 30.0. lifetime= " + boost::lexical_cast<string>(interestLifetime)));
-    }
-    unsigned char buf[3] = {0};
-    for (int i = sizeof(buf) - 1; i >= 0; i--, lifetime >>= 8)
-    {
-      buf[i] = lifetime & 0xff;
-    }
-    ccnb_append_tagged_blob(cbuf, CCN_DTAG_InterestLifetime, buf, sizeof(buf));
-  }
+//     // ndn timestamp unit is weird 1/4096 second
+//     // this is from their code
+//     unsigned lifetime = 4096 * (interestLifetime + 1.0/8192.0);
+//     if (lifetime == 0 || lifetime > (30 << 12))
+//     {
+//       boost::throw_exception (Error::Interest() << error_info_str("ndn requires 0 < lifetime < 30.0. lifetime= " + boost::lexical_cast<string>(interestLifetime)));
+//     }
+//     unsigned char buf[3] = {0};
+//     for (int i = sizeof(buf) - 1; i >= 0; i--, lifetime >>= 8)
+//     {
+//       buf[i] = lifetime & 0xff;
+//     }
+//     ccnb_append_tagged_blob(cbuf, CCN_DTAG_InterestLifetime, buf, sizeof(buf));
+//   }
 
-  ccn_charbuf_append_closer(cbuf); // </Interest>
+//   ccn_charbuf_append_closer(cbuf); // </Interest>
 
-  return ptr;
-}
+//   return ptr;
+// }
 
-std::ostream &
-Interest::toWire (std::ostream &os)
-{
-  size_t written = 0;
-  written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Interest, Ccnb::CCN_DTAG); // <Interest>
+// std::ostream &
+// Interest::toWire (std::ostream &os)
+// {
+//   size_t written = 0;
+//   written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Interest, Ccnb::CCN_DTAG); // <Interest>
   
-  written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Name, Ccnb::CCN_DTAG); // <Name>
-  written += Ccnb::AppendName (os, getName ());                              // <Component>...</Component>...
-  written += Ccnb::AppendCloser (os);                                        // </Name>
+//   written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Name, Ccnb::CCN_DTAG); // <Name>
+//   written += Ccnb::AppendName (os, getName ());                              // <Component>...</Component>...
+//   written += Ccnb::AppendCloser (os);                                        // </Name>
 
-  if (getMinSuffixComponents () != Interest::ncomps)
-    {
-      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_MinSuffixComponents, Ccnb::CCN_DTAG);
-      written += Ccnb::AppendNumber (os, getMinSuffixComponents ());
-      written += Ccnb::AppendCloser (os);
-    }
-  if (getMaxSuffixComponents () != Interest::ncomps)
-    {
-      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_MaxSuffixComponents, Ccnb::CCN_DTAG);
-      written += Ccnb::AppendNumber (os, getChildSelector ());
-      written += Ccnb::AppendCloser (os);
-    }
-  // if (IsEnabledExclude() && interest.GetExclude().size() > 0)
-  //   {
-  //     written += AppendBlockHeader (start, Ccnb::CCN_DTAG_Exclude, Ccnb::CCN_DTAG); // <Exclude>
-  //     written += AppendName (start, interest.GetExclude());                // <Component>...</Component>...
-  //     written += AppendCloser (start);                                  // </Exclude>
-  //   }
-  if (getChildSelector () != CHILD_DEFAULT)
-    {
-      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_ChildSelector, Ccnb::CCN_DTAG);
-      written += Ccnb::AppendNumber (os, getChildSelector ());
-      written += Ccnb::AppendCloser (os);
-    }
-  if (getAnswerOriginKind () != AOK_DEFAULT)
-    {
-      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_AnswerOriginKind, Ccnb::CCN_DTAG);
-      written += Ccnb::AppendNumber (os, getAnswerOriginKind ());
-      written += Ccnb::AppendCloser (os);
-    }
-  if (getScope () != NO_SCOPE)
-    {
-      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Scope, Ccnb::CCN_DTAG);
-      written += Ccnb::AppendNumber (os, getScope ());
-      written += Ccnb::AppendCloser (os);
-    }
-  if (!getInterestLifetime ().is_negative ())
-    {
-      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_InterestLifetime, Ccnb::CCN_DTAG);
-      written += Ccnb::AppendTimestampBlob (os, getInterestLifetime ());
-      written += Ccnb::AppendCloser (os);
-    }
-  // if (GetNonce()>0)
-  //   {
-  //     uint32_t nonce = interest.GetNonce();
-  //     written += AppendTaggedBlob (start, Ccnb::CCN_DTAG_Nonce, nonce);
-  //   }
+//   if (getMinSuffixComponents () != Interest::ncomps)
+//     {
+//       written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_MinSuffixComponents, Ccnb::CCN_DTAG);
+//       written += Ccnb::AppendNumber (os, getMinSuffixComponents ());
+//       written += Ccnb::AppendCloser (os);
+//     }
+//   if (getMaxSuffixComponents () != Interest::ncomps)
+//     {
+//       written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_MaxSuffixComponents, Ccnb::CCN_DTAG);
+//       written += Ccnb::AppendNumber (os, getChildSelector ());
+//       written += Ccnb::AppendCloser (os);
+//     }
+//   // if (IsEnabledExclude() && interest.GetExclude().size() > 0)
+//   //   {
+//   //     written += AppendBlockHeader (start, Ccnb::CCN_DTAG_Exclude, Ccnb::CCN_DTAG); // <Exclude>
+//   //     written += AppendName (start, interest.GetExclude());                // <Component>...</Component>...
+//   //     written += AppendCloser (start);                                  // </Exclude>
+//   //   }
+//   if (getChildSelector () != CHILD_DEFAULT)
+//     {
+//       written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_ChildSelector, Ccnb::CCN_DTAG);
+//       written += Ccnb::AppendNumber (os, getChildSelector ());
+//       written += Ccnb::AppendCloser (os);
+//     }
+//   if (getAnswerOriginKind () != AOK_DEFAULT)
+//     {
+//       written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_AnswerOriginKind, Ccnb::CCN_DTAG);
+//       written += Ccnb::AppendNumber (os, getAnswerOriginKind ());
+//       written += Ccnb::AppendCloser (os);
+//     }
+//   if (getScope () != NO_SCOPE)
+//     {
+//       written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Scope, Ccnb::CCN_DTAG);
+//       written += Ccnb::AppendNumber (os, getScope ());
+//       written += Ccnb::AppendCloser (os);
+//     }
+//   if (!getInterestLifetime ().is_negative ())
+//     {
+//       written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_InterestLifetime, Ccnb::CCN_DTAG);
+//       written += Ccnb::AppendTimestampBlob (os, getInterestLifetime ());
+//       written += Ccnb::AppendCloser (os);
+//     }
+//   // if (GetNonce()>0)
+//   //   {
+//   //     uint32_t nonce = interest.GetNonce();
+//   //     written += AppendTaggedBlob (start, Ccnb::CCN_DTAG_Nonce, nonce);
+//   //   }
     
-  // if (GetNack ()>0)
-  //   {
-  //     written += AppendBlockHeader (start, Ccnb::CCN_DTAG_Nack, Ccnb::CCN_DTAG);
-  //     written += AppendNumber (start, interest.GetNack ());
-  //     written += AppendCloser (start);
-  //   }
-  written += Ccnb::AppendCloser (os); // </Interest>
+//   // if (GetNack ()>0)
+//   //   {
+//   //     written += AppendBlockHeader (start, Ccnb::CCN_DTAG_Nack, Ccnb::CCN_DTAG);
+//   //     written += AppendNumber (start, interest.GetNack ());
+//   //     written += AppendCloser (start);
+//   //   }
+//   written += Ccnb::AppendCloser (os); // </Interest>
 
-  return os;
-}
+//   return os;
+// }
 
 
 } // ndn

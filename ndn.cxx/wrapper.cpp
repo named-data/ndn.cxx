@@ -30,12 +30,15 @@ extern "C" {
 #include <boost/random.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <sstream>
 
 #include "ndn.cxx/verifier.h"
 #include "executor/executor.h"
 
 #include "logging.h"
+#include "ccnb.h"
+
 
 INIT_LOGGER ("ndn.Wrapper");
 
@@ -282,8 +285,6 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
       }
   }
 
-  CharbufPtr ptr = name.toCharbuf();
-  ccn_charbuf *pname = ptr->getBuf();
   ccn_charbuf *content = ccn_charbuf_create();
 
   struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
@@ -316,15 +317,20 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
   }
   ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
   ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
-  CharbufPtr keyPtr = keyName.toCharbuf();
-  ccn_charbuf *keyBuf = keyPtr->getBuf();
-  ccn_charbuf_append(sp.template_ccnb, keyBuf->buf, keyBuf->length);
+
+  charbuf_stream keyStream;
+  Ccnb::AppendName (keyStream, keyName);
+  
+  ccn_charbuf_append(sp.template_ccnb, keyStream.buf ().getBuf ()->buf, keyStream.buf ().getBuf ()->length);
   ccn_charbuf_append_closer(sp.template_ccnb); // </KeyName>
   ccn_charbuf_append_closer(sp.template_ccnb); // </KeyLocator>
   sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
   ccn_charbuf_append_closer(sp.template_ccnb); // </SignedInfo>
 
-  if (ccn_sign_content(m_handle, content, pname, &sp, buf, len) != 0)
+  charbuf_stream nameStream;
+  Ccnb::AppendName (nameStream, name);
+  
+  if (ccn_sign_content(m_handle, content, nameStream.buf ().getBuf (), &sp, buf, len) != 0)
   {
     BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("sign content failed"));
   }
@@ -387,8 +393,6 @@ Wrapper::publishUnsignedData(const Name &name, const unsigned char *buf, size_t 
       }
   }
 
-  CharbufPtr ptr = name.toCharbuf();
-  ccn_charbuf *pname = ptr->getBuf();
   ccn_charbuf *content = ccn_charbuf_create();
   ccn_charbuf *signed_info = ccn_charbuf_create();
 
@@ -402,7 +406,11 @@ Wrapper::publishUnsignedData(const Name &name, const unsigned char *buf, size_t 
                                    NULL,
                                    NULL  // ccnd is happy with absent key locator and key itself... ha ha
                                    );
-  ccn_pack_unsigned_ContentObject(content, pname, signed_info, buf, len);
+
+  charbuf_stream nameStream;
+  Ccnb::AppendName (nameStream, name);
+
+  ccn_pack_unsigned_ContentObject(content, nameStream.buf ().getBuf (), signed_info, buf, len);
 
   Bytes bytes;
   readRaw(bytes, content->buf, content->length);
@@ -553,9 +561,16 @@ int Wrapper::sendInterest (const Interest &interest, const Closure &closure)
   dataClosure->p = &incomingData;
 
   UniqueRecLock lock(m_mutex);
-  if (ccn_express_interest (m_handle, interest.getName ().toCharbuf ()->getBuf (),
+
+  charbuf_stream nameStream;
+  Ccnb::AppendName (nameStream, interest.getName ());
+
+  charbuf_stream interestStream;
+  Ccnb::AppendInterest (interestStream, interest);
+
+  if (ccn_express_interest (m_handle, nameStream.buf ().getBuf (),
                             dataClosure,
-                            interest.toCharbuf ()->getBuf ()
+                            interestStream.buf ().getBuf ()
                             ) < 0)
   {
     _LOG_ERROR ("<< sendInterest: ccn_express_interest FAILED!!!");
@@ -573,8 +588,6 @@ int Wrapper::setInterestFilter (const Name &prefix, const InterestCallback &inte
     return -1;
   }
 
-  CharbufPtr ptr = prefix.toCharbuf();
-  ccn_charbuf *pname = ptr->getBuf();
   ccn_closure *interestClosure = new ccn_closure;
 
   // interestClosure->data = new ExecutorInterestClosure(interestCallback, m_executor);
@@ -582,7 +595,10 @@ int Wrapper::setInterestFilter (const Name &prefix, const InterestCallback &inte
   interestClosure->data = new tuple<Wrapper::InterestCallback *, ExecutorPtr> (new InterestCallback (interestCallback), m_executor); // should be removed when closure is removed
   interestClosure->p = &incomingInterest;
 
-  int ret = ccn_set_interest_filter (m_handle, pname, interestClosure);
+  charbuf_stream prefixStream;
+  Ccnb::AppendName (prefixStream, prefix);
+
+  int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), interestClosure);
   if (ret < 0)
   {
     _LOG_ERROR ("<< setInterestFilter: ccn_set_interest_filter FAILED");
@@ -606,10 +622,10 @@ Wrapper::clearInterestFilter (const Name &prefix, bool record/* = true*/)
   if (!m_running || !m_connected)
     return;
 
-  CharbufPtr ptr = prefix.toCharbuf();
-  ccn_charbuf *pname = ptr->getBuf();
+  charbuf_stream prefixStream;
+  Ccnb::AppendName (prefixStream, prefix);
 
-  int ret = ccn_set_interest_filter (m_handle, pname, 0);
+  int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), 0);
   if (ret < 0)
   {
   }

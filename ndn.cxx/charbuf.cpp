@@ -65,7 +65,24 @@ Charbuf::Charbuf(const void *buf, size_t length)
 
 Charbuf::~Charbuf()
 {
-  ccn_charbuf_destroy(&m_buf);
+  ccn_charbuf_destroy (&m_buf);
 }
 
+namespace iostreams
+{
+
+charbuf_append_device::charbuf_append_device (Charbuf& cnt)
+  : container (cnt)
+{
 }
+
+std::streamsize
+charbuf_append_device::write (const char_type* s, std::streamsize n)
+{
+  ccn_charbuf_append (container.getBuf (), s, n);
+  return n;
+}
+
+} // iostreams
+
+} // ndn

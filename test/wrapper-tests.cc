@@ -33,7 +33,7 @@ using namespace ndn;
 using namespace std;
 using namespace boost;
 
-BOOST_AUTO_TEST_SUITE(TestndnWrapper)
+BOOST_AUTO_TEST_SUITE(WrapperTests)
 
 WrapperPtr c1;
 WrapperPtr c2;
@@ -105,7 +105,7 @@ teardown()
 }
 
 
-BOOST_AUTO_TEST_CASE (BlandnWrapperTest)
+BOOST_AUTO_TEST_CASE (Basic)
 {
   INIT_LOGGERS ();
   
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE (BlandnWrapperTest)
   teardown();
 }
 
-BOOST_AUTO_TEST_CASE (ndnWrapperSelector)
+BOOST_AUTO_TEST_CASE (Selector)
 {
   setup();
   Closure closure (bind(dataCallback, _1, _2), bind(timeout, _1, _2, _3));
@@ -174,7 +174,7 @@ reexpress(const Name &name, const Closure &closure, InterestPtr origInterest)
   c1->sendInterest (*origInterest, closure);
 }
 
-BOOST_AUTO_TEST_CASE (TestTimeout)
+BOOST_AUTO_TEST_CASE (Timeout)
 {
   setup();
   g_dataCallback_counter = 0;
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE (TestTimeout)
   teardown();
 }
 
-BOOST_AUTO_TEST_CASE (TestUnsigned)
+BOOST_AUTO_TEST_CASE (Unsigned)
 {
   setup();
   string n1 = "/xxxxxx/unsigned/001";

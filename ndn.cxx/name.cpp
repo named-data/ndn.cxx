@@ -346,35 +346,12 @@ Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
   return retval;
 }
 
-
 Name
 Name::operator+ (const Name &name) const
 {
   Name newName (*this);
   copy (name.m_comps.begin(), name.m_comps.end(), back_inserter (newName));
   return newName;
-}
-
-
-CharbufPtr
-Name::toCharbuf () const
-{
-  CharbufPtr ptr = boost::make_shared<Charbuf> ();
-
-  ccn_charbuf *cbuf = ptr->getBuf();
-  ccn_name_init(cbuf);
-  for (const_iterator comp = begin (); comp != end (); comp ++)
-  {
-    ccn_name_append (cbuf, head(*comp), comp->size ());
-  }
-  return ptr;
-}
-
-std::ostream &
-Name::toWire (std::ostream &os) const
-{
-  Ccnb::AppendName (os, *this);
-  return os;
 }
 
 std::string

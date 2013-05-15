@@ -384,18 +384,6 @@ public:
   std::string
   toUri () const;
 
-  /**
-   * @brief Convert to wire format and return it in form of ndn::CharbufPtr
-   */
-  CharbufPtr
-  toCharbuf () const;
-
-  /**
-   * @brief Convert to wire format   
-   */
-  std::ostream &
-  toWire (std::ostream &os) const;
-  
   /////////////////////////////////////////////////
   // Helpers and compatibility wrappers
   

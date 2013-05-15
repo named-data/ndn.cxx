@@ -84,7 +84,7 @@ public:
    * @return reference to self (to allow method chaining)
    */
   inline Interest &
-  setInterstLifetime (const boost::posix_time::time_duration &interestLifetime);
+  setInterestLifetime (const boost::posix_time::time_duration &interestLifetime);
 
   /**
    * @brief Set interest lifetime (double)
@@ -250,17 +250,11 @@ public:
   ///////////////////////////////////////////////////////////////////////
 
   
-  /**
-   * @brief Convert to wire format and return it in form of ndn::CharbufPtr
-   */
-  CharbufPtr
-  toCharbuf () const;
-
-  /**
-   * @brief Convert to wire format   
-   */
-  std::ostream &
-  toWire (std::ostream &os);
+  // /**
+  //  * @brief Convert to wire format and return it in form of ndn::CharbufPtr
+  //  */
+  // CharbufPtr
+  // toCharbuf () const;
 
   /**
    * @brief Compare equality of two interests
@@ -313,7 +307,7 @@ Interest::getName () const
 }
   
 inline Interest &
-Interest::setInterstLifetime (const boost::posix_time::time_duration &interestLifetime)
+Interest::setInterestLifetime (const boost::posix_time::time_duration &interestLifetime)
 {
   m_interestLifetime = interestLifetime;
   return *this;

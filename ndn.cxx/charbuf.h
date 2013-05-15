@@ -24,6 +24,9 @@
 
 #include "ndn.cxx/common.h"
 #include <boost/shared_ptr.hpp>
+#include <boost/iostreams/detail/ios.hpp>
+#include <boost/iostreams/categories.hpp>
+#include <boost/iostreams/stream.hpp>
 
 namespace ndn {
 
@@ -63,6 +66,44 @@ protected:
   ccn_charbuf *m_buf;
 };
 
-}
+namespace iostreams
+{
+
+class charbuf_append_device {
+public:
+  typedef char  char_type;
+  typedef boost::iostreams::sink_tag       category;
+  
+  charbuf_append_device (Charbuf& cnt);
+  
+  std::streamsize
+  write(const char_type* s, std::streamsize n);
+protected:
+  Charbuf& container;
+};
+
+} // iostreams
+
+struct charbuf_stream : public boost::iostreams::stream<iostreams::charbuf_append_device>
+{
+  charbuf_stream ()
+    : m_device (m_buf)
+  {
+    open (m_device);
+  }
+
+  Charbuf &
+  buf ()
+  {
+    flush ();
+    return m_buf;
+  }
+
+private:
+  Charbuf m_buf;
+  iostreams::charbuf_append_device m_device;
+};
+
+} // ndn
 
 #endif // NDN_NDN_CHARBUF_H

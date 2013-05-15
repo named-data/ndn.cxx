@@ -22,6 +22,8 @@
 #define NDN_CCNB_H
 
 #include <ndn.cxx/name.h>
+#include <ndn.cxx/interest.h>
+
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #ifdef NDN_DETAIL_NEED_UNDEFINE_CCN_CLOSE
@@ -254,7 +256,7 @@ public:
    *
    * This is a ccnb-encoded element with containing UDATA as content
    *
-   * @param start start iterator of  the buffer to append to.
+   * @param os output stream to write
    * @param dtag is the element's dtag
    * @param string UTF-8 string to be written
    *
@@ -262,8 +264,20 @@ public:
    */
   static size_t
   AppendString (std::ostream &os, ccn_dtag dtag, const std::string &string);
+
+  /**
+   * @brief Format interest in CCNb encoding
+   * @param os output stream to write
+   * @param interest Interest to be formatted
+   *
+   * @todo For now, this method is used to create Interest template, which doesn't output name to the stream 
+   *
+   * @returns written length
+   */
+  static size_t
+  AppendInterest (std::ostream &os, const Interest &interest);
 };
-  
+
 } // ndn
 
 #endif // NDN_CCNB_H
