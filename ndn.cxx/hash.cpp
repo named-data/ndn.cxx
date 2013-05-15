@@ -20,6 +20,7 @@
  */
 
 #include "hash.h"
+#include "detail/string-transform.h"
 
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
@@ -31,9 +32,6 @@
 typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info_str;
 typedef boost::error_info<struct tag_errmsg, int> errmsg_info_int;
 
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/iterator/transform_iterator.hpp>
-#include <boost/archive/iterators/dataflow_exception.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 using namespace boost;
@@ -44,59 +42,8 @@ namespace fs = boost::filesystem;
 // Other options: VP_md2, EVP_md5, EVP_sha, EVP_sha1, EVP_sha256, EVP_dss, EVP_dss1, EVP_mdc2, EVP_ripemd160
 #define HASH_FUNCTION EVP_sha256
 
-
 namespace ndn
 {
-
-/// @cond include_hidden
-template<class CharType>
-struct hex_from_4_bit
-{
-  typedef CharType result_type;
-  CharType operator () (CharType ch) const
-  {
-    const char *lookup_table = "0123456789abcdef";
-    // cout << "New character: " << (int) ch << " (" << (char) ch << ")" << "\n";
-    BOOST_ASSERT (ch < 16);
-    return lookup_table[static_cast<size_t>(ch)];
-  }
-};
-
-typedef transform_iterator<hex_from_4_bit<string::const_iterator::value_type>,
-                           transform_width<string::const_iterator, 4, 8, string::const_iterator::value_type> > string_from_binary;
-
-
-
-template<class CharType>
-struct hex_to_4_bit
-{
-  typedef CharType result_type;
-  CharType operator () (CharType ch) const
-  {
-    const signed char lookup_table [] = {
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,-1,-1,-1,-1,-1,-1,
-      -1,10,11,12,13,14,15,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,10,11,12,13,14,15,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
-    };
-
-    // cout << "New character: " << hex << (int) ch << " (" << (char) ch << ")" << "\n";
-    signed char value = -1;
-    if ((unsigned)ch < 128)
-      value = lookup_table [(unsigned)ch];
-    if (value == -1)
-      BOOST_THROW_EXCEPTION (Error::HashConversion () << errmsg_info_int ((int)ch));
-
-    return value;
-  }
-};
-
-typedef transform_width<transform_iterator<hex_to_4_bit<string::const_iterator::value_type>, string::const_iterator>, 8, 4> string_to_binary;
-/// @endcond
 
 std::ostream &
 operator << (std::ostream &os, const Hash &hash)
@@ -106,8 +53,8 @@ operator << (std::ostream &os, const Hash &hash)
 
   ostreambuf_iterator<char> out_it (os); // ostream iterator
   // need to encode to base64
-  copy (string_from_binary (reinterpret_cast<const char*> (hash.m_buf)),
-        string_from_binary (reinterpret_cast<const char*> (hash.m_buf+hash.m_length)),
+  copy (detail::string_from_binary (reinterpret_cast<const char*> (hash.m_buf)),
+        detail::string_from_binary (reinterpret_cast<const char*> (hash.m_buf+hash.m_length)),
         out_it);
 
   return os;
@@ -141,9 +88,9 @@ Hash::FromString (const std::string &hashInTextEncoding)
 
   retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
 
-  unsigned char *end = copy (string_to_binary (hashInTextEncoding.begin ()),
-                            string_to_binary (hashInTextEncoding.end ()),
-                            retval->m_buf);
+  unsigned char *end = copy (detail::string_to_binary (hashInTextEncoding.begin ()),
+                             detail::string_to_binary (hashInTextEncoding.end ()),
+                             retval->m_buf);
 
   retval->m_length = end - retval->m_buf;
 

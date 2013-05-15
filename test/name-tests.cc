@@ -20,6 +20,9 @@
  */
 
 #include "ndn.cxx/name.h"
+#include "ndn.cxx/detail/name-component.h"
+
+#include <boost/lexical_cast.hpp>
 
 #define BOOST_TEST_MAIN 1
 
@@ -29,7 +32,26 @@ using namespace ndn;
 using namespace std;
 using namespace boost;
 
-BOOST_AUTO_TEST_SUITE(ndnNameTests)
+BOOST_AUTO_TEST_SUITE(NameTests)
+
+BOOST_AUTO_TEST_CASE (Component)
+{
+  name::Component x;
+  BOOST_CHECK_EQUAL (x.size (), 0);
+
+  x = name::Component ("test");
+  BOOST_CHECK_EQUAL (x.size (), 4);
+
+  x = name::Component ("%21test");
+  BOOST_CHECK_EQUAL (x.size (), 5);
+
+  BOOST_CHECK_EQUAL (boost::lexical_cast<string> (x), "!test");
+
+  x = name::Component ("%20test");
+  BOOST_CHECK_EQUAL (x.size (), 5);
+  
+  BOOST_CHECK_EQUAL (boost::lexical_cast<string> (x), "%20test");
+}
 
 BOOST_AUTO_TEST_CASE (ndnNameTest)
 {

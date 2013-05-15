@@ -391,24 +391,6 @@ Name::operator == (const Name &name) const
 }
 
 bool
-Name::canonical_compare (const Bytes &comp1, const Bytes &comp2)
-{
-  if (comp1.size () < comp2.size ())
-    return true;
-
-  if (comp1.size () > comp2.size ())
-    return false;
-
-  // now we know that sizes are equal
-
-  pair<Bytes::const_iterator, Bytes::const_iterator> diff = std::mismatch (comp1.begin (), comp1.end (), comp2.begin ());
-  if (diff.first == comp1.end ()) // components are actually equal
-    return true;
-
-  return std::lexicographical_compare (diff.first, comp2.end (), diff.second, comp2.end ());
-}
-
-bool
 Name::operator <= (const Name &name) const
 {
   Name::const_iterator i = this->begin ();

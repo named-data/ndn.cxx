@@ -385,17 +385,7 @@ public:
   toUri () const;
 
   /////////////////////////////////////////////////
-  // Helpers and compatibility wrappers
-  
-  /**
-   * @brief Canonical comparison of two sequences
-   *
-   * Similar to <= comparison, but using CCNx canonical ordering
-   * @see http://www.ccnx.org/releases/latest/doc/technical/CanonicalOrder.html
-   */
-  static bool
-  canonical_compare (const Bytes &comp1, const Bytes &comp2);
-  
+  // Helpers and compatibility wrappers 
   /**
    * @brief Check if to Name objects are equal (have the same number of components with the same binary data)
    */

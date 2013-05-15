@@ -84,7 +84,7 @@ def build (bld):
     libndn_cxx = bld (
         target="ndn.cxx",
         features=['cxx', 'cxxshlib'],
-        source = bld.path.ant_glob(['ndn.cxx/**/*.cpp',
+        source = bld.path.ant_glob(['ndn.cxx/**/*.cpp', 'ndn.cxx/**/*.cc',
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
         use = 'TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
