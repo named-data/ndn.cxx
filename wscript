@@ -103,7 +103,7 @@ def build (bld):
           install_prefix = None,
           )
 
-    headers = bld.path.ant_glob(['ndn.cxx.h', 'ndn.cxx/*.h'])
+    headers = bld.path.ant_glob(['ndn.cxx.h', 'ndn.cxx/**/*.h'])
     bld.install_files("%s" % bld.env['INCLUDEDIR'], headers, relative_trick=True)
 
 @Configure.conf
