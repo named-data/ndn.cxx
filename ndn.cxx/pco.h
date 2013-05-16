@@ -24,8 +24,8 @@
 
 #include "ndn.cxx/wrapper.h"
 #include "ndn.cxx/common.h"
-#include "ndn.cxx/name.h"
-#include "ndn.cxx/hash.h"
+#include "ndn.cxx/fields/name.h"
+#include "ndn.cxx/helpers/hash.h"
 
 namespace ndn {
 

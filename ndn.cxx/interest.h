@@ -23,9 +23,9 @@
 #define NDN_INTEREST_H
 
 #include <ndn.cxx/common.h>
-#include <ndn.cxx/name.h>
-#include <ndn.cxx/detail/exclude.h>
-#include <ndn.cxx/hash.h>
+#include <ndn.cxx/fields/name.h>
+#include <ndn.cxx/fields/exclude.h>
+#include <ndn.cxx/helpers/hash.h>
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 

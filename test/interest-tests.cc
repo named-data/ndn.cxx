@@ -19,8 +19,9 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ndn.cxx.h"
-#include "ndn.cxx/ccnb.h"
+#include "ndn.cxx/wire/ccnb.h"
+#include "ndn.cxx/interest.h"
+
 #include <unistd.h>
 #include <fstream>
 

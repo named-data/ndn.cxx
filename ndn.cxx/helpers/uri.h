@@ -22,7 +22,7 @@
 #ifndef NDN_DETAIL_URI_H
 #define NDN_DETAIL_URI_H
 
-#include "error.h"
+#include "ndn.cxx/error.h"
 
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/iterator/transform_iterator.hpp>

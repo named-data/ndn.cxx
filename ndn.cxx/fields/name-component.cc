@@ -20,8 +20,8 @@
 
 #include "name-component.h"
 
-#include "ndn.cxx/detail/error.h"
-#include "ndn.cxx/detail/uri.h"
+#include "ndn.cxx/error.h"
+#include "ndn.cxx/helpers/uri.h"
 
 using namespace std;
 

@@ -27,7 +27,7 @@
 #include <boost/thread/thread.hpp>
 
 #include "ndn.cxx/common.h"
-#include "ndn.cxx/name.h"
+#include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/interest.h"
 #include "ndn.cxx/closure.h"
 #include "ndn.cxx/pco.h"

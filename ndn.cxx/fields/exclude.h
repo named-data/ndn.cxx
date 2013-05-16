@@ -21,7 +21,7 @@
 #ifndef NDN_EXCLUDE_H
 #define NDN_EXCLUDE_H
 
-#include "ndn.cxx/detail/name-component.h"
+#include "ndn.cxx/fields/name-component.h"
 
 #include <map>
 

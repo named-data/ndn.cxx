@@ -19,9 +19,9 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ndn.cxx/name.h"
-#include "ndn.cxx/detail/name-component.h"
-#include "ndn.cxx/detail/error.h"
+#include "ndn.cxx/fields/name.h"
+#include "ndn.cxx/fields/name-component.h"
+#include "ndn.cxx/error.h"
 
 #define BOOST_TEST_MAIN 1
 

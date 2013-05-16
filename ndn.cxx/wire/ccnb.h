@@ -21,8 +21,8 @@
 #ifndef NDN_CCNB_H
 #define NDN_CCNB_H
 
-#include <ndn.cxx/name.h>
 #include <ndn.cxx/interest.h>
+#include <ndn.cxx/data.h>
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 

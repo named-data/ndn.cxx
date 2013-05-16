@@ -21,8 +21,7 @@
 
 #include "name.h"
 
-#include <ndn.cxx/detail/error.h>
-#include <ndn.cxx/ccnb.h>
+#include "ndn.cxx/error.h"
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/algorithm/string.hpp>

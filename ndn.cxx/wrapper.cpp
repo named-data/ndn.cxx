@@ -37,7 +37,7 @@ extern "C" {
 #include "executor/executor.h"
 
 #include "logging.h"
-#include "ccnb.h"
+#include "ndn.cxx/wire/ccnb.h"
 
 
 INIT_LOGGER ("ndn.Wrapper");

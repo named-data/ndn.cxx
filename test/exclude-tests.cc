@@ -18,8 +18,8 @@
  * Author: Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ndn.cxx/detail/exclude.h"
-#include "ndn.cxx/detail/error.h"
+#include "ndn.cxx/fields/exclude.h"
+#include "ndn.cxx/error.h"
 
 #include <boost/test/unit_test.hpp>
 

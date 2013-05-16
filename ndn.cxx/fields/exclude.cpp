@@ -21,7 +21,7 @@
 
 #include "exclude.h"
 
-#include "ndn.cxx/detail/error.h"
+#include "ndn.cxx/error.h"
 
 namespace ndn
 {

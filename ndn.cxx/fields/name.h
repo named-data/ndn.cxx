@@ -24,7 +24,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "ndn.cxx/detail/name-component.h"
+#include "ndn.cxx/fields/name-component.h"
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/charbuf.h"
 

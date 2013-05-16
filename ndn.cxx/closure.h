@@ -23,7 +23,7 @@
 #define NDN_CLOSURE_H
 
 #include "ndn.cxx/common.h"
-#include "ndn.cxx/name.h"
+#include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/interest.h"
 
 namespace ndn {

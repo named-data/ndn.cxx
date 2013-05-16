@@ -21,7 +21,6 @@
 
 #include "interest.h"
 #include <boost/lexical_cast.hpp>
-#include <ndn.cxx/ccnb.h>
 
 using namespace std;
 
