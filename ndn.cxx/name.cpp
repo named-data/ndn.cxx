@@ -21,13 +21,13 @@
 
 #include "name.h"
 
-#include <boost/lexical_cast.hpp>
-#include <ctype.h>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
+#include <ndn.cxx/detail/error.h>
 #include <ndn.cxx/ccnb.h>
+
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/algorithm/string.hpp>
+
+#include <ctype.h>
 
 using namespace std;
 
@@ -42,29 +42,74 @@ Name::Name ()
 {
 }
 
-Name::Name (const string &name)
-{
-  /**
-   * @todo Implement proper URI conversion. Right now it is not really doing a good job
-   */
+Name::Name (const string &uri)
+{ 
+  string::const_iterator i = uri.begin ();
+  string::const_iterator end = uri.end ();
 
-  stringstream ss(name);
-  string compStr;
-  bool first = true;
-  while(getline(ss, compStr, '/'))
-  {
-    // discard the first empty comp before the first '/'
-    if (first)
+  string::const_iterator firstSlash = std::find (i, end, '/');
+  if (firstSlash == end)
     {
-      first = false;
-      continue;
+      BOOST_THROW_EXCEPTION (error::Name ()
+                             << error::msg ("Name should include at least one slash (did you forget to specify initial /?)"));
     }
-    Bytes comp(compStr.begin(), compStr.end());
-    m_comps.push_back(comp);
-  }
+
+  if (firstSlash != i)
+    {
+      string schema (i, firstSlash);
+      if (*schema.rbegin () != ':')
+        {
+          BOOST_THROW_EXCEPTION (error::Name ()
+                                 << error::msg ("First component of the name does not start with a slash (did you forget to specify initial /?)"));
+        }
+
+      i = firstSlash;
+
+      if (!boost::iequals (schema, "ccnx:") &&
+          !boost::iequals (schema, "ndn:"))
+        {
+          BOOST_THROW_EXCEPTION (error::Name ()
+                                 << error::msg ("URI schema is not supported (only ccnx: or ndn: is allowed)")
+                                 << error::msg (schema));
+        }
+    }
+
+  string::const_iterator secondSlash = i;
+  secondSlash ++;
+  if (secondSlash != end && *secondSlash == '/')
+    {
+      // The authority component (the part after the initial "//" in the familiar http and ftp URI schemes) is present,
+      // but it is not relevant to NDN name.
+      // skipping it
+      secondSlash ++;
+      i = std::find (secondSlash, end, '/');
+    }
+  
+  if (i == end)
+    {
+      BOOST_THROW_EXCEPTION (error::Name ()
+                             << error::msg ("Invalid URI")
+                             << error::msg (uri));
+    }
+
+  while (i != end)
+    {
+      // skip any extra slashes
+      while (i != end && *i == '/')
+        {
+          i ++;
+        }
+      if (i == end)
+        break;
+      
+      string::const_iterator endOfComponent = std::find (i, end, '/');
+      m_comps.push_back (name::Component (i, endOfComponent));
+
+      i = endOfComponent;
+    }
 }
 
-Name::Name (const vector<Bytes> &comps)
+Name::Name (const vector<name::Component> &comps)
 {
   m_comps = comps;
 }
@@ -81,9 +126,8 @@ Name::Name (const unsigned char *data, const ccn_indexbuf *comps)
     const unsigned char *compPtr;
     size_t size;
     ccn_name_comp_get(data, comps, i, &compPtr, &size);
-    Bytes comp;
-    readRaw(comp, compPtr, size);
-    m_comps.push_back(comp);
+
+    m_comps.push_back (name::Component (compPtr, size));
   }
 }
 
@@ -98,9 +142,7 @@ Name::Name (const void *buf, const size_t length)
   int i = 0;
   while (ccn_name_comp_get(namebuf.buf, idx, i, &compPtr, &size) == 0)
     {
-      Bytes comp;
-      readRaw (comp, compPtr, size);
-      m_comps.push_back(comp);
+      m_comps.push_back (name::Component (compPtr, size));
       i++;
     }
   ccn_indexbuf_destroy(&idx);
@@ -116,9 +158,7 @@ Name::Name (const Charbuf &buf)
   int i = 0;
   while (ccn_name_comp_get(buf.getBuf ()->buf, idx, i, &compPtr, &size) == 0)
     {
-      Bytes comp;
-      readRaw (comp, compPtr, size);
-      m_comps.push_back(comp);
+      m_comps.push_back (name::Component (compPtr, size));
       i++;
     }
   ccn_indexbuf_destroy(&idx);
@@ -134,9 +174,7 @@ Name::Name (const ccn_charbuf *buf)
   int i = 0;
   while (ccn_name_comp_get(buf->buf, idx, i, &compPtr, &size) == 0)
     {
-      Bytes comp;
-      readRaw (comp, compPtr, size);
-      m_comps.push_back(comp);
+      m_comps.push_back (name::Component (compPtr, size));
       i++;
     }
   ccn_indexbuf_destroy(&idx);
@@ -162,50 +200,34 @@ Name::append (const Name &comp)
 }
 
 Name &
-Name::append (const Bytes &comp)
+Name::append (const name::Component &comp)
 {
-  m_comps.push_back(comp);
+  m_comps.push_back (comp);
   return *this;
 }
 
 Name &
 Name::append (const string &compStr)
 {
-  Bytes comp (compStr.begin(), compStr.end());
-  return append (comp);
+  return append (name::Component (compStr));
 }
 
 Name &
 Name::append (const void *buf, size_t size)
 {
-  Bytes comp (reinterpret_cast<const unsigned char*> (buf), reinterpret_cast<const unsigned char*> (buf) + size);
-  return append (comp);
+  return append (name::Component (buf, size));
 }
 
 Name &
 Name::appendNumber (uint64_t number)
 {
-  Bytes comp;
-  while (number > 0)
-    {
-      comp.push_back (static_cast<unsigned char> (number & 0xFF));
-      number >>= 8;
-    }
-  return append (comp);
+  return append (name::Component::fromNumber (number));
 }
 
 Name &
 Name::appendNumberWithMarker (uint64_t number, unsigned char marker)
 {
-  Bytes comp;
-  comp.push_back (marker);
-
-  while (number > 0)
-    {
-      comp.push_back (static_cast<unsigned char> (number & 0xFF));
-      number >>= 8;
-    }
-  return append (comp);
+  return append (name::Component::fromNumberWithMarker (number, marker));
 }
 
 Name &
@@ -227,7 +249,7 @@ Name::appendVersion (uint64_t version/* = Name::nversion*/)
 //                                GETTERS                                    //
 ///////////////////////////////////////////////////////////////////////////////
 
-const Bytes &
+const name::Component &
 Name::get (int index) const
 {
   if (index < 0)
@@ -237,12 +259,14 @@ Name::get (int index) const
 
   if (static_cast<unsigned int> (index) >= m_comps.size ())
     {
-      boost::throw_exception (Error::Name() << error_info_str("Index out of range: " + boost::lexical_cast<string> (index)));
+      BOOST_THROW_EXCEPTION (error::Name ()
+                             << error::msg ("Index out of range")
+                             << error::pos (index));
     }
   return m_comps [index];
 }
 
-Bytes &
+name::Component &
 Name::get (int index)
 {
   if (index < 0)
@@ -252,9 +276,11 @@ Name::get (int index)
 
   if (static_cast<unsigned int> (index) >= m_comps.size())
     {
-      boost::throw_exception(Error::Name() << error_info_str("Index out of range: " + boost::lexical_cast<string>(index)));
+      BOOST_THROW_EXCEPTION (error::Name ()
+                             << error::msg ("Index out of range")
+                             << error::pos (index));
     }
-  return m_comps[index];
+  return m_comps [index];
 }
 
 
@@ -262,65 +288,6 @@ Name::get (int index)
 ///// Static helpers to convert name component to appropriate value
 /////
 
-std::string
-Name::asString (const Bytes &comp)
-{
-  return std::string (reinterpret_cast<const char*> (head(comp)), comp.size ());
-}
-
-std::string
-Name::asUriString (const Bytes &comp)
-{
-  ostringstream ss;
-  for (Bytes::const_iterator ch = comp.begin (); ch != comp.end (); ch++)
-  {
-    if (isprint(*ch))
-    {
-      ss << static_cast<char> (*ch);
-    }
-    else
-    {
-      ss << "%" << hex << setfill('0') << setw(2) << static_cast<unsigned int> (*ch);
-    }
-  }
-
-  return ss.str();
-}
-
-uint64_t
-Name::asNumber (const Bytes &comp)
-{
-  uint64_t ret = 0;
-  for (Bytes::const_reverse_iterator i = comp.rbegin (); i != comp.rend (); i++)
-    {
-      ret <<= 8;
-      ret |= *i;
-    }
-  return ret;
-}
-
-uint64_t
-Name::asNumberWithMarker (const Bytes &comp, unsigned char marker)
-{
-  if (comp.empty () ||
-      *(comp.begin ()) != marker)
-    {
-      boost::throw_exception (Error::Name ()
-                              << error_info_str("Name component does not have required marker: " + Name::asString (comp)));
-    }
-  uint64_t ret = 0;
-  Bytes::const_reverse_iterator i = comp.rbegin ();
-  unsigned char value = *i;
-  i++;
-  for (; i != comp.rend (); i++)
-    {
-      ret <<= 8;
-      ret |= value;
-
-      value = *i;
-    }
-  return ret;
-}
 
 Name
 Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
@@ -334,8 +301,10 @@ Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
 
   if (pos + len > m_comps.size ())
     {
-      boost::throw_exception (Error::Name() <<
-                              error_info_str ("getSubName parameter out of range"));
+      BOOST_THROW_EXCEPTION (error::Name ()
+                             << error::msg ("getSubName parameter out of range")
+                             << error::pos (pos)
+                             << error::pos (len));
     }
 
   for (size_t i = pos; i < pos + len; i++)
@@ -357,95 +326,54 @@ Name::operator+ (const Name &name) const
 std::string
 Name::toUri () const
 {
-  return boost::lexical_cast<std::string> (*this);
+  ostringstream os;
+  toUri (os);
+  return os.str ();
 }
 
-ostream &
-operator << (ostream &os, const Name &name)
+void
+Name::toUri (std::ostream &os) const
 {
-  for (Name::const_iterator comp = name.begin (); comp != name.end (); comp++)
+  for (Name::const_iterator comp = begin (); comp != end (); comp++)
     {
-      os << "/" << Name::asUriString (*comp);
+      os << "/";
+      comp->toUri (os);
     }
-  if (name.size () == 0)
+  if (size () == 0)
     os << "/";
-  return os;
 }
 
-bool
-Name::operator == (const Name &name) const
-{
-  if (this->size () != name.size ())
-    return false;
+// ostream &
+// operator << (ostream &os, const Name &name)
+// {
+//   for (Name::const_iterator comp = name.begin (); comp != name.end (); comp++)
+//     {
+//       os << "/" << *comp;
+//     }
+//   if (name.size () == 0)
+//     os << "/";
+//   return os;
+// }
 
-  const_iterator i = this->begin ();
-  const_iterator j = name.begin ();
-
-  for (; i != end () && j != name.end (); i++, j++)
-    {
-      if (*i != *j)
-        return false;
-    }
-
-  return true;
-}
-
-bool
-Name::operator <= (const Name &name) const
+int
+Name::compare (const Name &name) const
 {
   Name::const_iterator i = this->begin ();
   Name::const_iterator j = name.begin ();
 
-  for (; i != this->end () && j != this->end (); i++, j++)
+  for (; i != this->end () && j != name.end (); i++, j++)
     {
-      // this is necessary "reimplementation" to optimize process of comparison
-
-      if (i->size () < j->size ())
-        return true;
-
-      if (i->size () > j->size ())
-        return false;
-
-      pair<Bytes::const_iterator, Bytes::const_iterator> diff = std::mismatch (i->begin (), i->end (), j->begin ());
-      if (diff.first == i->end ()) // components are actually equal
+      int res = i->compare (*j);
+      if (res == 0)
         continue;
-
-      return std::lexicographical_compare (diff.first, i->end (), diff.second, j->end ());
+      else
+        return res;
     }
 
   if (i == this->end () && j == name.end ())
-    return true;
+    return 0; // prefixes are equal
 
-  return (i == this->end ()); // any prefix of a name is "less" than the name
-}
-
-bool
-Name::operator < (const Name &name) const
-{
-  Name::const_iterator i = this->begin ();
-  Name::const_iterator j = name.begin ();
-
-  for (; i != this->end () && j != this->end (); i++, j++)
-    {
-      // this is necessary "reimplementation" to optimize process of comparison
-
-      if (i->size () < j->size ())
-        return true;
-
-      if (i->size () > j->size ())
-        return false;
-
-      pair<Bytes::const_iterator, Bytes::const_iterator> diff = std::mismatch (i->begin (), i->end (), j->begin ());
-      if (diff.first == i->end ()) // components are actually equal
-        continue;
-
-      return std::lexicographical_compare (diff.first, i->end (), diff.second, j->end ());
-    }
-
-  if (i == this->end () && j == name.end ())
-    return false;
-
-  return (i == this->end ()); // any prefix of a name is "less" than the name
+  return (i == this->end ()) ? -1 : +1;
 }
 
 } // ndn

@@ -33,7 +33,7 @@ extern "C" {
 
 #include <sstream>
 
-#include "ndn.cxx/verifier.h"
+// #include "ndn.cxx/verifier.h"
 #include "executor/executor.h"
 
 #include "logging.h"
@@ -117,7 +117,7 @@ Wrapper::Wrapper()
   , m_running (true)
   , m_connected (false)
   , m_executor (new Executor(1))
-  , m_verifier(new Verifier(this))
+  // , m_verifier(new Verifier(this))
 {
   start ();
 }
@@ -154,11 +154,11 @@ Wrapper::connectCcnd()
 Wrapper::~Wrapper()
 {
   shutdown ();
-  if (m_verifier != 0)
-  {
-    delete m_verifier;
-    m_verifier = 0;
-  }
+  // if (m_verifier != 0)
+  // {
+  //   delete m_verifier;
+  //   m_verifier = 0;
+  // }
 }
 
 void
@@ -724,7 +724,8 @@ Wrapper::getLocalPrefix ()
 bool
 Wrapper::verify(PcoPtr &pco, double maxWait)
 {
-  return m_verifier->verify(pco, maxWait);
+  return true; // totally fake
+  // return m_verifier->verify(pco, maxWait);
 }
 
 /// @cond include_hidden

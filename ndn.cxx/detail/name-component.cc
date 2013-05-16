@@ -19,12 +19,9 @@
  */
 
 #include "name-component.h"
-#include "ndn.cxx/detail/string-transform.h"
 
-#include <boost/lexical_cast.hpp>
-
-// Exceptions
-typedef boost::error_info<struct tag_errmsg, std::string> error_info_str;
+#include "ndn.cxx/detail/error.h"
+#include "ndn.cxx/detail/uri.h"
 
 using namespace std;
 
@@ -32,19 +29,6 @@ namespace ndn
 {
 namespace name
 {
-
-static const bool ESCAPE_CHARACTER [256] = {
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 26
-  1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 53
-  0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 107
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, // 134
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 161
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 188
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 215
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 242
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 // 255
-};
   
 Component::Component ()
 {
@@ -52,39 +36,34 @@ Component::Component ()
 
 Component::Component (const std::string &uri)
 {
-  string::const_iterator i = uri.begin ();
-  while (i != uri.end ())
+  try
     {
-      if (*i == '%')
-        {
-          try
-            {
-              i++;
-              string::const_iterator j = i;
-              advance (i, 2);
-              
-              copy (detail::string_to_binary (j), detail::string_to_binary (i), back_inserter (*this));
-            }
-          catch (ndn::error::StringTransform &e)
-            {
-              boost::throw_exception (error::name::Component ()
-                                      << error_info_str ("Incorrect escape sequence in URI name: [" + uri + "] near position " +
-                                                         boost::lexical_cast<string> (distance (i, uri.begin ()))));
-            }
-        }
-      else if (!ESCAPE_CHARACTER[static_cast<unsigned short> (*i)])
-        {
-          push_back (*i);
-          i++;
-        }
-      else
-        {
-          boost::throw_exception (error::name::Component ()
-                                  << error_info_str ("Incorrect URI name: [" + uri + "]"));
-        }
+      Uri::fromEscaped (uri.begin (), uri.end (), back_inserter (*this));
+    }
+  catch (error::Uri &err)
+    {
+      // re-throwing different exception
+      BOOST_THROW_EXCEPTION (error::name::Component ()
+                             << error::msg (uri)
+                             << error::pos (error::get_pos (err)));
     }
 }
-  
+
+Component::Component (std::string::const_iterator begin, std::string::const_iterator end)
+{
+  try
+    {
+      Uri::fromEscaped (begin, end, back_inserter (*this));
+    }
+  catch (error::Uri &err)
+    {
+      // re-throwing different exception
+      BOOST_THROW_EXCEPTION (error::name::Component ()
+                             << error::msg (string (begin, end))
+                             << error::pos (error::get_pos (err)));
+    }
+}
+
 Component::Component (const void *buf, size_t length)
 {
   copy (static_cast<const char*> (buf),
@@ -92,39 +71,110 @@ Component::Component (const void *buf, size_t length)
         back_inserter (*this));
 }
 
-bool
-Component::operator <= (const Component &other) const
+int
+Component::compare (const Component &other) const
 {
   if (size () < other.size ())
-    return true;
+    return -1;
 
   if (size () > other.size ())
-    return false;
+    return +1;
 
   // now we know that sizes are equal
 
   pair<const_iterator, const_iterator> diff = mismatch (begin (), end (), other.begin ());
   if (diff.first == end ()) // components are actually equal
-    return true;
+    return 0;
 
-  return std::lexicographical_compare (diff.first, end (), diff.second, other.end ());
+  return (std::lexicographical_compare (diff.first, end (), diff.second, other.end ())) ? -1 : +1;    
 }
 
-std::ostream&
-operator << (std::ostream &os, const Component &name)
+Component
+Component::fromNumber (uint64_t number)
 {
-  for (Component::const_iterator i = name.begin (); i != name.end (); i++)
+  Component comp;
+  while (number > 0)
     {
-      if (ESCAPE_CHARACTER[static_cast<unsigned short> (*i)])
-        {
-          os << "%" << hex << setfill('0') << setw(2) << static_cast<unsigned int> (*i);
-        }
-      else
-        {
-          os << *i;
-        }
+      comp.push_back (static_cast<unsigned char> (number & 0xFF));
+      number >>= 8;
     }
-  return os;
+  return comp;
+}
+
+Component
+Component::fromNumberWithMarker (uint64_t number, unsigned char marker)
+{
+  Component comp;
+  comp.push_back (marker);
+
+  while (number > 0)
+    {
+      comp.push_back (static_cast<unsigned char> (number & 0xFF));
+      number >>= 8;
+    }
+  return comp;
+}
+
+std::string
+Component::toBlob () const
+{
+  return std::string (begin (), end ());
+}
+
+void
+Component::toBlob (std::ostream &os) const
+{
+  os.write (buf (), size ());
+}
+
+std::string
+Component::toUri () const
+{
+  ostringstream os;
+  toUri (os);
+  return os.str ();  
+}
+
+void
+Component::toUri (std::ostream &os) const
+{
+  Uri::toEscaped (begin (), end (), ostream_iterator<char> (os));
+}
+
+uint64_t
+Component::toNumber () const
+{
+  uint64_t ret = 0;
+  for (const_reverse_iterator i = rbegin (); i != rend (); i++)
+    {
+      ret <<= 8;
+      ret |= *i;
+    }
+  return ret;
+}
+
+uint64_t
+Component::toNumberWithMarker (unsigned char marker) const
+{
+  if (empty () ||
+      *(begin ()) != marker)
+    {
+      BOOST_THROW_EXCEPTION (error::name::Component ()
+                             << error::msg ("Name component does not have required marker")
+                             << error::msg (toUri ()));
+    }
+  uint64_t ret = 0;
+  const_reverse_iterator i = rbegin ();
+  unsigned char value = *i;
+  i++;
+  for (; i != rend (); i++)
+    {
+      ret <<= 8;
+      ret |= value;
+
+      value = *i;
+    }
+  return ret;
 }
 
 

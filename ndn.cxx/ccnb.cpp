@@ -77,7 +77,7 @@ Ccnb::AppendName (std::ostream &os, const Name &name)
   written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Name, Ccnb::CCN_DTAG); // <Name>
   for (Name::const_iterator component = name.begin (); component != name.end (); component ++)
     {
-      written += AppendTaggedBlob (os, Ccnb::CCN_DTAG_Component, head (*component), component->size ());
+      written += AppendTaggedBlob (os, Ccnb::CCN_DTAG_Component, component->buf (), component->size ());
     }
   written += Ccnb::AppendCloser (os);                                        // </Name>
   
@@ -112,7 +112,7 @@ Ccnb::AppendTimestampBlob (std::ostream &os, const boost::posix_time::time_durat
 }
 
 size_t
-Ccnb::AppendTaggedBlob (std::ostream &os, Ccnb::ccn_dtag dtag, const uint8_t *data, size_t size)
+Ccnb::AppendTaggedBlob (std::ostream &os, Ccnb::ccn_dtag dtag, const void *data, size_t size)
 {
   size_t written = AppendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
   /* 2 */

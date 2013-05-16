@@ -23,6 +23,8 @@
 #define NDN_NAME_H
 
 #include <boost/shared_ptr.hpp>
+
+#include "ndn.cxx/detail/name-component.h"
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/charbuf.h"
 
@@ -34,12 +36,12 @@ namespace ndn {
 class Name
 {
 public:
-  typedef std::vector<Bytes>::iterator iterator;
-  typedef std::vector<Bytes>::const_iterator const_iterator;
-  typedef std::vector<Bytes>::reverse_iterator reverse_iterator;
-  typedef std::vector<Bytes>::const_reverse_iterator const_reverse_iterator;
-  typedef std::vector<Bytes>::reference reference;
-  typedef std::vector<Bytes>::const_reference const_reference;
+  typedef std::vector<name::Component>::iterator iterator;
+  typedef std::vector<name::Component>::const_iterator const_iterator;
+  typedef std::vector<name::Component>::reverse_iterator reverse_iterator;
+  typedef std::vector<name::Component>::const_reverse_iterator const_reverse_iterator;
+  typedef std::vector<name::Component>::reference reference;
+  typedef std::vector<name::Component>::const_reference const_reference;
   
   ///////////////////////////////////////////////////////////////////////////////
   //                              CONSTRUCTORS                                 //
@@ -69,7 +71,7 @@ public:
    *
    * @param comps vector of binary blobs
    */
-  Name (const std::vector<Bytes> &comps);
+  Name (const std::vector<name::Component> &comps);
 
   /**
    * @brief Create a name from CCNB-formatted binary blob
@@ -132,7 +134,7 @@ public:
    * @returns reference to self (to allow chaining of append methods)
    */
   Name &
-  append (const Bytes &comp);
+  append (const name::Component &comp);
 
   /**
    * @brief Append a string as a name component
@@ -243,7 +245,7 @@ public:
    *
    * If index is out of range, an exception will be thrown
    */
-  const Bytes &
+  const name::Component &
   get (int index) const;
 
   /**
@@ -253,7 +255,7 @@ public:
    *
    * If index is out of range, an exception will be thrown
    */
-  Bytes &
+  name::Component &
   get (int index);
 
   /////
@@ -289,71 +291,6 @@ public:
   /////
 
   /**
-   * @brief Convert binary blob name component to std::string (no conversion is made)
-   * @param comp name component to be converted
-   * @see asUriString
-   */  
-  static std::string
-  asString (const Bytes &comp);
-
-  /**
-   * @brief Convert binary blob name component to std::string, escaping all non-printable characters in URI format
-   * @param comp name component to be converted
-   * @see asString
-   */
-  static std::string
-  asUriString (const Bytes &comp);
-  
-  /**
-   * @brief Convert binary blob name component (network-ordered number) to number
-   * @param comp name component to be converted
-   */  
-  static uint64_t
-  asNumber (const Bytes &comp);
-
-  /**
-   * @brief Convert binary blob name component (network-ordered number) to number, using appropriate marker from the naming convention
-   * @param comp name component to be converted
-   * @param marker required marker from the naming convention
-   *
-   * If the required marker does not exist, an exception will be thrown
-   */  
-  static uint64_t
-  asNumberWithMarker (const Bytes &comp, unsigned char marker);
-
-  /**
-   * @brief Convert binary blob name component, assuming sequence number naming convention (marker = 0x00)
-   * @param comp name component to be converted
-   * @see asNumberWithMarker
-   */
-  inline static uint64_t
-  asSeqNum (const Bytes &);
-  
-  /**
-   * @brief Convert binary blob name component, assuming control number naming convention (marker = 0xC1)
-   * @param comp name component to be converted
-   * @see asNumberWithMarker
-   */
-  inline static uint64_t
-  asControlNum (const Bytes &);
-
-  /**
-   * @brief Convert binary blob name component, assuming block ID naming convention (marker = 0xFB)
-   * @param comp name component to be converted
-   * @see asNumberWithMarker
-   */
-  inline static uint64_t
-  asBlkId (const Bytes &);
-
-  /**
-   * @brief Convert binary blob name component, assuming time-stamping version naming convention (marker = 0xFD)
-   * @param comp name component to be converted
-   * @see asNumberWithMarker
-   */
-  inline static uint64_t
-  asVersion (const Bytes &);
-
-  /**
    * @brief Get a new name, constructed as a subset of components
    * @param pos Position of the first component to be copied to the subname
    * @param len Number of components to be copied. Value Name::npos indicates that all components till the end of the name.
@@ -376,7 +313,6 @@ public:
    */
   inline Name
   getPostfix (size_t len, size_t skip = 0) const;
-
   
   /**
    * @brief Get text representation of the name (URI)
@@ -384,12 +320,30 @@ public:
   std::string
   toUri () const;
 
+  /**
+   * @brief Write name as URI to the specified output stream
+   * @param os output stream
+   */
+  void
+  toUri (std::ostream &os) const;
+
   /////////////////////////////////////////////////
-  // Helpers and compatibility wrappers 
+  // Helpers and compatibility wrappers
+  /////////////////////////////////////////////////
+  
+  /**
+   * @brief Compare two names, using canonical ordering for each component
+   * @return 0  They compare equal
+   *         <0 If *this comes before other in the canonical ordering
+   *         >0 If *this comes after in the canonical ordering
+   */
+  int
+  compare (const Name &name) const;  
+  
   /**
    * @brief Check if to Name objects are equal (have the same number of components with the same binary data)
    */
-  bool
+  inline bool
   operator == (const Name &name) const;
 
   /**
@@ -401,13 +355,13 @@ public:
   /**
    * @brief Less or equal comparison of two name objects
    */
-  bool
+  inline bool
   operator <= (const Name &name) const;
 
   /**
    * @brief Less comparison of two name objects
    */
-  bool
+  inline bool
   operator < (const Name &name) const;
 
   /**
@@ -426,14 +380,14 @@ public:
    * @brief Operator [] to simplify access to name components
    * @see get
    */
-  inline Bytes &
+  inline name::Component &
   operator [] (int index);
   
   /**
    * @brief Operator [] to simplify access to name components
    * @see get
    */
-  inline const Bytes &
+  inline const name::Component &
   operator [] (int index) const;
 
   /**
@@ -456,34 +410,22 @@ public:
   const static uint64_t nversion = static_cast<uint64_t> (-1);
 
 private:
-  std::vector<Bytes> m_comps;
+  std::vector<name::Component> m_comps;
 };
 
 typedef boost::shared_ptr<Name> NamePtr;
 
-namespace Error
+inline std::ostream &
+operator << (std::ostream &os, const Name &name)
 {
-/**
- * @brief An exception indicating an unrecoverable error with Name
- *
- * Example how to print out diagnostic information when the exception is thrown
- * @code
- *     try
- *       {
- *         ... operations with ndn::Name
- *       }
- *     catch (boost::exception &e)
- *       {
- *         std::cerr << boost::diagnostic_information (e) << std::endl;
- *       }
- * @endcode
- */
-struct Name : public virtual boost::exception, public virtual std::exception {};
-
+  name.toUri (os);
+  return os;
 }
 
-std::ostream&
-operator <<(std::ostream &os, const Name &name);
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Definition of inline methods
+/////////////////////////////////////////////////////////////////////////////////////
 
 
 inline Name &
@@ -565,30 +507,6 @@ Name::rend ()
 
 //// helpers
 
-inline uint64_t
-Name::asSeqNum (const Bytes &bytes)
-{
-  return Name::asNumberWithMarker (bytes, 0x00);
-}
-  
-inline uint64_t
-Name::asControlNum (const Bytes &bytes)
-{
-  return Name::asNumberWithMarker (bytes, 0xC1);
-}
-
-inline uint64_t
-Name::asBlkId (const Bytes &bytes)
-{
-  return Name::asNumberWithMarker (bytes, 0xFB);
-}
-
-inline uint64_t
-Name::asVersion (const Bytes &bytes)
-{
-  return Name::asNumberWithMarker (bytes, 0xFD);
-}
-
 
 inline Name
 Name::getPrefix (size_t len, size_t skip/* = 0*/) const
@@ -611,30 +529,48 @@ Name::push_back (const T &comp)
 }
 
 inline bool
+Name::operator ==(const Name &name) const
+{
+  return (compare (name) == 0);
+}
+
+inline bool
 Name::operator !=(const Name &name) const
 {
-  return ! (*this == name);
+  return (compare (name) != 0);
+}
+
+inline bool
+Name::operator <= (const Name &name) const
+{
+  return (compare (name) <= 0);
+}
+
+inline bool
+Name::operator < (const Name &name) const
+{
+  return (compare (name) < 0);
 }
 
 inline bool
 Name::operator >= (const Name &name) const
 {
-  return ! (*this < name);
+  return (compare (name) >= 0);
 }
 
 inline bool
 Name::operator > (const Name &name) const
 {
-  return ! (*this <= name);
+  return (compare (name) > 0);
 }
 
-inline Bytes &
+inline name::Component &
 Name::operator [] (int index)
 {
   return get (index);
 }
   
-inline const Bytes &
+inline const name::Component &
 Name::operator [] (int index) const
 {
   return get (index);

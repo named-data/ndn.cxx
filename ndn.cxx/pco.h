@@ -29,8 +29,8 @@
 
 namespace ndn {
 
-class Cert;
-typedef boost::shared_ptr<Cert> CertPtr;
+// class Cert;
+// typedef boost::shared_ptr<Cert> CertPtr;
 
 class ParsedContentObject
 {
@@ -71,8 +71,8 @@ public:
   bool
   verified() const { return m_verified; }
 
-  void
-  verifySignature(const CertPtr &cert);
+  // void
+  // verifySignature(const CertPtr &cert);
 
   const unsigned char *
   msg() const { return head(m_bytes); }

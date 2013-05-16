@@ -229,27 +229,7 @@ public:
    * @returns written length
    */
   static size_t
-  AppendTaggedBlob (std::ostream &os, ccn_dtag dtag, const uint8_t *data, size_t size);
-  
-  /**
-   * Append value as a tagged BLOB (templated version)
-   *
-   * This is a ccnb-encoded element with containing the BLOB as content
-   *
-   * Data will be reinterpret_cast<const uint8_t*> and size will be obtained using sizeof
-   *
-   * @param os output stream to write
-   * @param dtag is the element's dtag
-   * @param data a value to add
-   *
-   * @returns written length
-   */
-  template<class T>
-  static inline size_t
-  AppendTaggedBlob (std::ostream &os, ccn_dtag dtag, const T &data)
-  {
-    return AppendTaggedBlob (os, dtag, reinterpret_cast<const uint8_t*> (&data), sizeof (data));
-  }
+  AppendTaggedBlob (std::ostream &os, ccn_dtag dtag, const void *data, size_t size);
 
   /**
    * Append a tagged string (should be a valid UTF-8 coded string)

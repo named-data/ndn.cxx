@@ -20,7 +20,7 @@
  */
 
 #include "hash.h"
-#include "detail/string-transform.h"
+#include "detail/uri.h"
 
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>

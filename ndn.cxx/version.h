@@ -15,24 +15,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
- *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ * Author: Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Zhenkai Zhu <zhenkai@cs.ucla.edu>
  */
 
-#ifndef NDN_CXX_ALL_H
-#define NDN_CXX_ALL_H
+#ifndef NDN_CXX_VERSION_H
+#define NDN_CXX_VERSION_H
 
-#include <ndn.cxx/common.h>
-#include <ndn.cxx/wrapper.h>
+//  NDN_CXX_VERSION % 100 is the minor version
+//  NDN_CXX_VERSION / 100 % 1000 is the major version
 
-#include <ndn.cxx/interest.h>
-#include <ndn.cxx/pco.h>
+#define NDN_CXX_VERSION 0001
 
-#include <ndn.cxx/closure.h>
+#define NDN_CXX_VERSION_MAJOR  0
+#define NDN_CXX_VERSION_MINOR  1
 
-// #include <ndn.cxx/cert.h>
-// #include <ndn.cxx/charbuf.h>
-// #include <ndn.cxx/discovery.h>
-// #include <ndn.cxx/verifier.h>
-
-#endif
+#endif // NDN_CXX_VERSION_H

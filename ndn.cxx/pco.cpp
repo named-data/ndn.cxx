@@ -20,7 +20,6 @@
  */
 
 #include "pco.h"
-#include "ndn.cxx/cert.h"
 
 namespace ndn {
 
@@ -139,10 +138,10 @@ ParsedContentObject::type() const
   return OTHER;
 }
 
-void
-ParsedContentObject::verifySignature(const CertPtr &cert)
-{
-  m_verified = (ccn_verify_signature(head(m_bytes), m_pco.offset[CCN_PCO_E], &m_pco, cert->pkey()) == 1);
-}
+// void
+// ParsedContentObject::verifySignature(const CertPtr &cert)
+// {
+//   m_verified = (ccn_verify_signature(head(m_bytes), m_pco.offset[CCN_PCO_E], &m_pco, cert->pkey()) == 1);
+// }
 
 }
