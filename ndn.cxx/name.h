@@ -42,7 +42,7 @@ public:
   typedef std::vector<name::Component>::const_reverse_iterator const_reverse_iterator;
   typedef std::vector<name::Component>::reference reference;
   typedef std::vector<name::Component>::const_reference const_reference;
-  
+
   ///////////////////////////////////////////////////////////////////////////////
   //                              CONSTRUCTORS                                 //
   ///////////////////////////////////////////////////////////////////////////////
@@ -67,11 +67,13 @@ public:
   Name (const std::string &url);
 
   /**
-   * @brief Create a name from a vector of binary blobs, representing name components
+   * @brief Create a name from a container of elements [begin, end)
    *
-   * @param comps vector of binary blobs
+   * @param begin begin iterator of the container
+   * @param end end iterator of the container
    */
-  Name (const std::vector<name::Component> &comps);
+  template<class Iterator>
+  Name (Iterator begin, Iterator end);
 
   /**
    * @brief Create a name from CCNB-formatted binary blob
@@ -113,19 +115,10 @@ public:
   Name &
   operator= (const Name &other);
 
-  
+
   ///////////////////////////////////////////////////////////////////////////////
   //                                SETTERS                                    //
   ///////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * @brief Append components from another ndn::Name object
-   *
-   * @param comp reference to Name object
-   * @returns reference to self (to allow chaining of append methods)
-   */
-  Name &
-  append (const Name &comp);
 
   /**
    * @brief Append a binary blob as a name component
@@ -133,8 +126,28 @@ public:
    * @param comp a binary blob
    * @returns reference to self (to allow chaining of append methods)
    */
-  Name &
+  inline Name &
   append (const name::Component &comp);
+
+  /**
+   * @brief Append components a container of elements [begin, end)
+   *
+   * @param begin begin iterator of the container
+   * @param end end iterator of the container
+   * @returns reference to self (to allow chaining of append methods)
+   */
+  template<class Iterator>
+  inline Name &
+  append (Iterator begin, Iterator end);
+
+  /**
+   * @brief Append components from another ndn::Name object
+   *
+   * @param comp reference to Name object
+   * @returns reference to self (to allow chaining of append methods)
+   */
+  inline Name &
+  append (const Name &comp);
 
   /**
    * @brief Append a string as a name component
@@ -145,7 +158,7 @@ public:
    * No conversions will be done to the string.  The string is included in raw form,
    * without any leading '\0' symbols.
    */
-  Name &
+  inline Name &
   append (const std::string &compStr);
 
   /**
@@ -155,7 +168,7 @@ public:
    * @param size length of the binary blob
    * @returns reference to self (to allow chaining of append methods)
    */
-  Name &
+  inline Name &
   append (const void *buf, size_t size);
 
   /**
@@ -169,7 +182,7 @@ public:
    *
    * If the number is zero, an empty component will be added
    */
-  Name &
+  inline Name &
   appendNumber (uint64_t number);
 
   /**
@@ -189,7 +202,7 @@ public:
    *
    * @see appendNumber
    */
-  Name &
+  inline Name &
   appendNumberWithMarker (uint64_t number, unsigned char marker);
 
   /**
@@ -197,7 +210,7 @@ public:
    * @param seqno sequence number
    * @see appendNumberWithMarker
    */
-  inline Name &
+  inline inline Name &
   appendSeqNum (uint64_t seqno);
 
   /**
@@ -284,7 +297,7 @@ public:
 
   inline Name::reverse_iterator
   rend ();                  ///< @brief Reverse end iterator
-  
+
 
   /////
   ///// Static helpers to convert name component to appropriate value
@@ -313,7 +326,7 @@ public:
    */
   inline Name
   getPostfix (size_t len, size_t skip = 0) const;
-  
+
   /**
    * @brief Get text representation of the name (URI)
    */
@@ -330,7 +343,7 @@ public:
   /////////////////////////////////////////////////
   // Helpers and compatibility wrappers
   /////////////////////////////////////////////////
-  
+
   /**
    * @brief Compare two names, using canonical ordering for each component
    * @return 0  They compare equal
@@ -338,8 +351,8 @@ public:
    *         >0 If *this comes after in the canonical ordering
    */
   int
-  compare (const Name &name) const;  
-  
+  compare (const Name &name) const;
+
   /**
    * @brief Check if to Name objects are equal (have the same number of components with the same binary data)
    */
@@ -351,7 +364,7 @@ public:
    */
   inline bool
   operator != (const Name &name) const;
-  
+
   /**
    * @brief Less or equal comparison of two name objects
    */
@@ -375,14 +388,14 @@ public:
    */
   inline bool
   operator > (const Name &name) const;
-  
+
   /**
    * @brief Operator [] to simplify access to name components
    * @see get
    */
   inline name::Component &
   operator [] (int index);
-  
+
   /**
    * @brief Operator [] to simplify access to name components
    * @see get
@@ -427,6 +440,65 @@ operator << (std::ostream &os, const Name &name)
 // Definition of inline methods
 /////////////////////////////////////////////////////////////////////////////////////
 
+template<class Iterator>
+Name::Name (Iterator begin, Iterator end)
+{
+  append (begin, end);
+}
+
+inline Name &
+Name::append (const name::Component &comp)
+{
+  if (comp.size () != 0)
+    m_comps.push_back (comp);
+  return *this;
+}
+
+template<class Iterator>
+inline Name &
+Name::append (Iterator begin, Iterator end)
+{
+  for (Iterator i = begin; i != end; i++)
+    {
+      append (*i);
+    }
+  return *this;
+}
+
+Name &
+Name::append (const Name &comp)
+{
+  if (this == &comp)
+    {
+      // have to double-copy if the object is self, otherwise results very frustrating (because we use vector...)
+      return append (Name (comp.begin (), comp.end ()));
+    }
+  return append (comp.begin (), comp.end ());
+}
+
+Name &
+Name::append (const std::string &compStr)
+{
+  return append (name::Component (compStr));
+}
+
+Name &
+Name::append (const void *buf, size_t size)
+{
+  return append (name::Component (buf, size));
+}
+
+Name &
+Name::appendNumber (uint64_t number)
+{
+  return append (name::Component::fromNumber (number));
+}
+
+Name &
+Name::appendNumberWithMarker (uint64_t number, unsigned char marker)
+{
+  return append (name::Component::fromNumberWithMarker (number, marker));
+}
 
 inline Name &
 Name::appendSeqNum (uint64_t seqno)
@@ -569,7 +641,7 @@ Name::operator [] (int index)
 {
   return get (index);
 }
-  
+
 inline const name::Component &
 Name::operator [] (int index) const
 {

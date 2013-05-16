@@ -130,7 +130,6 @@ public:
   static Component
   fromNumber (uint64_t number);
 
-
   /**
    * @brief Create network-ordered numeric component to the name with marker
    *
@@ -233,7 +232,6 @@ public:
    */
   inline uint64_t
   toVersion () const;
-  
 };
 
 inline const char *

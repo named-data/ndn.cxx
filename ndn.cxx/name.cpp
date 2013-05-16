@@ -103,15 +103,10 @@ Name::Name (const string &uri)
         break;
       
       string::const_iterator endOfComponent = std::find (i, end, '/');
-      m_comps.push_back (name::Component (i, endOfComponent));
+      append (name::Component (i, endOfComponent));
 
       i = endOfComponent;
     }
-}
-
-Name::Name (const vector<name::Component> &comps)
-{
-  m_comps = comps;
 }
 
 Name::Name (const Name &other)
@@ -127,7 +122,7 @@ Name::Name (const unsigned char *data, const ccn_indexbuf *comps)
     size_t size;
     ccn_name_comp_get(data, comps, i, &compPtr, &size);
 
-    m_comps.push_back (name::Component (compPtr, size));
+    append (name::Component (compPtr, size));
   }
 }
 
@@ -142,7 +137,7 @@ Name::Name (const void *buf, const size_t length)
   int i = 0;
   while (ccn_name_comp_get(namebuf.buf, idx, i, &compPtr, &size) == 0)
     {
-      m_comps.push_back (name::Component (compPtr, size));
+      append (name::Component (compPtr, size));
       i++;
     }
   ccn_indexbuf_destroy(&idx);
@@ -158,7 +153,7 @@ Name::Name (const Charbuf &buf)
   int i = 0;
   while (ccn_name_comp_get(buf.getBuf ()->buf, idx, i, &compPtr, &size) == 0)
     {
-      m_comps.push_back (name::Component (compPtr, size));
+      append (name::Component (compPtr, size));
       i++;
     }
   ccn_indexbuf_destroy(&idx);
@@ -174,7 +169,7 @@ Name::Name (const ccn_charbuf *buf)
   int i = 0;
   while (ccn_name_comp_get(buf->buf, idx, i, &compPtr, &size) == 0)
     {
-      m_comps.push_back (name::Component (compPtr, size));
+      append (name::Component (compPtr, size));
       i++;
     }
   ccn_indexbuf_destroy(&idx);
@@ -190,45 +185,6 @@ Name::operator= (const Name &other)
 ///////////////////////////////////////////////////////////////////////////////
 //                                SETTERS                                    //
 ///////////////////////////////////////////////////////////////////////////////
-
-Name &
-Name::append (const Name &comp)
-{
-  m_comps.insert (m_comps.end (),
-                  comp.m_comps.begin (), comp.m_comps.end ());
-  return *this;
-}
-
-Name &
-Name::append (const name::Component &comp)
-{
-  m_comps.push_back (comp);
-  return *this;
-}
-
-Name &
-Name::append (const string &compStr)
-{
-  return append (name::Component (compStr));
-}
-
-Name &
-Name::append (const void *buf, size_t size)
-{
-  return append (name::Component (buf, size));
-}
-
-Name &
-Name::appendNumber (uint64_t number)
-{
-  return append (name::Component::fromNumber (number));
-}
-
-Name &
-Name::appendNumberWithMarker (uint64_t number, unsigned char marker)
-{
-  return append (name::Component::fromNumberWithMarker (number, marker));
-}
 
 Name &
 Name::appendVersion (uint64_t version/* = Name::nversion*/)
@@ -254,10 +210,10 @@ Name::get (int index) const
 {
   if (index < 0)
     {
-      index = m_comps.size () - (-index);
+      index = size () - (-index);
     }
 
-  if (static_cast<unsigned int> (index) >= m_comps.size ())
+  if (static_cast<unsigned int> (index) >= size ())
     {
       BOOST_THROW_EXCEPTION (error::Name ()
                              << error::msg ("Index out of range")
@@ -271,10 +227,10 @@ Name::get (int index)
 {
   if (index < 0)
     {
-      index = m_comps.size () - (-index);
+      index = size () - (-index);
     }
 
-  if (static_cast<unsigned int> (index) >= m_comps.size())
+  if (static_cast<unsigned int> (index) >= size())
     {
       BOOST_THROW_EXCEPTION (error::Name ()
                              << error::msg ("Index out of range")
@@ -296,10 +252,10 @@ Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
 
   if (len == npos)
     {
-      len = m_comps.size () - pos;
+      len = size () - pos;
     }
 
-  if (pos + len > m_comps.size ())
+  if (pos + len > size ())
     {
       BOOST_THROW_EXCEPTION (error::Name ()
                              << error::msg ("getSubName parameter out of range")
@@ -318,8 +274,11 @@ Name::getSubName (size_t pos/* = 0*/, size_t len/* = Name::npos*/) const
 Name
 Name::operator+ (const Name &name) const
 {
-  Name newName (*this);
-  copy (name.m_comps.begin(), name.m_comps.end(), back_inserter (newName));
+  Name newName;
+  newName
+    .append (*this)
+    .append (name);
+
   return newName;
 }
 

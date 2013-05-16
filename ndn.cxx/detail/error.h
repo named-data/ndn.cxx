@@ -54,6 +54,7 @@ struct Name            : public virtual boost::exception, public virtual std::ex
 namespace name { 
 struct Component       : public virtual boost::exception, public virtual std::exception {};
 }
+struct Exclude         : public virtual boost::exception, public virtual std::exception {};
 
 
 // Diagnostic information fields

@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE (Component)
 
   x = name::Component ("%20test");
   BOOST_CHECK_EQUAL (x.size (), 5);
-  
+
   BOOST_CHECK_EQUAL (x.toUri (), "%20test");
 }
 
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE (Basic)
   BOOST_CHECK_EQUAL (empty, root);
   BOOST_CHECK_EQUAL (empty, Name ("/"));
   BOOST_CHECK_EQUAL (root.size(), 0);
-  
+
   empty.append ("hello");
   empty.append ("world");
   BOOST_CHECK_EQUAL (empty.size(), 2);
@@ -71,7 +71,6 @@ BOOST_AUTO_TEST_CASE (Basic)
   Name name("/hello/world");
   BOOST_CHECK_EQUAL (empty, name);
   BOOST_CHECK_EQUAL (name, Name("/hello") + Name("/world"));
-
 
   name.appendSeqNum (1);
   name.appendSeqNum (255);
@@ -93,6 +92,14 @@ BOOST_AUTO_TEST_CASE (Basic)
   BOOST_CHECK_EQUAL (Name ().append (tmp, sizeof(tmp)).toUri (), "/%00%01%02%03P");
 
   BOOST_CHECK_EQUAL (Name ().append ("entr\u00E9e", sizeof ("entr\u00E9e")-1).toUri (), "/entr%C3%A9e");
+
+  Name appendName ("/hello/you");
+  appendName.append (Name ("/hello/you/too"));
+  BOOST_CHECK_EQUAL (appendName.toUri (), "/hello/you/hello/you/too");
+
+  Name appendSelf ("/hello/you");
+  appendSelf.append (appendSelf);
+  BOOST_CHECK_EQUAL (appendSelf.toUri (), "/hello/you/hello/you");
 }
 
 BOOST_AUTO_TEST_CASE (Advanced)
@@ -103,8 +110,8 @@ BOOST_AUTO_TEST_CASE (Advanced)
   BOOST_REQUIRE_THROW (Name ("bla"),    error::Name);
   BOOST_REQUIRE_THROW (Name ("bla/"),   error::Name);
   BOOST_REQUIRE_THROW (Name ("http:/test"), error::Name);
-  
-  BOOST_CHECK_EQUAL (Name ("ndn:///").toUri (), "/");  
+
+  BOOST_CHECK_EQUAL (Name ("ndn:///").toUri (), "/");
   BOOST_CHECK_EQUAL (Name ("ccnx:///").toUri (), "/");
   BOOST_CHECK_EQUAL (Name ("/").toUri (), "/");
   BOOST_CHECK_EQUAL (Name ("///").toUri (), "/");
@@ -122,7 +129,7 @@ BOOST_AUTO_TEST_CASE (Ordering)
   BOOST_CHECK_GT (Name ("/test/test/test"), Name ("/test/test"));
   BOOST_CHECK_GE (Name ("/test/test/test"), Name ("/test/test"));
   BOOST_CHECK_GE (Name ("/test/test/test"), Name ("/test/test/test"));
-  
+
   BOOST_CHECK_LE (Name ("/test"), Name ("/aaaaa"));
   BOOST_CHECK_LT (Name ("/test"), Name ("/aaaaa"));
   BOOST_CHECK_LT (Name ("/test/test"), Name ("/test/test/test"));
