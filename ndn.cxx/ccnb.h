@@ -26,10 +26,6 @@
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#ifdef NDN_DETAIL_NEED_UNDEFINE_CCN_CLOSE
-#undef CCN_CLOSE
-#endif
-
 namespace ndn
 {
 
@@ -46,7 +42,7 @@ public:
    */
   enum ccn_tt {
     CCN_EXT,        /**< starts composite extension - numval is subtype */
-    CCN_TAG,        /**< starts composite - numval is tagnamelen-1 */ 
+    CCN_TAG,        /**< starts composite - numval is tagnamelen-1 */
     CCN_DTAG,       /**< starts composite - numval is tagdict index (enum ccn_dtag) */
     CCN_ATTR,       /**< attribute - numval is attrnamelen-1, value follows */
     CCN_DATTR,      /**< attribute numval is attrdict index */
@@ -55,10 +51,8 @@ public:
     CCN_NO_TOKEN    /**< should not occur in encoding */
   };
 
-#ifndef CCN_CLOSE
-  /** \brief CCN_CLOSE terminates composites */
-  enum {CCN_CLOSE = 0};
-#endif  
+  /** \brief CCN_CLOSE_TAG terminates composites */
+  enum {CCN_CLOSE_TAG = 0};
 
   /**
    * \brief DTAG identifies ccnb-encoded elements.
@@ -191,7 +185,7 @@ public:
    *
    * @returns written length
    */
-  static size_t
+  inline static size_t
   AppendCloser (std::ostream &os);
 
   /**
@@ -228,8 +222,23 @@ public:
    *
    * @returns written length
    */
-  static size_t
+  inline static size_t
   AppendTaggedBlob (std::ostream &os, ccn_dtag dtag, const void *data, size_t size);
+
+  /**
+   * Append a tagged BLOB
+   *
+   * This is a ccnb-encoded element with containing the BLOB as content
+   *
+   * @param os output stream to write
+   * @param dtag is the element's dtag
+   * @param data points to the binary data
+   * @param size is the size of the data, in bytes
+   *
+   * @returns written length
+   */
+  inline static size_t
+  AppendTaggedNumber (std::ostream &os, ccn_dtag dtag, uint32_t number);
 
   /**
    * Append a tagged string (should be a valid UTF-8 coded string)
@@ -242,7 +251,7 @@ public:
    *
    * @returns written length
    */
-  static size_t
+  inline static size_t
   AppendString (std::ostream &os, ccn_dtag dtag, const std::string &string);
 
   /**
@@ -250,13 +259,75 @@ public:
    * @param os output stream to write
    * @param interest Interest to be formatted
    *
-   * @todo For now, this method is used to create Interest template, which doesn't output name to the stream 
+   * @todo For now, this method is used to create Interest template, which doesn't output name to the stream
    *
    * @returns written length
    */
   static size_t
   AppendInterest (std::ostream &os, const Interest &interest);
+
+  /**
+   * @brief Append exclude filter in CCNb encoding
+   * @param os output stream to write
+   * @param exclude Exclude filter to be formatted
+   *
+   * @returns written length
+   */
+  static size_t
+  AppendExclude (std::ostream &os, const Exclude &exclude);
 };
+
+
+inline size_t
+Ccnb::AppendCloser (std::ostream &os)
+{
+  os.put (Ccnb::CCN_CLOSE_TAG);
+  return 1;
+}
+
+inline size_t
+Ccnb::AppendTaggedBlob (std::ostream &os, Ccnb::ccn_dtag dtag, const void *data, size_t size)
+{
+  size_t written = AppendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
+  /* 2 */
+  if (size>0)
+    {
+      written += AppendBlockHeader (os, size, Ccnb::CCN_BLOB);
+      os.write (reinterpret_cast<const char*> (data), size);
+      written += size;
+      /* size */
+    }
+  written += AppendCloser (os);
+  /* 1 */
+
+  return written;
+}
+
+inline size_t
+Ccnb::AppendTaggedNumber (std::ostream &os, Ccnb::ccn_dtag dtag, uint32_t number)
+{
+  size_t written = Ccnb::AppendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
+  {
+    written += Ccnb::AppendNumber (os, number);
+  }
+  written += Ccnb::AppendCloser (os);
+
+  return written;
+}
+
+inline size_t
+Ccnb::AppendString (std::ostream &os, Ccnb::ccn_dtag dtag, const std::string &string)
+{
+  size_t written = AppendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
+  {
+    written += AppendBlockHeader (os, string.size (), Ccnb::CCN_UDATA);
+    os.write (string.c_str (), string.size ());
+    written += string.size ();
+  }
+  written += AppendCloser (os);
+
+  return written;
+}
 
 } // ndn
 

@@ -24,6 +24,7 @@
 
 #include <ndn.cxx/common.h>
 #include <ndn.cxx/name.h>
+#include <ndn.cxx/detail/exclude.h>
 #include <ndn.cxx/hash.h>
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -66,17 +67,26 @@ public:
    * @brief Set interest name
    * @param name name of the interest
    * @return reference to self (to allow method chaining)
+   *
+   * In some cases, a direct access to and manipulation of name using getName is more efficient
    */
   inline Interest &
   setName (const Name &name);
 
   /**
-   * @brief Get interest name
+   * @brief Get interest name (const reference)
    * @returns name of the interest
    */
   inline const Name &
   getName () const;
-  
+
+  /**
+   * @brief Get interest name (reference)
+   * @returns name of the interest
+   */
+  inline Name &
+  getName ();
+
   /**
    * @brief Set interest lifetime (time_duration)
    * @param interestLifetime interest lifetime specified as a time_duration value.
@@ -104,7 +114,7 @@ public:
    */
   inline const boost::posix_time::time_duration &
   getInterestLifetime () const;
-  
+
   /**
    * @brief Set intended interest scope
    * @param scope requested scope of the interest @see Scope
@@ -123,7 +133,7 @@ public:
   ///////////////////////////////////////////////////////////////////////
   //                          SELECTORS                                //
   ///////////////////////////////////////////////////////////////////////
-  
+
   /**
    * @brief Enum defining constants for AnswerOriginKind selector field
    */
@@ -168,13 +178,13 @@ public:
   /**
    * \brief Get interest selector for maximum suffix components
    *
-   * MaxSuffixComponents refer to the number of name components beyond those in the prefix, 
+   * MaxSuffixComponents refer to the number of name components beyond those in the prefix,
    * and counting the implicit digest, that may occur in the matching ContentObject.
    * For more information, see http://www.ccnx.org/releases/latest/doc/technical/InterestMessage.html
    **/
   inline uint32_t
   getMaxSuffixComponents () const;
-  
+
   /**
    * @brief Set interest selector for minimum suffix components
    * @param minSuffixComponents minimum number of suffix components. If Interest::ncomps, then not restricted
@@ -182,11 +192,11 @@ public:
    */
   inline Interest &
   setMinSuffixComponents (uint32_t minSuffixComponents);
-  
+
   /**
    * \brief Get interest selector for minimum suffix components
    *
-   * MinSuffixComponents refer to the number of name components beyond those in the prefix, 
+   * MinSuffixComponents refer to the number of name components beyond those in the prefix,
    * and counting the implicit digest, that may occur in the matching ContentObject.
    * For more information, see http://www.ccnx.org/releases/latest/doc/technical/InterestMessage.html
    **/
@@ -212,10 +222,10 @@ public:
    * @param child child selector @see ChildSelector
    * @return reference to self (to allow method chaining)
    *
-   * Often a given interest will match more than one ContentObject within a given content store. 
-   * The ChildSelector provides a way of expressing a preference for which of these should be returned. 
+   * Often a given interest will match more than one ContentObject within a given content store.
+   * The ChildSelector provides a way of expressing a preference for which of these should be returned.
    * If the value is false, the leftmost child is preferred. If true, the rightmost child is preferred.
-   * \see http://www.ccnx.org/releases/latest/doc/technical/InterestMessage.html for more information. 
+   * \see http://www.ccnx.org/releases/latest/doc/technical/InterestMessage.html for more information.
    */
   inline Interest &
   setChildSelector (uint8_t child);
@@ -245,16 +255,30 @@ public:
   inline const Hash&
   getPublisherPublicKeyDigest () const;
 
+  /**
+   * @brief Set exclude filter
+   * @param exclude An exclude filter to set
+   *
+   * In some cases, a direct access to and manipulation of exclude filter using getExclude is more efficient
+   */
+  inline void
+  setExclude (const Exclude &exclude);
+
+  /**
+   * @brief Get exclude filter (const reference)
+   */
+  inline const Exclude &
+  getExclude () const;
+
+  /**
+   * @brief Get exclude filter (reference)
+   */
+  inline Exclude &
+  getExclude ();
+
   ///////////////////////////////////////////////////////////////////////
   //                           HELPERS                                 //
   ///////////////////////////////////////////////////////////////////////
-
-  
-  // /**
-  //  * @brief Convert to wire format and return it in form of ndn::CharbufPtr
-  //  */
-  // CharbufPtr
-  // toCharbuf () const;
 
   /**
    * @brief Compare equality of two interests
@@ -273,11 +297,12 @@ private:
   uint32_t m_minSuffixComponents;
   uint32_t m_answerOriginKind;
   boost::posix_time::time_duration m_interestLifetime; // lifetime in seconds
-  
+
   uint8_t m_scope;
   uint8_t m_childSelector;
   // not used now
   Hash m_publisherPublicKeyDigest;
+  Exclude m_exclude;
 };
 
 typedef boost::shared_ptr<Interest> InterestPtr;
@@ -305,7 +330,13 @@ Interest::getName () const
 {
   return m_name;
 }
-  
+
+inline Name &
+Interest::getName ()
+{
+  return m_name;
+}
+
 inline Interest &
 Interest::setInterestLifetime (const boost::posix_time::time_duration &interestLifetime)
 {
@@ -319,7 +350,7 @@ Interest::setInterestLifetime (double interestLifetimeSeconds)
   double seconds, microseconds;
   seconds = std::modf (interestLifetimeSeconds, &microseconds);
   microseconds *= 1000000;
-  
+
   m_interestLifetime = boost::posix_time::seconds (seconds) + boost::posix_time::microseconds (microseconds);
   return *this;
 }
@@ -329,7 +360,7 @@ Interest::getInterestLifetime () const
 {
   return m_interestLifetime;
 }
-  
+
 inline Interest &
 Interest::setScope (uint8_t scope)
 {
@@ -346,7 +377,7 @@ Interest::getScope () const
 ///////////////////////////////////////////////////////////////////////
 //                          SELECTORS                                //
 ///////////////////////////////////////////////////////////////////////
-  
+
 
 inline Interest &
 Interest::setMaxSuffixComponents (uint32_t maxSuffixComponents)
@@ -360,14 +391,14 @@ Interest::getMaxSuffixComponents () const
 {
   return m_maxSuffixComponents;
 }
-  
+
 inline Interest &
 Interest::setMinSuffixComponents (uint32_t minSuffixComponents)
 {
   m_minSuffixComponents = minSuffixComponents;
   return *this;
 }
-  
+
 inline uint32_t
 Interest::getMinSuffixComponents () const
 {
@@ -380,7 +411,7 @@ Interest::setAnswerOriginKind (uint32_t answerOriginKind)
   m_answerOriginKind = answerOriginKind;
   return *this;
 }
-  
+
 inline uint32_t
 Interest::getAnswerOriginKind () const
 {
@@ -412,6 +443,31 @@ Interest::getPublisherPublicKeyDigest () const
 {
   return m_publisherPublicKeyDigest;
 }
+
+inline void
+Interest::setExclude (const Exclude &exclude)
+{
+  m_exclude = exclude;
+}
+
+/**
+ * @brief Get exclude filter (const reference)
+ */
+inline const Exclude &
+Interest::getExclude () const
+{
+  return m_exclude;
+}
+
+/**
+ * @brief Get exclude filter (reference)
+ */
+inline Exclude &
+Interest::getExclude ()
+{
+  return m_exclude;
+}
+
 
 } // ndn
 
