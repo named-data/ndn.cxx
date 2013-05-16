@@ -42,6 +42,8 @@ def configure(conf):
     if not conf.get_define ("HAVE_SSL"):
         conf.fatal ("Cannot find SSL libraries")
 
+    conf.check_cfg(package="libcrypto",  args=['--cflags', '--libs'], uselib_store='CRYPTO', mandatory=True)
+
     if conf.options.log4cxx:
         conf.check_cfg(package='liblog4cxx', args=['--cflags', '--libs'], uselib_store='LOG4CXX', mandatory=True)
         conf.define ("HAVE_LOG4CXX", 1)
@@ -87,7 +89,7 @@ def build (bld):
         source = bld.path.ant_glob(['ndn.cxx/**/*.cpp', 'ndn.cxx/**/*.cc',
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
-        use = 'TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
+        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
         includes = ".",
         )
 

@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+#include "blob.h"
+
 namespace ndn {
 
 namespace name {
@@ -25,7 +27,7 @@ namespace name {
  * to work with name components, as well as operator to apply canonical
  * ordering on name components
  */
-class Component : public std::vector<char>
+class Component : public Blob
 {
 public:
   /**
@@ -95,12 +97,6 @@ public:
    */
   inline bool
   operator > (const Component &other) const;
-
-  /**
-   * @brief Get access to underlying buffer
-   */
-  inline const char *
-  buf () const;
 
   ////////////////////////////////////
   // Component construction helpers //
@@ -223,12 +219,6 @@ public:
   inline uint64_t
   toVersion () const;
 };
-
-inline const char *
-Component::buf () const
-{
-  return &(*begin ());
-}
 
 bool
 Component::operator <= (const Component &other) const

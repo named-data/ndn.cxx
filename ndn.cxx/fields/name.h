@@ -121,6 +121,17 @@ public:
   append (const name::Component &comp);
 
   /**
+   * @brief Append a binary blob as a name component
+   * @param comp a binary blob
+   *
+   * This version is a little bit more efficient, since it swaps contents of comp and newly added component
+   *
+   * Attention!!! This method has an intended side effect: content of comp becomes empty
+   */
+  inline Name &
+  appendBySwap (name::Component &comp);
+  
+  /**
    * @brief Append components a container of elements [begin, end)
    *
    * @param begin begin iterator of the container
@@ -445,6 +456,17 @@ Name::append (const name::Component &comp)
   return *this;
 }
 
+inline Name &
+Name::appendBySwap (name::Component &comp)
+{
+  if (comp.size () != 0)
+    {
+      Name::iterator newComp = m_comps.insert (end (), name::Component ());
+      newComp->swap (comp);
+    }
+  return *this;
+}
+
 template<class Iterator>
 inline Name &
 Name::append (Iterator begin, Iterator end)
@@ -470,25 +492,31 @@ Name::append (const Name &comp)
 Name &
 Name::append (const std::string &compStr)
 {
-  return append (name::Component (compStr));
+  name::Component comp (compStr);
+  return appendBySwap (comp);
 }
 
 Name &
 Name::append (const void *buf, size_t size)
 {
-  return append (name::Component (buf, size));
+  name::Component comp (buf, size);
+  return appendBySwap (comp);
 }
 
 Name &
 Name::appendNumber (uint64_t number)
 {
-  return append (name::Component::fromNumber (number));
+  name::Component comp;
+  name::Component::fromNumber (number).swap (comp);
+  return appendBySwap (comp);
 }
 
 Name &
 Name::appendNumberWithMarker (uint64_t number, unsigned char marker)
 {
-  return append (name::Component::fromNumberWithMarker (number, marker));
+  name::Component comp;
+  name::Component::fromNumberWithMarker (number, marker).swap (comp);
+  return appendBySwap (comp);
 }
 
 inline Name &
