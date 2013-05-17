@@ -9,6 +9,7 @@
  */
 
 #include "signature-sha256-with-rsa.h"
+#include "ndn.cxx/wire/base.h"
 
 namespace ndn {
 namespace signature {
@@ -17,6 +18,12 @@ const std::string Sha256WithRsa::s_oid = "2.16.840.1.101.3.4.2.1";
 
 Sha256WithRsa::~Sha256WithRsa ()
 {
+}
+
+void
+Sha256WithRsa::doubleDispatch (std::ostream &os, wire::Base &wire)
+{
+  wire.appendSignature (os, *this);
 }
 
 } // signature

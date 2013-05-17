@@ -11,7 +11,11 @@
 #ifndef NDN_SIGNATURE_H
 #define NDN_SIGNATURE_H
 
+#include <iostream>
+
 namespace ndn {
+
+namespace wire { class Base; }
 
 /**
  * @brief Pure virtual class providing an interface to work with signatures for NDN data packets
@@ -24,6 +28,14 @@ public:
    */
   virtual
   ~Signature () { }
+
+  /**
+   * @brief A double dispatch pattern to call the right wireFormatter method to format signature
+   * @param os reference to output stream
+   * @param wireFormatter a reference to a wireFormatter object
+   */
+  virtual void
+  doubleDispatch (std::ostream &os, wire::Base &wireFormatter) = 0;
 };
 
 } // ndn

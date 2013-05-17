@@ -12,6 +12,8 @@
 #define NDN_DATA_H
 
 #include "ndn.cxx/fields/name.h"
+#include "ndn.cxx/fields/content.h"
+#include "ndn.cxx/fields/signature.h"
 
 namespace ndn {
 
@@ -25,6 +27,11 @@ public:
    * @brief Create an empty Data with empty payload
    **/
   Data ();
+
+  /**
+   * @brief Destructor
+   */
+  ~Data ();
 
   /**
    * @brief Set data packet name
@@ -50,54 +57,76 @@ public:
   inline Name &
   getName ();
 
-  // /**
-  //  * @brief Set content object timestamp
-  //  * @param timestamp timestamp
-  //  */
-  // void
-  // SetTimestamp (const Time &timestamp);
+  /**
+   * @brief Get const smart pointer to signature object
+   */
+  inline Ptr<const Signature>
+  getSignature () const;
 
-  // /**
-  //  * @brief Get timestamp of the content object
-  //  */
-  // Time
-  // GetTimestamp () const;
+  /**
+   * @brief Get smart pointer to signature object
+   */
+  inline Ptr<Signature>
+  getSignature ();
 
-  // /**
-  //  * @brief Set freshness of the content object
-  //  * @param freshness Freshness, 0s means infinity
-  //  */
-  // void
-  // SetFreshness (const Time &freshness);
+  /**
+   * @brief Set signature object
+   * @param signature smart pointer to a signature object
+   */
+  inline void
+  setSignature (Ptr<Signature> sigature);
 
-  // /**
-  //  * @brief Get freshness of the content object
-  //  */
-  // Time
-  // GetFreshness () const;
+  /**
+   * @brief Get const reference to content object (content info + actual content)
+   */
+  inline const Content &
+  getContent () const;
 
-  // /**
-  //  * @brief Set "fake" signature on the content object
-  //  * @param signature  uint32_t number, simulating content object signature
-  //  *
-  //  * Values for the signature totally depend on the application
-  //  */
-  // void
-  // SetSignature (uint32_t signature);
+  /**
+   * @brief Get reference to content object (content info + actual content)
+   */
+  inline Content &
+  getContent ();
 
-  // /**
-  //  * @brief Get "fake" signature of the content object
-  //  *
-  //  * Values for the signature totally depend on the application
-  //  */
-  // uint32_t
-  // GetSignature () const;
+  /**
+   * @brief Set content object (content info + actual content)
+   * @param content reference to a content object
+   *
+   * More efficient way (that avoids copying):
+   * @code
+   * Content content (...);
+   * getContent ().swap (content);
+   * @endcode
+   */
+  inline void
+  setContent (const Content &content);
+
+  /**
+   * @brief A helper method to directly access actual content data (const reference)
+   *
+   * This method is equivalent to
+   * @code
+   * getContent ().getContent ()
+   * @endcode
+   */
+  inline const Blob &
+  content () const;
+
+  /**
+   * @brief A helper method to directly access actual content data (reference)
+   *
+   * This method is equivalent to
+   * @code
+   * getContent ().getContent ()
+   * @endcode
+   */
+  inline Blob &
+  content ();
 
 private:
   Name m_name;
-  // Time m_freshness;
-  // Time m_timestamp;
-  // uint32_t m_signature; // 0, means no signature, any other value application dependent (not a real signature)
+  Ptr<Signature> m_signature; // signature with its parameters "binds" name and content
+  Content m_content;
 };
 
 inline Data &
@@ -117,6 +146,54 @@ inline Name &
 Data::getName ()
 {
   return m_name;
+}
+
+inline Ptr<const Signature>
+Data::getSignature () const
+{
+  return m_signature;
+}
+
+inline Ptr<Signature>
+Data::getSignature ()
+{
+  return m_signature;
+}
+
+inline void
+Data::setSignature (Ptr<Signature> signature)
+{
+  m_signature = signature;
+}
+
+inline const Content &
+Data::getContent () const
+{
+  return m_content;
+}
+
+inline Content &
+Data::getContent ()
+{
+  return m_content;
+}
+
+inline void
+Data::setContent (const Content &content)
+{
+  m_content = content;
+}
+
+inline const Blob &
+Data::content () const
+{
+  return getContent ().getContent ();
+}
+
+inline Blob &
+Data::content ()
+{
+  return getContent ().getContent ();
 }
 
 } // namespace ndn

@@ -16,4 +16,8 @@ Data::Data ()
 {
 }
 
+Data::~Data ()
+{
+}
+
 } // namespace ndn

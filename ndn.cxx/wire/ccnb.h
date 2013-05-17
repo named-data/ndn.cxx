@@ -8,21 +8,23 @@
  * Author: Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef NDN_CCNB_H
-#define NDN_CCNB_H
+#ifndef NDN_WIRE_CCNB_H
+#define NDN_WIRE_CCNB_H
 
-#include <ndn.cxx/interest.h>
-#include <ndn.cxx/data.h>
+#include "base.h"
+
+#include "ndn.cxx/interest.h"
+#include "ndn.cxx/data.h"
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-namespace ndn
-{
+namespace ndn {
+namespace wire {
 
 /**
  * @brief Class for working with ccnb encoding
  */
-class Ccnb
+class Ccnb : public Base
 {
 public:
   /**
@@ -156,8 +158,8 @@ public:
    *
    * @returns written length
    */
-  static size_t
-  AppendBlockHeader (std::ostream &os, size_t value, ccn_tt block_type);
+  static void
+  appendBlockHeader (std::ostream &os, size_t value, ccn_tt block_type);
 
   /**
    * @brief Add number in CCNB encoding
@@ -166,8 +168,8 @@ public:
    *
    * @returns written length
    */
-  static size_t
-  AppendNumber (std::ostream &os, uint32_t number);
+  static void
+  appendNumber (std::ostream &os, uint32_t number);
 
   /**
    * @brief Append CCNB closer tag (size is 1)
@@ -175,8 +177,8 @@ public:
    *
    * @returns written length
    */
-  inline static size_t
-  AppendCloser (std::ostream &os);
+  inline static void
+  appendCloser (std::ostream &os);
 
   /**
    * @brief Append Name in CCNB encoding
@@ -185,8 +187,8 @@ public:
    *
    * @returns written length
    */
-  static size_t
-  AppendName (std::ostream &os, const Name &name);
+  static void
+  appendName (std::ostream &os, const Name &name);
 
   /**
    * Append a binary timestamp as a BLOB using the ccn binary
@@ -197,8 +199,8 @@ public:
    *
    * @returns written length
    */
-  static size_t
-  AppendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &time);
+  static void
+  appendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &time);
 
   /**
    * Append a tagged BLOB
@@ -212,8 +214,8 @@ public:
    *
    * @returns written length
    */
-  inline static size_t
-  AppendTaggedBlob (std::ostream &os, ccn_dtag dtag, const void *data, size_t size);
+  inline static void
+  appendTaggedBlob (std::ostream &os, ccn_dtag dtag, const void *data, size_t size);
 
   /**
    * Append a tagged BLOB
@@ -227,8 +229,8 @@ public:
    *
    * @returns written length
    */
-  inline static size_t
-  AppendTaggedNumber (std::ostream &os, ccn_dtag dtag, uint32_t number);
+  inline static void
+  appendTaggedNumber (std::ostream &os, ccn_dtag dtag, uint32_t number);
 
   /**
    * Append a tagged string (should be a valid UTF-8 coded string)
@@ -241,8 +243,8 @@ public:
    *
    * @returns written length
    */
-  inline static size_t
-  AppendString (std::ostream &os, ccn_dtag dtag, const std::string &string);
+  inline static void
+  appendString (std::ostream &os, ccn_dtag dtag, const std::string &string);
 
   /**
    * @brief Format interest in CCNb encoding
@@ -253,8 +255,8 @@ public:
    *
    * @returns written length
    */
-  static size_t
-  AppendInterest (std::ostream &os, const Interest &interest);
+  static void
+  appendInterest (std::ostream &os, const Interest &interest);
 
   /**
    * @brief Append exclude filter in CCNb encoding
@@ -263,62 +265,60 @@ public:
    *
    * @returns written length
    */
-  static size_t
-  AppendExclude (std::ostream &os, const Exclude &exclude);
+  static void
+  appendExclude (std::ostream &os, const Exclude &exclude);
+
+  /**
+   * @brief Append signature in SHA256withRSA format
+   */
+  virtual void
+  appendSignature (std::ostream &os, const signature::Sha256WithRsa &signature);
 };
 
 
-inline size_t
-Ccnb::AppendCloser (std::ostream &os)
+inline void
+Ccnb::appendCloser (std::ostream &os)
 {
   os.put (Ccnb::CCN_CLOSE_TAG);
-  return 1;
 }
 
-inline size_t
-Ccnb::AppendTaggedBlob (std::ostream &os, Ccnb::ccn_dtag dtag, const void *data, size_t size)
+inline void
+Ccnb::appendTaggedBlob (std::ostream &os, Ccnb::ccn_dtag dtag, const void *data, size_t size)
 {
-  size_t written = AppendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
+  appendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
   /* 2 */
   if (size>0)
     {
-      written += AppendBlockHeader (os, size, Ccnb::CCN_BLOB);
+      appendBlockHeader (os, size, Ccnb::CCN_BLOB);
       os.write (reinterpret_cast<const char*> (data), size);
-      written += size;
       /* size */
     }
-  written += AppendCloser (os);
+  appendCloser (os);
   /* 1 */
-
-  return written;
 }
 
-inline size_t
-Ccnb::AppendTaggedNumber (std::ostream &os, Ccnb::ccn_dtag dtag, uint32_t number)
+inline void
+Ccnb::appendTaggedNumber (std::ostream &os, Ccnb::ccn_dtag dtag, uint32_t number)
 {
-  size_t written = Ccnb::AppendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
+  appendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
   {
-    written += Ccnb::AppendNumber (os, number);
+    appendNumber (os, number);
   }
-  written += Ccnb::AppendCloser (os);
-
-  return written;
+  appendCloser (os);
 }
 
-inline size_t
-Ccnb::AppendString (std::ostream &os, Ccnb::ccn_dtag dtag, const std::string &string)
+inline void
+Ccnb::appendString (std::ostream &os, Ccnb::ccn_dtag dtag, const std::string &string)
 {
-  size_t written = AppendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
+  appendBlockHeader (os, dtag, Ccnb::CCN_DTAG);
   {
-    written += AppendBlockHeader (os, string.size (), Ccnb::CCN_UDATA);
+    appendBlockHeader (os, string.size (), Ccnb::CCN_UDATA);
     os.write (string.c_str (), string.size ());
-    written += string.size ();
   }
-  written += AppendCloser (os);
-
-  return written;
+  appendCloser (os);
 }
 
+} // wire
 } // ndn
 
-#endif // NDN_CCNB_H
+#endif // NDN_WIRE_CCNB_H

@@ -11,16 +11,16 @@
 #include "ccnb.h"
 #include <boost/lexical_cast.hpp>
 
-namespace ndn
-{
+namespace ndn {
+namespace wire {
 
 #define CCN_TT_BITS 3
 #define CCN_TT_MASK ((1 << CCN_TT_BITS) - 1)
 #define CCN_MAX_TINY ((1 << (7-CCN_TT_BITS)) - 1)
 #define CCN_TT_HBIT ((unsigned char)(1 << 7))
 
-size_t
-Ccnb::AppendBlockHeader (std::ostream &os, size_t val, Ccnb::ccn_tt tt)
+void
+Ccnb::appendBlockHeader (std::ostream &os, size_t val, Ccnb::ccn_tt tt)
 {
   unsigned char buf[1+8*((sizeof(val)+6)/7)];
   unsigned char *p = &(buf[sizeof(buf)-1]);
@@ -35,48 +35,42 @@ Ccnb::AppendBlockHeader (std::ostream &os, size_t val, Ccnb::ccn_tt tt)
     val >>= 7;
   }
   os.write (reinterpret_cast<const char*> (p), n);
-  return n;
+  // return n;
 }
 
-size_t
-Ccnb::AppendNumber (std::ostream &os, uint32_t number)
+void
+Ccnb::appendNumber (std::ostream &os, uint32_t number)
 {
   std::string numberStr = boost::lexical_cast<std::string> (number);
 
-  size_t written = 0;
-  written += AppendBlockHeader (os, numberStr.size (), Ccnb::CCN_UDATA);
-  written += numberStr.size ();
+  appendBlockHeader (os, numberStr.size (), Ccnb::CCN_UDATA);
+  numberStr.size ();
   os.write (numberStr.c_str (), numberStr.size ());
-
-  return written;
 }
-  
-size_t
-Ccnb::AppendName (std::ostream &os, const Name &name)
+
+void
+Ccnb::appendName (std::ostream &os, const Name &name)
 {
-  size_t written = 0;
-  written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Name, Ccnb::CCN_DTAG); // <Name>
+  Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_Name, Ccnb::CCN_DTAG); // <Name>
   for (Name::const_iterator component = name.begin (); component != name.end (); component ++)
     {
-      written += AppendTaggedBlob (os, Ccnb::CCN_DTAG_Component, component->buf (), component->size ());
+      appendTaggedBlob (os, Ccnb::CCN_DTAG_Component, component->buf (), component->size ());
     }
-  written += Ccnb::AppendCloser (os);                                        // </Name>
-  
-  return written;
+  Ccnb::appendCloser (os);                                        // </Name>
 }
 
-size_t
-Ccnb::AppendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &time)
+void
+Ccnb::appendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &time)
 {
-  // the original function implements Markers... thought not sure what are these markers for...
+  // CCNx method function implements some markers, which are not really defined anywhere else...
 
   // Determine miminal number of bytes required to store the timestamp
   int required_bytes = 2; // 12 bits for fractions of a second, 4 bits left for seconds. Sometimes it is enough
   intmax_t ts = time.total_seconds () >> 4;
   for (;  required_bytes < 7 && ts != 0; ts >>= 8) // not more than 6 bytes?
      required_bytes++;
-  
-  size_t len = AppendBlockHeader(os, required_bytes, Ccnb::CCN_BLOB);
+
+  appendBlockHeader(os, required_bytes, Ccnb::CCN_BLOB);
 
   // write part with seconds
   ts = time.total_seconds () >> 4;
@@ -88,87 +82,86 @@ Ccnb::AppendTimestampBlob (std::ostream &os, const boost::posix_time::time_durat
     (((time.total_nanoseconds () % 1000000000) / 5 * 8 + 195312) / 390625);
   for (int i = required_bytes - 2; i < required_bytes; i++)
     os.put ( ts >> (8 * (required_bytes - 1 - i)) );
-  
-  return len + required_bytes;
+
+  // return len + required_bytes;
 }
 
-size_t
-Ccnb::AppendExclude (std::ostream &os, const Exclude &exclude)
+void
+Ccnb::appendExclude (std::ostream &os, const Exclude &exclude)
 {
-  size_t written = 0;
-  written += AppendBlockHeader (os, Ccnb::CCN_DTAG_Exclude, Ccnb::CCN_DTAG); // <Exclude>
+  appendBlockHeader (os, Ccnb::CCN_DTAG_Exclude, Ccnb::CCN_DTAG); // <Exclude>
 
   for (Exclude::const_reverse_iterator item = exclude.rbegin (); item != exclude.rend (); item ++)
     {
       if (!item->first.empty ())
-        written += AppendTaggedBlob (os, Ccnb::CCN_DTAG_Component, item->first.buf (), item->first.size ());
+        appendTaggedBlob (os, Ccnb::CCN_DTAG_Component, item->first.buf (), item->first.size ());
       if (item->second)
         {
-          written += AppendBlockHeader (os, Ccnb::CCN_DTAG_Any, Ccnb::CCN_DTAG); // <Any>
-          written += AppendCloser (os); // </Any>
+          appendBlockHeader (os, Ccnb::CCN_DTAG_Any, Ccnb::CCN_DTAG); // <Any>
+          appendCloser (os); // </Any>
         }
     }
-  written += AppendCloser (os); // </Exclude>
-
-  return written;
+  appendCloser (os); // </Exclude>
 }
 
-size_t
-Ccnb::AppendInterest (std::ostream &os, const Interest &interest)
+void
+Ccnb::appendInterest (std::ostream &os, const Interest &interest)
 {
-  size_t written = 0;
-  written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_Interest, Ccnb::CCN_DTAG); // <Interest>
+  Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_Interest, Ccnb::CCN_DTAG); // <Interest>
 
   // this is used for now as an interest template. Name should be empty
-  // written += Ccnb::AppendName (os, interest.getName ());
-  written += Ccnb::AppendName (os, Name ());                              // <Component>...</Component>...
+  // Ccnb::appendName (os, interest.getName ());
+  Ccnb::appendName (os, Name ());                              // <Component>...</Component>...
 
   if (interest.getMinSuffixComponents () != Interest::ncomps)
     {
-      written += AppendTaggedNumber (os, Ccnb::CCN_DTAG_MinSuffixComponents, interest.getMinSuffixComponents ());
+      appendTaggedNumber (os, Ccnb::CCN_DTAG_MinSuffixComponents, interest.getMinSuffixComponents ());
     }
   if (interest.getMaxSuffixComponents () != Interest::ncomps)
     {
-      written += AppendTaggedNumber (os, Ccnb::CCN_DTAG_MaxSuffixComponents, interest.getMaxSuffixComponents ());
+      appendTaggedNumber (os, Ccnb::CCN_DTAG_MaxSuffixComponents, interest.getMaxSuffixComponents ());
     }
   if (interest.getExclude ().size () > 0)
     {
-      written += AppendExclude (os, interest.getExclude ());
+      appendExclude (os, interest.getExclude ());
     }
   if (interest.getChildSelector () != Interest::CHILD_DEFAULT)
     {
-      written += AppendTaggedNumber (os, Ccnb::CCN_DTAG_ChildSelector, interest.getChildSelector ());
+      appendTaggedNumber (os, Ccnb::CCN_DTAG_ChildSelector, interest.getChildSelector ());
     }
   if (interest.getAnswerOriginKind () != Interest::AOK_DEFAULT)
     {
-      written += AppendTaggedNumber (os, Ccnb::CCN_DTAG_AnswerOriginKind, interest.getAnswerOriginKind ());
+      appendTaggedNumber (os, Ccnb::CCN_DTAG_AnswerOriginKind, interest.getAnswerOriginKind ());
     }
   if (interest.getScope () != Interest::NO_SCOPE)
     {
-      written += AppendTaggedNumber (os, Ccnb::CCN_DTAG_Scope, interest.getScope ());
+      appendTaggedNumber (os, Ccnb::CCN_DTAG_Scope, interest.getScope ());
     }
   if (!interest.getInterestLifetime ().is_negative ())
     {
-      written += Ccnb::AppendBlockHeader (os, Ccnb::CCN_DTAG_InterestLifetime, Ccnb::CCN_DTAG);
-      written += Ccnb::AppendTimestampBlob (os, interest.getInterestLifetime ());
-      written += Ccnb::AppendCloser (os);
+      Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_InterestLifetime, Ccnb::CCN_DTAG);
+      Ccnb::appendTimestampBlob (os, interest.getInterestLifetime ());
+      Ccnb::appendCloser (os);
     }
   // if (GetNonce()>0)
   //   {
   //     uint32_t nonce = interest.GetNonce();
-  //     written += AppendTaggedBlob (start, Ccnb::CCN_DTAG_Nonce, nonce);
+  //     appendTaggedBlob (start, Ccnb::CCN_DTAG_Nonce, nonce);
   //   }
-    
+
   // if (GetNack ()>0)
   //   {
-  //     written += AppendBlockHeader (start, Ccnb::CCN_DTAG_Nack, Ccnb::CCN_DTAG);
-  //     written += AppendNumber (start, interest.GetNack ());
-  //     written += AppendCloser (start);
+  //     appendBlockHeader (start, Ccnb::CCN_DTAG_Nack, Ccnb::CCN_DTAG);
+  //     appendNumber (start, interest.GetNack ());
+  //     appendCloser (start);
   //   }
-  written += Ccnb::AppendCloser (os); // </Interest>
-
-  return written;
+  Ccnb::appendCloser (os); // </Interest>
 }
 
+void
+Ccnb::appendSignature (std::ostream &os, const signature::Sha256WithRsa &signature)
+{
+}
 
+} // namespace wire
 } // namespace ndn

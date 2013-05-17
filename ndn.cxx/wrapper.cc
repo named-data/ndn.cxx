@@ -310,7 +310,7 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
   ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
 
   charbuf_stream keyStream;
-  Ccnb::AppendName (keyStream, keyName);
+  wire::Ccnb::appendName (keyStream, keyName);
   
   ccn_charbuf_append(sp.template_ccnb, keyStream.buf ().getBuf ()->buf, keyStream.buf ().getBuf ()->length);
   ccn_charbuf_append_closer(sp.template_ccnb); // </KeyName>
@@ -319,7 +319,7 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
   ccn_charbuf_append_closer(sp.template_ccnb); // </SignedInfo>
 
   charbuf_stream nameStream;
-  Ccnb::AppendName (nameStream, name);
+  wire::Ccnb::appendName (nameStream, name);
   
   if (ccn_sign_content(m_handle, content, nameStream.buf ().getBuf (), &sp, buf, len) != 0)
   {
@@ -399,7 +399,7 @@ Wrapper::publishUnsignedData(const Name &name, const unsigned char *buf, size_t 
                                    );
 
   charbuf_stream nameStream;
-  Ccnb::AppendName (nameStream, name);
+  wire::Ccnb::appendName (nameStream, name);
 
   ccn_pack_unsigned_ContentObject(content, nameStream.buf ().getBuf (), signed_info, buf, len);
 
@@ -554,10 +554,10 @@ int Wrapper::sendInterest (const Interest &interest, const Closure &closure)
   UniqueRecLock lock(m_mutex);
 
   charbuf_stream nameStream;
-  Ccnb::AppendName (nameStream, interest.getName ());
+  wire::Ccnb::appendName (nameStream, interest.getName ());
 
   charbuf_stream interestStream;
-  Ccnb::AppendInterest (interestStream, interest);
+  wire::Ccnb::appendInterest (interestStream, interest);
 
   if (ccn_express_interest (m_handle, nameStream.buf ().getBuf (),
                             dataClosure,
@@ -587,7 +587,7 @@ int Wrapper::setInterestFilter (const Name &prefix, const InterestCallback &inte
   interestClosure->p = &incomingInterest;
 
   charbuf_stream prefixStream;
-  Ccnb::AppendName (prefixStream, prefix);
+  wire::Ccnb::appendName (prefixStream, prefix);
 
   int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), interestClosure);
   if (ret < 0)
@@ -614,7 +614,7 @@ Wrapper::clearInterestFilter (const Name &prefix, bool record/* = true*/)
     return;
 
   charbuf_stream prefixStream;
-  Ccnb::AppendName (prefixStream, prefix);
+  wire::Ccnb::appendName (prefixStream, prefix);
 
   int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), 0);
   if (ret < 0)

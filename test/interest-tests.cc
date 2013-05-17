@@ -55,8 +55,7 @@ BOOST_AUTO_TEST_CASE (Basic)
   // i.setPublisherPublicKeyDigest (?);
 
   ostringstream os;
-  int len = Ccnb::AppendInterest (os, i);
-  BOOST_CHECK_EQUAL (len, Interest1.size ());
+  wire::Ccnb::appendInterest (os, i);
   string Interest0 = os.str ();
   BOOST_CHECK_EQUAL_COLLECTIONS (Interest0.begin (), Interest0.end (),
                                  Interest1.begin (), Interest1.end ());
@@ -68,8 +67,7 @@ BOOST_AUTO_TEST_CASE (Basic)
   BOOST_CHECK_EQUAL (boost::lexical_cast<string> (i.getExclude ()), "alex zhenkai0 ----> zhenkai1 loooooooooooooong ----> ");
 
   os.str (""); os.clear ();
-  len = Ccnb::AppendInterest (os, i);
-  BOOST_CHECK_EQUAL (len, Interest3.size ());
+  wire::Ccnb::appendInterest (os, i);
   Interest0 = os.str ();
   BOOST_CHECK_EQUAL_COLLECTIONS (Interest0.begin (), Interest0.end (),
                                  Interest3.begin (), Interest3.end ());
@@ -86,9 +84,7 @@ BOOST_AUTO_TEST_CASE (Charbuf)
   i.setInterestLifetime (posix_time::seconds (10));
 
   charbuf_stream stream;
-  int len = Ccnb::AppendInterest (stream, i);
-  
-  BOOST_CHECK_EQUAL (len, Interest2.size ());
+  wire::Ccnb::appendInterest (stream, i);
 
   BOOST_CHECK_EQUAL_COLLECTIONS (reinterpret_cast<char*> (stream.buf ().getBuf ()->buf),
                                  reinterpret_cast<char*> (stream.buf ().getBuf ()->buf+stream.buf ().getBuf ()->length),

@@ -40,33 +40,64 @@ public:
   inline const std::string &
   getDigestAlgorithm () const;
 
+  /**
+   * @brief Get reference to signature bits
+   */
   inline Blob &
   getSignatureBits ();
 
+  /**
+   * @brief Get const reference to signature bits
+   */
   inline const Blob &
   getSignatureBits () const;
 
+  /**
+   * @brief Set signature bits
+   */
   inline void
   setSignatureBits (const Blob &signatureBits);
 
+  /**
+   * @brief Get reference to publisher key digest bits
+   */
   inline Blob &
   getPublisherKeyDigest ();
 
+  /**
+   * @brief Get const reference to publisher key digest bits
+   */
   inline const Blob &
   getPublisherKeyDigest () const;
 
+  /**
+   * @brief Set publisher key digest bits
+   */
   inline void
   setPublisherKeyDigest (const Blob &publisherKeyDigest);
 
+  /**
+   * @brief Get reference to key locator object
+   */
   inline KeyLocator &
   getKeyLocator ();
 
+  /**
+   * @brief Get const reference to key locator object
+   */
   inline const KeyLocator &
   getKeyLocator () const;
 
+  /**
+   * @brief Set key locator object
+   */
   inline void
   setKeyLocator (const KeyLocator &keyLocator);
-  
+
+  // from Signature
+  virtual void
+  doubleDispatch (std::ostream &os, wire::Base &wire);
+
 private:
   static const std::string s_oid;
 

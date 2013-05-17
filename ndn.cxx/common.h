@@ -13,6 +13,17 @@
 #ifndef NDN_COMMON_H
 #define NDN_COMMON_H
 
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+
+namespace ndn
+{
+template<class T> struct Ptr : public boost::shared_ptr<T>
+{
+  operator Ptr<const T> () const { return *this; }
+};
+}
+
 extern "C" {
 #include <ccn/ccn.h>
 #include <ccn/charbuf.h>
