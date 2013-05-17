@@ -21,9 +21,9 @@ Sha256WithRsa::~Sha256WithRsa ()
 }
 
 void
-Sha256WithRsa::doubleDispatch (std::ostream &os, wire::Base &wire)
+Sha256WithRsa::doubleDispatch (std::ostream &os, wire::Base &wire, void *userData) const
 {
-  wire.appendSignature (os, *this);
+  wire.appendSignature (os, *this, userData);
 }
 
 } // signature

@@ -71,7 +71,7 @@ public:
            Type type = DATA,
            const boost::posix_time::time_duration &freshness = maxFreshness,
            const name::Component &finalBlock = noFinalBlock);
-  
+
   /**
    * @brief Create a content from a memory buffer
    * @param buffer pointer to first byte of the memory buffer
@@ -123,20 +123,20 @@ public:
 
   /**
    * @brief Get content freshness (const reference)
-   */  
+   */
   inline const boost::posix_time::time_duration &
   getFreshness () const;
 
   /**
    * @brief Get content freshness (reference)
-   */  
+   */
   inline boost::posix_time::time_duration &
   getFreshness ();
 
   /**
    * @brief Set content freshness
    * @param freshness content freshness (default value is Content::maxFreshness = 2147 seconds)
-   */  
+   */
   inline void
   setFreshness (const boost::posix_time::time_duration &freshness = maxFreshness);
 
@@ -188,11 +188,12 @@ public:
    */
   inline void
   setContent (const void *buf, size_t length);
-  
+
 public:
-  static const name::Component noFinalBlock; ///< @brief Not a final block == name::Component () 
+  static const name::Component noFinalBlock; ///< @brief Not a final block == name::Component ()
+  static const boost::posix_time::time_duration noFreshness; ///< @brief Minimum freshness == seconds (0)
   static const boost::posix_time::time_duration maxFreshness; ///< @brief Maximum freshnes == seconds (2147)
-  
+
 private:
   // ContentInfo
   boost::posix_time::ptime m_timestamp;
@@ -268,6 +269,30 @@ inline void
 Content::setFinalBlockId (const name::Component &finalBlock)
 {
   m_finalBlockId = finalBlock;
+}
+
+inline const Blob &
+Content::getContent () const
+{
+  return m_content;
+}
+
+inline Blob &
+Content::getContent ()
+{
+  return m_content;
+}
+
+inline void
+Content::setContent (const Blob &content)
+{
+  m_content = content;
+}
+
+inline void
+Content::setContent (const void *buf, size_t length)
+{
+  Blob (buf, length).swap (m_content);
 }
 
 } // ndn

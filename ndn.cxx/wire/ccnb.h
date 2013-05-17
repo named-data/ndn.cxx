@@ -155,8 +155,6 @@ public:
    * @param os output stream to write
    * @param value dictionary id of the block header
    * @param block_type Type of CCNB block
-   *
-   * @returns written length
    */
   static void
   appendBlockHeader (std::ostream &os, size_t value, ccn_tt block_type);
@@ -174,8 +172,6 @@ public:
   /**
    * @brief Append CCNB closer tag (size is 1)
    * @param os output stream to write
-   *
-   * @returns written length
    */
   inline static void
   appendCloser (std::ostream &os);
@@ -196,11 +192,20 @@ public:
    *
    * @param os output stream to write
    * @param time reference to time duration object
-   *
-   * @returns written length
    */
   static void
-  appendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &time);
+  appendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &timestamp);
+
+  /**
+   * Append a binary timestamp as a BLOB using the ccn binary
+   * Timestamp representation (12-bit fraction).
+   *
+   * @param os output stream to write
+   * @param time reference to posix_time::ptime object.  This method automatically calculates duration between time and gregorian::date(1970,1,1)
+   *             and calls the other version of the method
+   */
+  inline static void
+  appendTimestampBlob (std::ostream &os, const boost::posix_time::ptime &time);
 
   /**
    * Append a tagged BLOB
@@ -211,8 +216,6 @@ public:
    * @param dtag is the element's dtag
    * @param data points to the binary data
    * @param size is the size of the data, in bytes
-   *
-   * @returns written length
    */
   inline static void
   appendTaggedBlob (std::ostream &os, ccn_dtag dtag, const void *data, size_t size);
@@ -224,10 +227,20 @@ public:
    *
    * @param os output stream to write
    * @param dtag is the element's dtag
+   * @param blob reference to the data blob
+   */
+  inline static void
+  appendTaggedBlob (std::ostream &os, ccn_dtag dtag, const Blob &blob);
+
+  /**
+   * Append a tagged BLOB
+   *
+   * This is a ccnb-encoded element with containing the BLOB as content
+   *
+   * @param os output stream to write
+   * @param dtag is the element's dtag
    * @param data points to the binary data
    * @param size is the size of the data, in bytes
-   *
-   * @returns written length
    */
   inline static void
   appendTaggedNumber (std::ostream &os, ccn_dtag dtag, uint32_t number);
@@ -240,8 +253,6 @@ public:
    * @param os output stream to write
    * @param dtag is the element's dtag
    * @param string UTF-8 string to be written
-   *
-   * @returns written length
    */
   inline static void
   appendString (std::ostream &os, ccn_dtag dtag, const std::string &string);
@@ -252,8 +263,6 @@ public:
    * @param interest Interest to be formatted
    *
    * @todo For now, this method is used to create Interest template, which doesn't output name to the stream
-   *
-   * @returns written length
    */
   static void
   appendInterest (std::ostream &os, const Interest &interest);
@@ -262,8 +271,6 @@ public:
    * @brief Append exclude filter in CCNb encoding
    * @param os output stream to write
    * @param exclude Exclude filter to be formatted
-   *
-   * @returns written length
    */
   static void
   appendExclude (std::ostream &os, const Exclude &exclude);
@@ -272,7 +279,15 @@ public:
    * @brief Append signature in SHA256withRSA format
    */
   virtual void
-  appendSignature (std::ostream &os, const signature::Sha256WithRsa &signature);
+  appendSignature (std::ostream &os, const signature::Sha256WithRsa &signature, void *userData);
+
+  /**
+   * @brief Format data in CCNb encoding
+   * @param os output stream to write
+   * @param data data to be formatted
+   */
+  void
+  appendData (std::ostream &os, const Data &data);
 };
 
 
@@ -280,6 +295,13 @@ inline void
 Ccnb::appendCloser (std::ostream &os)
 {
   os.put (Ccnb::CCN_CLOSE_TAG);
+}
+
+inline void
+Ccnb::appendTimestampBlob (std::ostream &os, const boost::posix_time::ptime &time)
+{
+  static const boost::posix_time::ptime epoch (boost::gregorian::date(1970,1,1));
+  appendTimestampBlob (os, time - epoch);
 }
 
 inline void
@@ -295,6 +317,12 @@ Ccnb::appendTaggedBlob (std::ostream &os, Ccnb::ccn_dtag dtag, const void *data,
     }
   appendCloser (os);
   /* 1 */
+}
+
+inline void
+Ccnb::appendTaggedBlob (std::ostream &os, ccn_dtag dtag, const Blob &blob)
+{
+  appendTaggedBlob (os, dtag, blob.buf (), blob.size ());
 }
 
 inline void

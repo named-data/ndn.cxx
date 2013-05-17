@@ -96,7 +96,7 @@ public:
 
   // from Signature
   virtual void
-  doubleDispatch (std::ostream &os, wire::Base &wire);
+  doubleDispatch (std::ostream &os, wire::Base &wire, void *userData) const;
 
 private:
   static const std::string s_oid;

@@ -33,9 +33,10 @@ public:
    * @brief A double dispatch pattern to call the right wireFormatter method to format signature
    * @param os reference to output stream
    * @param wireFormatter a reference to a wireFormatter object
+   * @param userData any user-specific data
    */
   virtual void
-  doubleDispatch (std::ostream &os, wire::Base &wireFormatter) = 0;
+  doubleDispatch (std::ostream &os, wire::Base &wireFormatter, void *userData) const = 0;
 };
 
 } // ndn

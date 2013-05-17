@@ -29,7 +29,7 @@ class Base
 {
 public:
   virtual void
-  appendSignature (std::ostream &os, const signature::Sha256WithRsa &signature) = 0;
+  appendSignature (std::ostream &os, const signature::Sha256WithRsa &signature, void *userData) = 0;
 };
 
 } // wire
