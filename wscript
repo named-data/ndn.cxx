@@ -8,11 +8,11 @@ def options(opt):
     opt.add_option('--test', action='store_true',default=False,dest='_test',help='''build unit tests''')
     opt.add_option('--log4cxx', action='store_true',default=False,dest='log4cxx',help='''Compile with log4cxx logging support''')
 
-    opt.load('compiler_c compiler_cxx boost ccnx doxygen gnu_dirs')
+    opt.load('compiler_c compiler_cxx boost ccnx doxygen gnu_dirs c_osx')
     opt.load('tinyxml', tooldir=['waf-tools'])
 
 def configure(conf):
-    conf.load("compiler_c compiler_cxx boost ccnx gnu_dirs tinyxml doxygen")
+    conf.load("compiler_c compiler_cxx boost ccnx gnu_dirs tinyxml doxygen c_osx")
 
     if conf.options.debug:
         conf.define ('_DEBUG', 1)
@@ -27,7 +27,13 @@ def configure(conf):
     else:
         conf.add_supported_cxxflags (cxxflags = ['-O3', '-g'])
 
-    conf.define ("CCNX_CPP_VERSION", VERSION)
+    if Utils.unversioned_sys_platform () == "darwin":
+        conf.check_cxx(framework_name='Foundation', uselib_store='OSX_FOUNDATION', mandatory=True, compile_filename='test.mm')
+        # conf.check_cxx(framework_name='AppKit',     uselib_store='OSX_APPKIT',     mandatory=True, compile_filename='test.mm')
+        conf.check_cxx(framework_name='Security',   uselib_store='OSX_SECURITY',   define_name='HAVE_SECURITY',
+                       use="OSX_FOUNDATION", mandatory=True, compile_filename='test.mm')
+
+    conf.define ("NDN_CXX_VERSION", VERSION)
 
     conf.check_cfg(package='libevent', args=['--cflags', '--libs'], uselib_store='LIBEVENT', mandatory=True)
     conf.check_cfg(package='libevent_pthreads', args=['--cflags', '--libs'], uselib_store='LIBEVENT_PTHREADS', mandatory=True)
@@ -95,6 +101,11 @@ def build (bld):
         includes = ".",
         )
 
+    if Utils.unversioned_sys_platform () == "darwin":
+        libndn_cxx.mac_app = True
+        libndn_cxx.source += bld.path.ant_glob (['platforms/osx/**/*.mm'])
+        libndn_cxx.use += " OSX_FOUNDATION OSX_SECURITY"
+
     # Unit tests
     if bld.env['TEST']:
       unittests = bld.program (
@@ -150,3 +161,9 @@ def sphinx (bld):
     bld (features="sphinx",
          outdir = "doc/html",
          source = "doc/source/conf.py")
+
+
+@TaskGen.extension('.mm')
+def mm_hook(self, node):
+    """Alias .mm files to be compiled the same as .cc files, gcc will do the right thing."""
+    return self.create_compiled_task('cxx', node)

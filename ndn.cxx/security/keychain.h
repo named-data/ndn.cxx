@@ -11,7 +11,8 @@
 #ifndef NDN_KEY_H
 #define NDN_KEY_H
 
-#include "ndn.cxx/data.h"
+#include "ndn.cxx/fields/blob.h"
+#include "ndn.cxx/fields/name.h"
 
 namespace ndn {
 
@@ -27,11 +28,23 @@ public:
   virtual
   ~Keychain () { }
 
+  virtual void
+  generateKeyPair (const Name &keyName) = 0;
+
+  virtual void
+  deleteKeyPair (const Name &keyName) = 0;
+
+  virtual void
+  deletePublicKey (const Name &keyName) = 0;
+
+  virtual Ptr<Blob>
+  getPublicKey (const Name &publicKeyName) = 0;
+};
   /**
    * @brief Pure virtual method to sign NDN data packet
    */
-  
-  
+
+
   // Key ();
   //       // 	self.type = None
   //       // 	self.publicKeyID = None # SHA256 hash
