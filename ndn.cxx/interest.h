@@ -18,8 +18,6 @@
 #include <ndn.cxx/fields/exclude.h>
 #include <ndn.cxx/helpers/hash.h>
 
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
 namespace ndn {
 
 /**
@@ -85,7 +83,7 @@ public:
    * @return reference to self (to allow method chaining)
    */
   inline Interest &
-  setInterestLifetime (const boost::posix_time::time_duration &interestLifetime);
+  setInterestLifetime (const TimeInterval &interestLifetime);
 
   /**
    * @brief Set interest lifetime (double)
@@ -98,12 +96,12 @@ public:
 
   /**
    * @brief Get interest lifetime
-   * @return boost::posix_time::time_duration representing lifetime of the interest.
+   * @return TimeInterval representing lifetime of the interest.
    *         Use time_duration::total_seconds () or time_duration::total_microseconds (),
    *         if you need interest lifetime as a plain number.
    *         @see http://www.boost.org/doc/libs/1_53_0/doc/html/date_time/posix_time.html
    */
-  inline const boost::posix_time::time_duration &
+  inline const TimeInterval &
   getInterestLifetime () const;
 
   /**
@@ -287,7 +285,7 @@ private:
   uint32_t m_maxSuffixComponents;
   uint32_t m_minSuffixComponents;
   uint32_t m_answerOriginKind;
-  boost::posix_time::time_duration m_interestLifetime; // lifetime in seconds
+  TimeInterval m_interestLifetime; // lifetime in seconds
 
   uint8_t m_scope;
   uint8_t m_childSelector;
@@ -329,7 +327,7 @@ Interest::getName ()
 }
 
 inline Interest &
-Interest::setInterestLifetime (const boost::posix_time::time_duration &interestLifetime)
+Interest::setInterestLifetime (const TimeInterval &interestLifetime)
 {
   m_interestLifetime = interestLifetime;
   return *this;
@@ -338,15 +336,11 @@ Interest::setInterestLifetime (const boost::posix_time::time_duration &interestL
 inline Interest &
 Interest::setInterestLifetime (double interestLifetimeSeconds)
 {
-  double seconds, microseconds;
-  seconds = std::modf (interestLifetimeSeconds, &microseconds);
-  microseconds *= 1000000;
-
-  m_interestLifetime = boost::posix_time::seconds (seconds) + boost::posix_time::microseconds (microseconds);
+  m_interestLifetime = time::Seconds (interestLifetimeSeconds);
   return *this;
 }
 
-inline const boost::posix_time::time_duration &
+inline const TimeInterval &
 Interest::getInterestLifetime () const
 {
   return m_interestLifetime;

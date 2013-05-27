@@ -17,7 +17,6 @@ extern "C" {
 }
 #include <poll.h>
 #include <boost/throw_exception.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/random.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string.hpp>
@@ -234,7 +233,7 @@ Wrapper::ccnLoop ()
           {
             try
             {
-              this_thread::sleep (boost::get_system_time () +  boost::posix_time::seconds (interval) + boost::posix_time::milliseconds (rangeUniformRandom ()));
+              this_thread::sleep (boost::get_system_time () +  time::Seconds (interval) + time::Milliseconds (rangeUniformRandom ()));
 
               connectCcnd ();
               _LOG_DEBUG("reconnect to ccnd succeeded");
@@ -242,7 +241,7 @@ Wrapper::ccnLoop ()
             }
             catch (Error::ndnOperation &e)
             {
-              this_thread::sleep (boost::get_system_time () +  boost::posix_time::seconds (interval) + boost::posix_time::milliseconds (rangeUniformRandom ()));
+              this_thread::sleep (boost::get_system_time () +  time::Seconds (interval) + time::Milliseconds (rangeUniformRandom ()));
 
               // do exponential backup for reconnect interval
               if (interval < maxInterval)
@@ -728,9 +727,9 @@ struct GetState
     double intPart, fraction;
     fraction = modf (std::abs(maxWait), &intPart);
 
-    m_maxWait = date_time::second_clock<boost::posix_time::ptime>::universal_time()
-      + boost::posix_time::seconds (intPart)
-      + boost::posix_time::microseconds (fraction * 1000000);
+    m_maxWait = time::Now ()
+      + time::Seconds (intPart)
+      + time::Microseconds (fraction * 1000000);
   }
 
   PcoPtr
@@ -761,7 +760,7 @@ struct GetState
   }
 
 private:
-  boost::posix_time::ptime m_maxWait;
+  Time m_maxWait;
 
   boost::mutex m_mutex;
   boost::condition_variable    m_cond;

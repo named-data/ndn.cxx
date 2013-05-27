@@ -11,11 +11,6 @@
 #ifndef NDN_WIRE_BASE_H
 #define NDN_WIRE_BASE_H
 
-// #include "ndn.cxx/interest.h"
-// #include "ndn.cxx/data.h"
-
-// #include <boost/date_time/posix_time/posix_time_types.hpp>
-
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
 namespace ndn {

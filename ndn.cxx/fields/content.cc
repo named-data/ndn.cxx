@@ -15,17 +15,17 @@ namespace ndn
 {
 
 const name::Component Content::noFinalBlock = name::Component ();
-const boost::posix_time::time_duration Content::noFreshness;
-const boost::posix_time::time_duration Content::maxFreshness = boost::posix_time::seconds (2147);
+const TimeInterval Content::noFreshness;
+const TimeInterval Content::maxFreshness = time::Seconds (2147);
 
 Content::Content ()
 {
 }
 
 Content::Content (const void *buffer, size_t size,
-                  const boost::posix_time::ptime &timestamp,
+                  const Time &timestamp,
                   Type type/* = DATA*/,
-                  const boost::posix_time::time_duration &freshness/* = maxFreshness*/,
+                  const TimeInterval &freshness/* = maxFreshness*/,
                   const name::Component &finalBlock/* = noFinalBlock*/)
   : m_timestamp (timestamp)
   , m_type (type)
@@ -38,9 +38,9 @@ Content::Content (const void *buffer, size_t size,
 
 Content::Content (const void *buffer, size_t size,
                   Type type/* = DATA*/,
-                  const boost::posix_time::time_duration &freshness/* = maxFreshness*/,
+                  const TimeInterval &freshness/* = maxFreshness*/,
                   const name::Component &finalBlock/* = noFinalBlock*/)
-  : m_timestamp (boost::posix_time::microsec_clock::universal_time ())
+  : m_timestamp (time::Now ())
   , m_type (type)
   , m_freshness (freshness)
   , m_finalBlockId (finalBlock)

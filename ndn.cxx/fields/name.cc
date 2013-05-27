@@ -13,8 +13,6 @@
 #include "name.h"
 
 #include "ndn.cxx/error.h"
-
-#include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <ctype.h>
@@ -183,8 +181,7 @@ Name::appendVersion (uint64_t version/* = Name::nversion*/)
     return appendNumberWithMarker (version, 0xFD);
   else
     {
-      boost::posix_time::time_duration now (boost::posix_time::microsec_clock::universal_time () -
-                                            boost::posix_time::ptime (boost::gregorian::date (1970, boost::gregorian::Jan, 1)));
+      TimeInterval now = time::NowUnixTimestamp ();
       version = (now.total_seconds () << 12) | (0xFFF & (now.fractional_seconds () / 244 /*( 1000,000 microseconds / 4096.0 resolution = last 12 bits)*/));
       return appendNumberWithMarker (version, 0xFD);
     }

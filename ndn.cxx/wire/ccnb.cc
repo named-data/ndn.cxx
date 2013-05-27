@@ -62,7 +62,7 @@ Ccnb::appendName (std::ostream &os, const Name &name)
 }
 
 void
-Ccnb::appendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &time)
+Ccnb::appendTimestampBlob (std::ostream &os, const TimeInterval &time)
 {
   // CCNx method function implements some markers, which are not really defined anywhere else...
 

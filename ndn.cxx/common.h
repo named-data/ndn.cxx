@@ -15,6 +15,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 namespace ndn
 {
@@ -38,7 +39,35 @@ struct Ptr : public boost::shared_ptr<T>
   static Ptr
   Create () { return boost::make_shared<T> (); }
 };
+
+typedef boost::posix_time::ptime Time;
+typedef boost::posix_time::time_duration TimeInterval;
+
+namespace time
+{
+inline TimeInterval Seconds (int secs) { return boost::posix_time::seconds (secs); }
+inline TimeInterval Milliseconds (int msecs) { return boost::posix_time::milliseconds (msecs); }
+inline TimeInterval Microseconds (int musecs) { return boost::posix_time::microseconds (musecs); }
+
+inline TimeInterval Seconds (double fractionalSeconds)
+{
+  double seconds, microseconds;
+  seconds = std::modf (fractionalSeconds, &microseconds);
+  microseconds *= 1000000;
+
+  return time::Seconds (seconds) + time::Microseconds (microseconds);
 }
+
+inline Time Now () { return boost::posix_time::microsec_clock::universal_time (); }
+
+const Time UNIX_EPOCH_TIME = Time (boost::gregorian::date (1970, boost::gregorian::Jan, 1));
+inline TimeInterval NowUnixTimestamp ()
+{
+  return TimeInterval (time::Now () - UNIX_EPOCH_TIME);
+}
+} // time
+} // ndn
+
 
 extern "C" {
 #include <ccn/ccn.h>

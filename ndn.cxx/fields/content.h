@@ -11,10 +11,9 @@
 #ifndef NDN_CONTENT_H
 #define NDN_CONTENT_H
 
+#include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/fields/name-component.h"
-
-#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 namespace ndn {
 
@@ -67,9 +66,9 @@ public:
    * Use the other version of the constructor, if timestamp needs to be automatically generated
    */
   Content (const void *buffer, size_t size,
-           const boost::posix_time::ptime &timestamp,
+           const Time &timestamp,
            Type type = DATA,
-           const boost::posix_time::time_duration &freshness = maxFreshness,
+           const TimeInterval &freshness = maxFreshness,
            const name::Component &finalBlock = noFinalBlock);
 
   /**
@@ -84,19 +83,19 @@ public:
    */
   Content (const void *buffer, size_t size,
            Type type = DATA,
-           const boost::posix_time::time_duration &freshness = maxFreshness,
+           const TimeInterval &freshness = maxFreshness,
            const name::Component &finalBlock = noFinalBlock);
 
   /**
    * @brief Get content timestamp (const reference)
    */
-  inline const boost::posix_time::ptime &
+  inline const Time &
   getTimestamp () const;
 
   /**
    * @brief Get content timestamp (reference)
    */
-  inline boost::posix_time::ptime &
+  inline Time &
   getTimestamp ();
 
   /**
@@ -106,7 +105,7 @@ public:
    * If parameter is omitted, then the current time (UTC clock) is used
    */
   inline void
-  setTimeStamp (const boost::posix_time::ptime &timestamp = boost::posix_time::ptime ());
+  setTimeStamp (const Time &timestamp = Time ());
 
   /**
    * @brief Get type of content
@@ -124,13 +123,13 @@ public:
   /**
    * @brief Get content freshness (const reference)
    */
-  inline const boost::posix_time::time_duration &
+  inline const TimeInterval &
   getFreshness () const;
 
   /**
    * @brief Get content freshness (reference)
    */
-  inline boost::posix_time::time_duration &
+  inline TimeInterval &
   getFreshness ();
 
   /**
@@ -138,7 +137,7 @@ public:
    * @param freshness content freshness (default value is Content::maxFreshness = 2147 seconds)
    */
   inline void
-  setFreshness (const boost::posix_time::time_duration &freshness = maxFreshness);
+  setFreshness (const TimeInterval &freshness = maxFreshness);
 
   /**
    * @brief Get final block ID of the content (const reference)
@@ -191,36 +190,43 @@ public:
 
 public:
   static const name::Component noFinalBlock; ///< @brief Not a final block == name::Component ()
-  static const boost::posix_time::time_duration noFreshness; ///< @brief Minimum freshness == seconds (0)
-  static const boost::posix_time::time_duration maxFreshness; ///< @brief Maximum freshnes == seconds (2147)
+  static const TimeInterval noFreshness; ///< @brief Minimum freshness == seconds (0)
+  static const TimeInterval maxFreshness; ///< @brief Maximum freshnes == seconds (2147)
 
 private:
   // ContentInfo
-  boost::posix_time::ptime m_timestamp;
+  Time m_timestamp;
   Type m_type;
-  boost::posix_time::time_duration m_freshness;
+  TimeInterval m_freshness;
   name::Component m_finalBlockId;
 
   // ContentData
   Blob m_content;
 };
 
-inline const boost::posix_time::ptime &
+inline const Time &
 Content::getTimestamp () const
 {
   return m_timestamp;
 }
 
-inline boost::posix_time::ptime &
+inline Time &
 Content::getTimestamp ()
 {
   return m_timestamp;
 }
 
 inline void
-Content::setTimeStamp (const boost::posix_time::ptime &timestamp/* = boost::posix_time::ptime ()*/)
+Content::setTimeStamp (const Time &timestamp/* = Time ()*/)
 {
-  m_timestamp = timestamp;
+  if (timestamp != Time ())
+    {
+      m_timestamp = timestamp;
+    }
+  else
+    {
+      m_timestamp = time::Now ();
+    }
 }
 
 inline Content::Type
@@ -235,20 +241,20 @@ Content::setType (Content::Type type)
   m_type = type;
 }
 
-inline const boost::posix_time::time_duration &
+inline const TimeInterval &
 Content::getFreshness () const
 {
   return m_freshness;
 }
 
-inline boost::posix_time::time_duration &
+inline TimeInterval &
 Content::getFreshness ()
 {
   return m_freshness;
 }
 
 inline void
-Content::setFreshness (const boost::posix_time::time_duration &freshness/* = maxFreshness*/)
+Content::setFreshness (const TimeInterval &freshness/* = Content::maxFreshness*/)
 {
   m_freshness = freshness;
 }

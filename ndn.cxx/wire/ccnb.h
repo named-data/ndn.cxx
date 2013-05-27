@@ -16,8 +16,6 @@
 #include "ndn.cxx/interest.h"
 #include "ndn.cxx/data.h"
 
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
 namespace ndn {
 namespace wire {
 
@@ -194,18 +192,19 @@ public:
    * @param time reference to time duration object
    */
   static void
-  appendTimestampBlob (std::ostream &os, const boost::posix_time::time_duration &timestamp);
+  appendTimestampBlob (std::ostream &os, const TimeInterval &timestamp);
 
   /**
    * Append a binary timestamp as a BLOB using the ccn binary
    * Timestamp representation (12-bit fraction).
    *
    * @param os output stream to write
-   * @param time reference to posix_time::ptime object.  This method automatically calculates duration between time and gregorian::date(1970,1,1)
+   * @param time reference to Time (posix_time::ptime) object.
+   *             This method automatically calculates duration between time and gregorian::date(1970,1,1)
    *             and calls the other version of the method
    */
   inline static void
-  appendTimestampBlob (std::ostream &os, const boost::posix_time::ptime &time);
+  appendTimestampBlob (std::ostream &os, const Time &time);
 
   /**
    * Append a tagged BLOB
@@ -298,10 +297,9 @@ Ccnb::appendCloser (std::ostream &os)
 }
 
 inline void
-Ccnb::appendTimestampBlob (std::ostream &os, const boost::posix_time::ptime &time)
+Ccnb::appendTimestampBlob (std::ostream &os, const Time &time)
 {
-  static const boost::posix_time::ptime epoch (boost::gregorian::date(1970,1,1));
-  appendTimestampBlob (os, time - epoch);
+  appendTimestampBlob (os, time - time::UNIX_EPOCH_TIME);
 }
 
 inline void
