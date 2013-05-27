@@ -101,18 +101,23 @@ keychain::OSX::generateKeyPair (const Name &keyName)
 {
   const void *	keys[] = {
     kSecAttrLabel,
-    // kSecAttrIsPermanent,
+    kSecAttrIsPermanent,
     kSecAttrKeyType,
-    kSecAttrKeySizeInBits
+    kSecAttrKeySizeInBits,
+    kSecAttrApplicationTag
   };
 
-  CFStringRef label = CFStringCreateWithCString (NULL, keyName.toUri ().c_str (), kCFStringEncodingUTF8);
+  std::string uri = keyName.toUri ();
+  CFStringRef label = CFStringCreateWithCString (NULL, uri.c_str (), kCFStringEncodingUTF8);
+  CFDataRef tag = CFDataCreate (NULL, reinterpret_cast<const unsigned char *> (uri.c_str ()), uri.size ());
+  
   int keySize = 2048;
   const void *	values[] = {
     label,
-    // kCFBooleanFalse,
+    kCFBooleanTrue,
     kSecAttrKeyTypeRSA,
-    CFNumberCreate (NULL, kCFNumberIntType, &keySize)
+    CFNumberCreate (NULL, kCFNumberIntType, &keySize),
+    tag
   };
 
   CFDictionaryRef dict = CFDictionaryCreate (NULL,
@@ -137,13 +142,15 @@ keychain::OSX::deleteKeyPair (const Name &keyName)
 {
   const void *	keys[] = {
     kSecClass,
-    kSecAttrLabel
+    kSecAttrApplicationTag
   };
 
-  CFStringRef label = CFStringCreateWithCString (NULL, keyName.toUri ().c_str (), kCFStringEncodingUTF8);
+  std::string uri = keyName.toUri ();
+  CFDataRef tag = CFDataCreate (NULL, reinterpret_cast<const unsigned char *> (uri.c_str ()), uri.size ());
+
   const void *	values[] = {
     kSecClassKey,
-    label
+    tag
   };
 
   CFDictionaryRef dict = CFDictionaryCreate (NULL,
@@ -168,14 +175,16 @@ keychain::OSX::deletePublicKey (const Name &keyName)
   const void *	keys[] = {
     kSecClass,
     kSecAttrKeyClass,
-    kSecAttrLabel
+    kSecAttrApplicationTag
   };
 
-  CFStringRef label = CFStringCreateWithCString (NULL, keyName.toUri ().c_str (), kCFStringEncodingUTF8);
+  std::string uri = keyName.toUri ();
+  CFDataRef tag = CFDataCreate (NULL, reinterpret_cast<const unsigned char *> (uri.c_str ()), uri.size ());
+
   const void *	values[] = {
     kSecClassKey,
     kSecAttrKeyClassPublic,
-    label
+    tag
   };
 
   CFDictionaryRef dict = CFDictionaryCreate (NULL,
@@ -201,16 +210,18 @@ keychain::OSX::getPublicKey (const Name &publicKeyName)
     kSecClass,
     kSecAttrKeyType,
     kSecAttrKeyClass,
-    kSecAttrLabel,
+    kSecAttrApplicationTag,
     kSecReturnData
   };
 
-  CFStringRef label = CFStringCreateWithCString (NULL, publicKeyName.toUri ().c_str (), kCFStringEncodingUTF8);
+  std::string uri = publicKeyName.toUri ();
+  CFDataRef tag = CFDataCreate (NULL, reinterpret_cast<const unsigned char *> (uri.c_str ()), uri.size ());
+
   const void *	values[] = {
     kSecClassKey,
     kSecAttrKeyTypeRSA,
     kSecAttrKeyClassPublic,
-    label,
+    tag,
     [NSNumber numberWithBool:YES]
   };
 
