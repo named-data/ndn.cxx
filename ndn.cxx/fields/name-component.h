@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "blob.h"
+#include <stdint.h>
 
 namespace ndn {
 

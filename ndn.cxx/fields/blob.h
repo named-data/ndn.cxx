@@ -14,6 +14,7 @@
 #define NDN_BLOB_H
 
 #include <vector>
+#include <cstddef>
 
 namespace ndn {
 

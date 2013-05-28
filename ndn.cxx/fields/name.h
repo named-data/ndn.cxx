@@ -212,7 +212,7 @@ public:
    * @param seqno sequence number
    * @see appendNumberWithMarker
    */
-  inline inline Name &
+  inline Name &
   appendSeqNum (uint64_t seqno);
 
   /**
