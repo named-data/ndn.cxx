@@ -29,6 +29,7 @@ public:
 
   typedef typename parent_trie::iterator iterator;
   typedef typename parent_trie::const_iterator const_iterator;
+  typedef typename parent_trie::payload_traits payload_traits;
 
   typedef typename PolicyTraits::template policy<
     trie_with_policy<FullKey, PayloadTraits, PolicyTraits>,

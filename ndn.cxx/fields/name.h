@@ -31,6 +31,8 @@ public:
   typedef std::vector<name::Component>::reference reference;
   typedef std::vector<name::Component>::const_reference const_reference;
 
+  typedef name::Component partial_type;
+  
   ///////////////////////////////////////////////////////////////////////////////
   //                              CONSTRUCTORS                                 //
   ///////////////////////////////////////////////////////////////////////////////
