@@ -73,23 +73,23 @@ BOOST_AUTO_TEST_CASE (Basic)
                                  Interest3.begin (), Interest3.end ());
 }
 
-BOOST_AUTO_TEST_CASE (Charbuf)
-{
-  INIT_LOGGERS ();
+// BOOST_AUTO_TEST_CASE (Charbuf)
+// {
+//   INIT_LOGGERS ();
 
-  Interest i;
-  i.setName (Name ("/test"));
-  i.setMinSuffixComponents (2);
-  i.setMaxSuffixComponents (2);
-  i.setInterestLifetime (posix_time::seconds (10));
+//   Interest i;
+//   i.setName (Name ("/test"));
+//   i.setMinSuffixComponents (2);
+//   i.setMaxSuffixComponents (2);
+//   i.setInterestLifetime (posix_time::seconds (10));
 
-  charbuf_stream stream;
-  wire::Ccnb::appendInterest (stream, i);
+//   charbuf_stream stream;
+//   wire::Ccnb::appendInterest (stream, i);
 
-  BOOST_CHECK_EQUAL_COLLECTIONS (reinterpret_cast<char*> (stream.buf ().getBuf ()->buf),
-                                 reinterpret_cast<char*> (stream.buf ().getBuf ()->buf+stream.buf ().getBuf ()->length),
-                                 Interest2.begin (), Interest2.end ());
+//   BOOST_CHECK_EQUAL_COLLECTIONS (reinterpret_cast<char*> (stream.buf ().getBuf ()->buf),
+//                                  reinterpret_cast<char*> (stream.buf ().getBuf ()->buf+stream.buf ().getBuf ()->length),
+//                                  Interest2.begin (), Interest2.end ());
   
-}
+// }
 
 BOOST_AUTO_TEST_SUITE_END()

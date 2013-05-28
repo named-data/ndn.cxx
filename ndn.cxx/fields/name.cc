@@ -102,67 +102,6 @@ Name::Name (const Name &other)
   m_comps = other.m_comps;
 }
 
-Name::Name (const unsigned char *data, const ccn_indexbuf *comps)
-{
-  for (unsigned int i = 0; i < comps->n - 1; i++)
-  {
-    const unsigned char *compPtr;
-    size_t size;
-    ccn_name_comp_get(data, comps, i, &compPtr, &size);
-
-    append (name::Component (compPtr, size));
-  }
-}
-
-Name::Name (const void *buf, const size_t length)
-{
-  ccn_indexbuf *idx = ccn_indexbuf_create();
-  const ccn_charbuf namebuf = { length, length, const_cast<unsigned char *> (reinterpret_cast<const unsigned char *> (buf)) };
-  ccn_name_split (&namebuf, idx);
-
-  const unsigned char *compPtr = NULL;
-  size_t size = 0;
-  int i = 0;
-  while (ccn_name_comp_get(namebuf.buf, idx, i, &compPtr, &size) == 0)
-    {
-      append (name::Component (compPtr, size));
-      i++;
-    }
-  ccn_indexbuf_destroy(&idx);
-}
-
-Name::Name (const Charbuf &buf)
-{
-  ccn_indexbuf *idx = ccn_indexbuf_create();
-  ccn_name_split (buf.getBuf (), idx);
-
-  const unsigned char *compPtr = NULL;
-  size_t size = 0;
-  int i = 0;
-  while (ccn_name_comp_get(buf.getBuf ()->buf, idx, i, &compPtr, &size) == 0)
-    {
-      append (name::Component (compPtr, size));
-      i++;
-    }
-  ccn_indexbuf_destroy(&idx);
-}
-
-Name::Name (const ccn_charbuf *buf)
-{
-  ccn_indexbuf *idx = ccn_indexbuf_create();
-  ccn_name_split (buf, idx);
-
-  const unsigned char *compPtr = NULL;
-  size_t size = 0;
-  int i = 0;
-  while (ccn_name_comp_get(buf->buf, idx, i, &compPtr, &size) == 0)
-    {
-      append (name::Component (compPtr, size));
-      i++;
-    }
-  ccn_indexbuf_destroy(&idx);
-}
-
 Name &
 Name::operator= (const Name &other)
 {

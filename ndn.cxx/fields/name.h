@@ -13,11 +13,8 @@
 #ifndef NDN_NAME_H
 #define NDN_NAME_H
 
-#include <boost/shared_ptr.hpp>
-
 #include "ndn.cxx/fields/name-component.h"
 #include "ndn.cxx/common.h"
-#include "ndn.cxx/charbuf.h"
 
 namespace ndn {
 
@@ -65,40 +62,6 @@ public:
    */
   template<class Iterator>
   Name (Iterator begin, Iterator end);
-
-  /**
-   * @brief Create a name from CCNB-formatted binary blob
-   *
-   * @param data pointer to the first byte of name in CCNB-formatted binary blob format
-   * @param comps array of indices of name components inside the binary blob (@see ccn_indexbuf)
-   */
-  Name (const unsigned char *data, const ccn_indexbuf *comps);
-
-  /**
-   * @brief Create a name from CCNB-formatted binary blob
-   *
-   * @param data pointer to the first byte of name in CCNB-formatted binary blob format
-   * @param length length of CCNB-formatted binary blob
-   *
-   * This version of the constructor first parses CCNB-formatted binary blob, discovers
-   * the number of name components and their offsets, and then creates a new name object
-   * based on the discovered information
-   */
-  Name (const void *data, const size_t length);
-
-  /**
-   * @brief Create a name from CCNB-formatted binary blob, represented by ndn::Charbuf object
-   *
-   * @param buf reference to ndn::Charbuf object, pointing to a buffer with CCNB-formatted binary blob
-   */
-  Name (const Charbuf &buf);
-
-  /**
-   * @brief Create a name from CCNB-formatted binary blob, represented by ccn_charbuf structure
-   *
-   * @param buf pointer to ccn_charbuf structure, pointing to a buffer with CCNB-formatted binary blob
-   */
-  Name (const ccn_charbuf *buf);
 
   /**
    * @brief Assignment operator

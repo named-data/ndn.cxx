@@ -292,6 +292,8 @@ private:
   // not used now
   Hash m_publisherPublicKeyDigest;
   Exclude m_exclude;
+
+  Ptr<Blob> m_wire;
 };
 
 typedef boost::shared_ptr<Interest> InterestPtr;

@@ -14,6 +14,7 @@
 #include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/fields/content.h"
 #include "ndn.cxx/fields/signature.h"
+#include "ndn.cxx/fields/signed-blob.h"
 
 namespace ndn {
 
@@ -127,6 +128,8 @@ private:
   Name m_name;
   Ptr<Signature> m_signature; // signature with its parameters "binds" name and content
   Content m_content;
+
+  Ptr<SignedBlob> m_wire;  
 };
 
 inline Data &
