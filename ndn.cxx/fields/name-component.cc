@@ -88,6 +88,7 @@ Component::fromNumber (uint64_t number)
       comp.push_back (static_cast<unsigned char> (number & 0xFF));
       number >>= 8;
     }
+  std::reverse (comp.begin (), comp.end ());
   return comp;
 }
 
@@ -102,6 +103,8 @@ Component::fromNumberWithMarker (uint64_t number, unsigned char marker)
       comp.push_back (static_cast<unsigned char> (number & 0xFF));
       number >>= 8;
     }
+
+  std::reverse (comp.begin () + 1, comp.end ());
   return comp;
 }
 
@@ -135,7 +138,7 @@ uint64_t
 Component::toNumber () const
 {
   uint64_t ret = 0;
-  for (const_reverse_iterator i = rbegin (); i != rend (); i++)
+  for (const_iterator i = begin (); i != end (); i++)
     {
       ret <<= 8;
       ret |= static_cast<unsigned char> (*i);
@@ -152,16 +155,12 @@ Component::toNumberWithMarker (unsigned char marker) const
       BOOST_THROW_EXCEPTION (error::name::Component ()
                              << error::msg ("Name component does not have required marker [" + toUri () + "]"));
     }
+
   uint64_t ret = 0;
-  const_reverse_iterator i = rbegin ();
-  unsigned char value = static_cast<unsigned char> (*i);
-  i++;
-  for (; i != rend (); i++)
+  for (const_iterator i = begin () + 1; i != end (); i++)
     {
       ret <<= 8;
-      ret |= value;
-
-      value = static_cast<unsigned char> (*i);
+      ret |= static_cast<unsigned char> (*i);
     }
   return ret;
 }
