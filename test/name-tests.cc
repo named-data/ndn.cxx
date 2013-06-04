@@ -91,6 +91,10 @@ BOOST_AUTO_TEST_CASE (Basic)
   Name appendSelf ("/hello/you");
   appendSelf.append (appendSelf);
   BOOST_CHECK_EQUAL (appendSelf.toUri (), "/hello/you/hello/you");
+
+  Name withVersion ("/hello.txt/%FD%95-%25U1%DE%04/%00%01");
+  BOOST_REQUIRE_NO_THROW (withVersion.get (1).toVersion ());
+  BOOST_CHECK_EQUAL (withVersion.get (1).toVersion (), 1370203370106261);
 }
 
 BOOST_AUTO_TEST_CASE (Advanced)
