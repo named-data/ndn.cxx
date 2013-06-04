@@ -68,14 +68,14 @@ BOOST_AUTO_TEST_CASE (Basic)
   name.appendSeqNum (256);
   name.appendSeqNum (1234567890);
 
-  BOOST_CHECK_EQUAL (name.toUri (), "/hello/world/%00%01/%00%FF/%00%00%01/%00%D2%02%96I");
+  BOOST_CHECK_EQUAL (name.toUri (), "/hello/world/%00%01/%00%FF/%00%01%00/%00I%96%02%D2");
 
   BOOST_CHECK_EQUAL (name.get (5).toSeqNum (), 1234567890);
   BOOST_CHECK_EQUAL (name.get (4).toSeqNum (), 256);
   BOOST_CHECK_EQUAL (name.get (3).toSeqNum (), 255);
   BOOST_CHECK_EQUAL (name.get (2).toSeqNum (), 1);
 
-  BOOST_CHECK_EQUAL (name.get (-1).toUri (), "%00%D2%02%96I");
+  BOOST_CHECK_EQUAL (name.get (-1).toUri (), "%00I%96%02%D2");
 
   BOOST_CHECK_EQUAL (Name ("/%00").get (0).toSeqNum (), 0);
 
@@ -94,7 +94,9 @@ BOOST_AUTO_TEST_CASE (Basic)
 
   Name withVersion ("/hello.txt/%FD%95-%25U1%DE%04/%00%01");
   BOOST_REQUIRE_NO_THROW (withVersion.get (1).toVersion ());
-  BOOST_CHECK_EQUAL (withVersion.get (1).toVersion (), 1370203370106261);
+  BOOST_CHECK_EQUAL (withVersion.get (1).toVersion (), 41989409896259076);
+
+  BOOST_CHECK_EQUAL (Name ("/%00%01%00").get (0).toSeqNum (), 256);
 }
 
 BOOST_AUTO_TEST_CASE (Advanced)
