@@ -55,7 +55,7 @@ inline TimeInterval Seconds (double fractionalSeconds)
   seconds = std::modf (fractionalSeconds, &microseconds);
   microseconds *= 1000000;
 
-  return time::Seconds (seconds) + time::Microseconds (microseconds);
+  return time::Seconds((int)seconds) + time::Microseconds((int)microseconds);
 }
 
 inline Time Now () { return boost::posix_time::microsec_clock::universal_time (); }
