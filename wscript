@@ -27,11 +27,11 @@ def configure(conf):
     else:
         conf.add_supported_cxxflags (cxxflags = ['-O3', '-g'])
 
-    # if Utils.unversioned_sys_platform () == "darwin":
-    #     conf.check_cxx(framework_name='Foundation', uselib_store='OSX_FOUNDATION', mandatory=True, compile_filename='test.mm')
-    #     # conf.check_cxx(framework_name='AppKit',     uselib_store='OSX_APPKIT',     mandatory=True, compile_filename='test.mm')
-    #     conf.check_cxx(framework_name='Security',   uselib_store='OSX_SECURITY',   define_name='HAVE_SECURITY',
-    #                    use="OSX_FOUNDATION", mandatory=True, compile_filename='test.mm')
+    if Utils.unversioned_sys_platform () == "darwin":
+        conf.check_cxx(framework_name='Foundation', uselib_store='OSX_FOUNDATION', mandatory=True, compile_filename='test.mm')
+        conf.check_cxx(framework_name='AppKit',     uselib_store='OSX_APPKIT',     mandatory=True, compile_filename='test.mm')
+        conf.check_cxx(framework_name='Security',   uselib_store='OSX_SECURITY',   define_name='HAVE_SECURITY',
+                       use="OSX_FOUNDATION", mandatory=True, compile_filename='test.mm')
 
     conf.define ("NDN_CXX_VERSION", VERSION)
 
@@ -101,10 +101,10 @@ def build (bld):
         includes = ".",
         )
 
-    # if Utils.unversioned_sys_platform () == "darwin":
-    #     libndn_cxx.mac_app = True
-    #     libndn_cxx.source += bld.path.ant_glob (['platforms/osx/**/*.mm'])
-    #     libndn_cxx.use += " OSX_FOUNDATION OSX_SECURITY"
+    if Utils.unversioned_sys_platform () == "darwin":
+        libndn_cxx.mac_app = True
+        libndn_cxx.source += bld.path.ant_glob (['platforms/osx/**/*.mm'])
+        libndn_cxx.use += " OSX_FOUNDATION OSX_SECURITY"
 
     # Unit tests
     if bld.env['TEST']:

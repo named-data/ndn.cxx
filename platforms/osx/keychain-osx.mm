@@ -15,6 +15,8 @@
 #include <Foundation/Foundation.h>
 #include <AppKit/AppKit.h>
 #include <Security/Security.h>
+#include <Security/SecImportExport.h>
+
 
 INIT_LOGGER ("Keychain.OSX");
 
@@ -42,7 +44,7 @@ public:
   static const std::string s_keychainPath;
 };
 
-const std::string OSX_Private::s_keychainPath = "~/Library/Keychains/NDN.keychain";
+const std::string OSX_Private::s_keychainPath = "NDN.keychain";
 } // keychain
 
 
@@ -211,7 +213,7 @@ keychain::OSX::getPublicKey (const Name &publicKeyName)
     kSecAttrKeyType,
     kSecAttrKeyClass,
     kSecAttrApplicationTag,
-    kSecReturnData
+    kSecReturnRef
   };
 
   std::string uri = publicKeyName.toUri ();
@@ -222,7 +224,7 @@ keychain::OSX::getPublicKey (const Name &publicKeyName)
     kSecAttrKeyTypeRSA,
     kSecAttrKeyClassPublic,
     tag,
-    [NSNumber numberWithBool:YES]
+    kCFBooleanTrue
   };
 
   CFDictionaryRef query = CFDictionaryCreate (NULL,
@@ -230,13 +232,30 @@ keychain::OSX::getPublicKey (const Name &publicKeyName)
                                               sizeof(keys) / sizeof(*keys),
                                               NULL, NULL);
 
-  NSData* publicKey;
-  OSStatus res = SecItemCopyMatching (query, (CFTypeRef *)(&publicKey));
+  //  NSData* publicKey;
+  // OSStatus res = SecItemCopyMatching (query, (CFTypeRef *)(&publicKey));
+  SecKeyRef* pubkeyRef;
+  OSStatus res = SecItemCopyMatching (query, (CFTypeRef *)(&pubkeyRef));
   if (res != errSecSuccess)
     OSX_Private::LogHumanError (res, "Cannot find public key " + publicKeyName.toUri ());
 
-  Ptr<Blob> retval (new Blob ([publicKey bytes], [publicKey length]));
+  // Ptr<Blob> retval (new Blob ([publicKey bytes], [publicKey length]));
+  // _LOG_DEBUG ("Key size: " << [publicKey length]);
+
+  NSData* publicKey;
+
+  SecKeyImportExportParameters param;
+  param.version = SEC_KEY_IMPORT_EXPORT_PARAMS_VERSION;
+  param.flags = kSecItemPemArmour;
+  OSStatus res2 = SecItemExport(pubkeyRef,
+                                kSecFormatOpenSSL,
+                                kSecItemPemArmour,
+                                NULL,
+                                (CFDataRef *)(&publicKey));
+                                
+  Ptr<Blob> retval (new Blob ([publicKey bytes], [publicKey length]));                              
   _LOG_DEBUG ("Key size: " << [publicKey length]);
+
   return retval;
 }
 

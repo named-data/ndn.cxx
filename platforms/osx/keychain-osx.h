@@ -16,7 +16,8 @@
 namespace ndn {
 namespace keychain {
 
-class OSX : public Keychain
+  //class OSX : public Keychain
+class OSX
 {
 public:
   OSX ();

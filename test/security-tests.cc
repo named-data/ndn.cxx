@@ -10,7 +10,7 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-// #include "platforms/osx/keychain-osx.h"
+#include "platforms/osx/keychain-osx.h"
 #include "ndn.cxx/error.h"
 
 #include <boost/test/unit_test.hpp>
@@ -25,16 +25,18 @@ BOOST_AUTO_TEST_SUITE(SecurityTests)
 
 BOOST_AUTO_TEST_CASE (Basic)
 {
-  // Ptr<Keychain> keychain;
-  // BOOST_CHECK_NO_THROW (keychain = Ptr<keychain::OSX>::Create ());
+  //Ptr<Keychain> keychain;
+  Ptr<keychain::OSX> keychain;
+  BOOST_CHECK_NO_THROW (keychain = Ptr<keychain::OSX>::Create ());
 
-  // Name keyName ("/my/private/key1");
+  Name keyName ("/my/private/key1");
   // keychain->generateKeyPair (keyName);
-  // // keychain->deleteKeyPair (keyName);
+  // keychain->deleteKeyPair (keyName);
 
-  // Ptr<Blob> key = keychain->getPublicKey (keyName);
-  // ofstream f ("out.pub");
-  // f.write (key->buf (), key->size ());
+  Ptr<Blob> key = keychain->getPublicKey (keyName);
+  ofstream f ("out.pub");
+  f.write (key->buf (), key->size ());
+  // keychain->~OSX ();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
