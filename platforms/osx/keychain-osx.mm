@@ -15,7 +15,6 @@
 #include <Foundation/Foundation.h>
 #include <AppKit/AppKit.h>
 #include <Security/Security.h>
-#include <Security/SecImportExport.h>
 
 
 INIT_LOGGER ("Keychain.OSX");
@@ -258,6 +257,8 @@ keychain::OSX::getPublicKey (const Name &publicKeyName)
 
   return retval;
 }
+
+
 
 /// @todo Release data structures after use
 
