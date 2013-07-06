@@ -57,7 +57,7 @@ def configure(conf):
     conf.check_tinyxml(path=conf.options.tinyxml_dir)
     conf.check_doxygen(mandatory=False)
 
-    conf.check_boost(lib='system test iostreams filesystem thread date_time')
+    conf.check_boost(lib='system test iostreams filesystem thread date_time regex')
 
     boost_version = conf.env.BOOST_VERSION.split('_')
     if int(boost_version[0]) < 1 or int(boost_version[1]) < 46:
@@ -68,7 +68,7 @@ def configure(conf):
 
     if conf.options._test:
         conf.define ('_TESTS', 1)
-        conf.env.TEST = 1
+        conf.env['TEST'] = 1
 
     conf.write_config_header('config.h')
 
@@ -113,7 +113,7 @@ def build (bld):
           features = "cxx cxxprogram",
           defines = "WAF",
           source = bld.path.ant_glob(['test/*.cc']),
-          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME LOG4CXX ndn.cxx',
+          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME BOOST_REGEX LOG4CXX ndn.cxx',
           includes = ".",
           install_prefix = None,
           )
