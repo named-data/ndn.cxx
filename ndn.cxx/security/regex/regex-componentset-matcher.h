@@ -27,13 +27,27 @@ namespace regex
   {
 
   public:
-    RegexComponentSetMatcher(const string expr, RegexExprType type = EXPR_COMPONENT_SET)
-      : RegexMatcher(expr, type)
+    ///////////////////////////////////////////////////////////////////////////////
+    //                              CONSTRUCTORS                                 //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @brief Create a RegexComponentSetMatcher matcher from expr
+     * @param expr The standard regular expression to match a component
+     * @param exact The flag to provide exact match
+     * @param backRefNum The starting back reference number
+     */
+    RegexComponentSetMatcher(const string expr, int backRefNum)
+      : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefNum)
         m_include(true);
     {};
     
     virtual ~RegexComponentSetMatcher();
-
+    
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
     virtual bool Compile();
 
     /**
@@ -45,7 +59,7 @@ namespace regex
     virtual bool Match(Name name, const int & offset, const int & len = 1);
 
   private:
-    set<RegexComponent> m_compoents;
+    set<RegexComponent*> m_compoents;
     bool m_include;
   }
 

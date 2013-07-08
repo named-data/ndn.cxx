@@ -17,16 +17,6 @@ namespace ndn
 
 namespace regex
 {
-  RegexComponent::~RegexComponent()
-  {
-  }
-
-  /**
-   * @brief check if the pattern match the part of name
-   * @param name name against which the pattern is matched
-   * @param offset starting index of matching
-   * @param len number of components to be matched
-   */
   bool RegexComponent::Match(Name name, const int & offset, const int & len)
   {
     if(m_exact == true)

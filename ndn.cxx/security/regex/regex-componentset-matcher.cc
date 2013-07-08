@@ -17,17 +17,81 @@ namespace ndn
 
 namespace regex
 {
-  bool RegexComponentSetMatcher::Compile()
+  RegexComponentSetMatcher::~RegexComponentSetMatcher()
   {
-    //TODO
+    set<RegexComponent*>::iterator it = m_components.begin();
+    
+    for(; it != m_components.end(); it++)
+      delete *it;
   }
 
-  /**
-   * @brief check if the pattern match the part of name
-   * @param name name against which the pattern is matched
-   * @param offset starting index of matching
-   * @param len number of components to be matched
-   */
+  bool RegexComponentSetMatcher::Compile()
+  {
+    string errMsg = "Error: RegexComponentSetMatcher.Compile(): ";
+    int index = 0;
+    
+    switch(m_expr[0]){
+    case '<':
+      return CompileSingleComponent();
+    case '[':
+      int lastIndex = m_expr.size() - 1;
+      if(']' != m_expr[lastIndex])
+        throw RegexException(errMsg + " No matched ']' " + m_expr);
+
+      if('!' == m_expr[1]){
+        m_include = false;
+        return CompileMultipleComponents(2, lastIndex);
+      }
+      else
+        return CompileMultipleComponents(1, lastIndex);
+
+    default:
+      throw RegexException(errMsg + "Parsing error in expr " + m_expr);
+    }
+  }
+
+  bool RegexComponentSetMatcher::CompileSingleComponent()
+  {
+    string errMsg = "Error: RegexComponentSetMatcher.CompileSingleComponent(): "
+
+    int end = ExtractComponent(1);
+
+    if(m_expr.size() != end)
+      throw RegexException(errMsg + m_expr);
+    else{
+      RegexComponent* component = new RegexComponent(m_expr.substr(1, end - 2), m_backRefNum);
+      m_matcherList.push_back(component);
+      return true;
+    }
+
+    return false;
+  }
+
+  bool RegexComponentSetMatcher::CompileMultipleComponents(const int start, const int lastIndex)
+  {
+    string errMsg = "Error: RegexComponentSetMatcher.CompileMultipleComponents(): ";
+
+    int index = start;
+    int tmp_index = start;
+    
+    while(index < lastIndex){
+      if("<" != m_expr[index])
+        throw RegexException(errMsg + "Component expr error " + m_expr);
+      
+      tmp_index = index + 1;
+      index = ExtractComponent(tmp_index);
+
+      RegexComponent* component = new RegexComponent(m_expr.substr(tmp_index, index - tmp_index - 1), m_backRefNum);
+      m_matcherList.push_back(component);
+    }
+    
+    if(index == lastIndex)
+      return true;
+    else
+      throw RegexException(errMsg + "Not sufficient expr to parse " + m_expr);        
+  }
+
+
   bool RegexComponentSetMatcher::Match(Name name, const int & offset, const int & len)
   {
     bool matched = false;

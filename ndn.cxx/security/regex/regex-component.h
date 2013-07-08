@@ -32,18 +32,35 @@ namespace regex
   class RegexComponent : public RegexMatcher
   {
   public:
-    RegexComponent(const string expr, RegexExprType type = EXPR_COMPONENT, bool exact = true) 
-      : RegexMatcher (expr, type),
+    ///////////////////////////////////////////////////////////////////////////////
+    //                              CONSTRUCTORS                                 //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @brief Create a RegexComponent matcher from expr
+     * @param expr The standard regular expression to match a component
+     * @param exact The flag to provide exact match
+     * @param backRefNum The starting back reference number
+     */
+    RegexComponent(const string expr, int backRefNum, bool exact = true)
+      : RegexMatcher (expr, EXPR_COMPONENT, backRefNum),
         m_exact(exact)
     {};
     
-    virtual ~RegexComponent();
+    virtual ~RegexComponent() {};
+    
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
+    virtual bool Compile() {};
 
     /**
      * @brief check if the pattern match the part of name
      * @param name name against which the pattern is matched
      * @param offset starting index of matching
      * @param len number of components to be matched
+     * @returns true if match succeeds
      */
     virtual bool Match(Name name, const int & offset, const int & len = 1);
     

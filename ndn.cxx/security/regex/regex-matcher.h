@@ -47,9 +47,10 @@ namespace regex
     ///////////////////////////////////////////////////////////////////////////////
     //                              CONSTRUCTORS                                 //
     ///////////////////////////////////////////////////////////////////////////////
-    RegexMatcher(const string expr, RegexExprType type) 
+    RegexMatcher(const string expr, RegexExprType type, int backRefNum) 
       : m_expr(expr), 
-        m_type(type)
+        m_type(type),
+        m_backRefNum(backRefNum)
     {};
 
     virtual ~RegexMatcher();
@@ -62,6 +63,8 @@ namespace regex
      * @param index index of the next component to be matched
      */
     virtual bool Match(Name name, const int & offset, const int & len) = 0;
+
+    int getBackRefNum() {return m_backRefNum};
 
   private:
     int ExtractSubPattern(int index);
@@ -79,6 +82,7 @@ namespace regex
   private:
     const string m_expr;
     const int m_offset;
+    const int m_backRefNum;
     const RegexExprType m_type; 
     vector<RegexMatcher*> m_matcherList;
   };
