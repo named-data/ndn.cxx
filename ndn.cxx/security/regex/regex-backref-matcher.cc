@@ -8,6 +8,8 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
+#include <boost/regex.hpp>
+
 #include "regex-backref-matcher.h"
 
 using namespace std;
@@ -19,7 +21,18 @@ namespace regex
 {
   bool RegexBackRefMatcher::Compile()
   {
-    //TODO
+    string errMsg = "Error: RegexBackRefMatcher.Compile(): "
+
+    int lastIndex = m_expr.size() - 1;
+    if('(' == m_expr[0] && ')' == m_expr[lastIndex]){
+      m_backRefManager->AddRef(this);
+
+      RegexMatcher* matcher = new RegexPatternListMatcher(m_expr.substr(1, lastIndex - 1), m_backRefManager);
+      m_matcherList.push_back(matcher);
+      return matcher->Compile();
+    }
+    else
+      throw RegexException(errMsg + " Unrecognoized format " + m_expr);
   }
 
 }//regex

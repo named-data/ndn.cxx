@@ -20,9 +20,9 @@ namespace regex
   bool RegexComponent::Match(Name name, const int & offset, const int & len)
   {
     if(m_exact == true)
-      return = boost::regex_match(name.get(offset).toUri(), m_expr);
+      return = boost::regex_match(name.get(offset).toUri(), boost::regex(m_expr));
     else
-      return boost::regex_search(name.get(offset).toUri(), m_expr);
+      return boost::regex_search(name.get(offset).toUri(), boost::regex(m_expr));
   }
 
 } //regex

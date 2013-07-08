@@ -8,11 +8,10 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
+#ifndef NDN_REGEX_TOP_MATCHER_H
+#define NDN_REGEX_TOP_MATCHER_H
 
-#ifndef NDN_REGEX_BACKREF_MATCHER_H
-#define NDN_REGEX_BACKREF_MATCHER_H
-
-#include "regex-matcher.h"
+#include <string>
 
 using namespace std;
 
@@ -21,26 +20,24 @@ namespace ndn
 
 namespace regex
 {
-
-  class RegexBackRefMatcher : public RegexPatternMatcher
+  class RegexTopMatcher: public RegexMatcher
   {
   public:
-    RegexBackRefMatcher(const string expr, RegexBRManager * const backRefManager)
-      : RegexMatcher (expr, EXPR_BACKREF, backRefManager)
+    RegexTopMatcher(const string expr, RegexBRManager *const backRefManager)
+      : RegexMatcher(expr, EXPR_TOP, backRefManager)
     {};
     
-    virtual ~RegexBackRefMatcher();
+    virtual ~RegexTopMatcher();
 
     virtual bool Compile();
     
+    virtual bool Match(Name name, const int & offset, const int & len);
+
   private:
-    int m_refNum;
+    
   };
 }
 
-}//regex
-
-}//ndn
+}
 
 #endif
-

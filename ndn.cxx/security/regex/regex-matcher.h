@@ -33,11 +33,11 @@ namespace regex
 
       EXPR_HEAD,
       EXPR_TAIL,
-      EXPR_HEAD_TAIL,      
-      EXPR_PATTERN,
+      EXPR_HEAD_TAIL,     
+ 
+      EXPR_PATTERNLIST,
 
       EXPR_REPEAT_PATTERN,
-      EXPR_SUBPATTERN,
       
       EXPR_BACKREF,
       EXPR_COMPONENT_SET,
