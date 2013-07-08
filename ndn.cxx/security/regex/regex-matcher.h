@@ -64,6 +64,8 @@ namespace regex
      */
     virtual bool Match(Name name, const int & offset, const int & len) = 0;
 
+    Name getMatchResult(){return matchResult;}
+
   private:
     int ExtractSubPattern(int index);
 
@@ -83,6 +85,7 @@ namespace regex
     RegexBRManager *const m_backRefManager;
     const RegexExprType m_type; 
     vector<RegexMatcher*> m_matcherList;
+    Name matchResult;
   };
 
 }//regex

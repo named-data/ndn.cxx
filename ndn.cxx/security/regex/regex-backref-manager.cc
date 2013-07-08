@@ -9,3 +9,26 @@
  */
 
 #include "regex-backref-manager.h"
+
+namespace ndn
+{
+
+namespace regex
+{
+  int RegexBRManager::PushRef(RegexBackRefMatcher* matcher)
+  {
+    int last = m_backRefs.size();
+    m_backRefs.push_back(matcher);
+
+    return last;
+  }
+
+  int RegexBRManager::PopRef()
+  {
+    m_backRefs.pop_back();
+    
+    return m_backRefs.size();
+  }
+}
+
+}//ndn

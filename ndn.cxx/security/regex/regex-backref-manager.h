@@ -11,4 +11,30 @@
 #ifndef NDN_REGEX_BACKREF_MANAGER_H
 #define NDN_REGEX_BACKREF_MANAGER_H
 
+namespace ndn
+{
+
+namespace regex
+{
+  class RegexBRManager
+  {
+  public:
+    RegexBRManager();
+    
+    virtual ~RegexBRManager();
+    
+    virtual int PushRef(RegexBackRefMatcher* matcher);
+    
+    virtual int PopRef();
+    
+    virtual RegexBackRefMatcher* getBackRef(int i){return m_backRefs[i];}
+    
+  private:
+    vector<RegexBackRefMatcher*> m_backRefs;
+  }
+
+}//regex
+
+}//ndn
+
 #endif
