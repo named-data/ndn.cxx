@@ -23,23 +23,48 @@ namespace regex
   class RegexRepeatMatcher : public RegexMatcher
   {
   public:
-    RegexRepeatMatcher(const string expr, RegexExprType type = EXPR_REPEAT_PATTERN)
-      : RegexMatcher (expr, type)
+    ///////////////////////////////////////////////////////////////////////////////
+    //                              CONSTRUCTORS                                 //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * @brief Create a RegexRepeatMatcher matcher from expr
+     * @param expr The standard regular expression to match a component
+     * @param backRefNum The starting back reference number
+     * @param indicator The first index of the repeating structure
+     */
+    Regexrepeatmatcher(const string expr, RegexBRManager *const backRefManager, int indicator)
+      : RegexMatcher (expr, EXPR_REPEAT_PATTERN, backRefManager),
+        m_indicator(indicator)
     {};
     
     virtual ~RegexRepeatMatcher();
 
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
     virtual bool Compile();
 
+    /**
+     * @brief check if the pattern match the part of name
+     * @param name name against which the pattern is matched
+     * @param offset starting index of matching
+     * @param len number of components to be matched
+     */
     virtual bool Match(Name name, const int & offset, const int & len);
 
   private:
+    bool ParseRepetition();
+
     bool RecursiveMatch(RegexMatcher* matcher,
                         int repeat,
                         Name, name,
                         const int & offset,
                         const int &len);
-
+  
+  private:
+    int m_indicator;
     int m_repeatMin;
     int m_repeatMax;
   };

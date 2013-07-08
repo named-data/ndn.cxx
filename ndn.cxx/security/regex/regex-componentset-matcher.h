@@ -37,8 +37,8 @@ namespace regex
      * @param exact The flag to provide exact match
      * @param backRefNum The starting back reference number
      */
-    RegexComponentSetMatcher(const string expr, int backRefNum)
-      : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefNum)
+    RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager)
+      : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager)
         m_include(true);
     {};
     
@@ -57,6 +57,11 @@ namespace regex
      * @param len number of components to be matched
      */    
     virtual bool Match(Name name, const int & offset, const int & len = 1);
+
+  private:
+    bool CompileSingleComponent();
+    
+    bool CompileMultipleComponents(const int start, const int lastIndex);
 
   private:
     set<RegexComponent*> m_compoents;

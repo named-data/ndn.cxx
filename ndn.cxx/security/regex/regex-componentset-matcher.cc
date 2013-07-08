@@ -17,10 +17,11 @@ namespace ndn
 
 namespace regex
 {
+
   RegexComponentSetMatcher::~RegexComponentSetMatcher()
   {
     set<RegexComponent*>::iterator it = m_components.begin();
-    
+
     for(; it != m_components.end(); it++)
       delete *it;
   }
@@ -60,7 +61,7 @@ namespace regex
       throw RegexException(errMsg + m_expr);
     else{
       RegexComponent* component = new RegexComponent(m_expr.substr(1, end - 2), m_backRefNum);
-      m_matcherList.push_back(component);
+      m_components.insert(component);
       return true;
     }
 
@@ -82,7 +83,7 @@ namespace regex
       index = ExtractComponent(tmp_index);
 
       RegexComponent* component = new RegexComponent(m_expr.substr(tmp_index, index - tmp_index - 1), m_backRefNum);
-      m_matcherList.push_back(component);
+      m_components.insert(component);
     }
     
     if(index == lastIndex)
