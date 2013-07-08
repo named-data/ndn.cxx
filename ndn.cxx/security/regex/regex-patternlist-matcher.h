@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "regex-matcher.h"
+
 using namespace std;
 
 namespace ndn
@@ -30,15 +32,15 @@ namespace regex
     virtual ~RegexPatternListMatcher(){};
     
     virtual bool Compile();
-    
-    virtual bool Match(Name name, const int & offset, const int & len = 1);
 
   private:
     bool ExtractPattern(int index, int* next);
     
-    int ExtractSubPattern(const char left, const char rightint index);
+    int ExtractSubPattern(const char left, const char right, int index);
+    
+    int ExtractRepetition(int index);
+  };
 
-  }
 }//regex
 
 }//ndn

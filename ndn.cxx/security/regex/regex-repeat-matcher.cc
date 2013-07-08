@@ -14,6 +14,8 @@
 #include <boost/regex.hpp>
 
 #include "regex-repeat-matcher.h"
+#include "regex-backref-matcher.h"
+#include "regex-componentset-matcher.h"
 
 using namespace std;
 
@@ -27,10 +29,10 @@ namespace regex
   {
     RegexMatcher* matcher;
 
-    if("(" == m_expr[0])
-      matcher = new RegexBackRefMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
+    if('(' == m_expr[0])
+      matcher = (RegexMatcher*) new RegexBackRefMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
     else
-      matcher = new RegexComponentSetMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
+      matcher = (RegexMatcher*) new RegexComponentSetMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
 
     m_matcherList.push_back(matcher);
       
@@ -41,7 +43,7 @@ namespace regex
   {
     string errMsg = "Error: RegexRepeatMatcher.ParseRepetition(): ";
     
-    int exprSize = m_epxr.size();
+    int exprSize = m_expr.size();
     int intMax = numeric_limits<int>::max();
     
     if(exprSize == m_indicator){
@@ -69,11 +71,11 @@ namespace regex
       }
       else{
         string repeatStruct = m_expr.substr(m_indicator, exprSize - m_indicator);
-        if(boost::regex_match(repeatStruct, "\{[0-9]+,[0-9]+\}")){
+        if(boost::regex_match(repeatStruct, boost::regex("{[0-9]+,[0-9]+}"))){
           int separator = repeatStruct.find_first_of(',', 0);
 
-          min = atoi(repeatStruct.substr(1, separator - 1).c_str());
-          max = atoi(repeatStruct.substr(separator + 1, exprSize - separator - 1).c_str());
+          int min = atoi(repeatStruct.substr(1, separator - 1).c_str());
+          int max = atoi(repeatStruct.substr(separator + 1, exprSize - separator - 1).c_str());
 
           if(min > intMax || max > intMax || min > max)
             throw RegexException(errMsg + "Wrong number " + m_expr);
@@ -97,12 +99,12 @@ namespace regex
     int repeat = 0;
     RegexMatcher * matcher = m_matcherList[0];
     
-    RecursiveMatch(matcher, repeat, name, offset, len);
+    return RecursiveMatch(matcher, repeat, name, offset, len);
   }
-
+  
   bool RegexRepeatMatcher::RecursiveMatch(RegexMatcher* matcher, 
 					  int repeat, 
-					  Name, name, 
+					  Name name, 
 					  const int & offset, 
 					  const int &len)
   {
@@ -110,19 +112,27 @@ namespace regex
     if(repeat > m_repeatMax)
       return true;
     
+    while(tried <= len){
+      if(matcher->Match(name, offset, tried)){
+        repeat++;
+        
+        if(repeat >= m_repeatMin)
+          return true;
+        
+        if(RecursiveMatch(matcher, repeat, name, offset + tried, len - tried))
+          return true;
+        else 
+          tried++;
+      }
+      else{
+        if(repeat < m_repeatMin)
+          tried++;
+        else
+          return true;
+      }
+    }
 
-    if(matcher->Match(name, offset, tried)){
-      repeat++;
-      if(RecursiveMatch(matcher, repeat, name, offset + tried, len - tried))
-	return true;
-    }
-    else{
-      if(repeat < m_repeatMin)
-	return false;
-      else
-	return true;
-    }
-  
+    return false;
   }
 
 }//regex

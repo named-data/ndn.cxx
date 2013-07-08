@@ -8,10 +8,8 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_REGEX_TOP_MATCHER_H
-#define NDN_REGEX_TOP_MATCHER_H
-
 #include "regex-top-matcher.h"
+#include "regex-patternlist-matcher.h"
 
 using namespace std;
 
@@ -22,15 +20,17 @@ namespace regex
 {
   bool RegexTopMatcher::Compile()
   {
+    string errMsg = "Error: RegexTopMatcher.Compile(): ";
+
     string expr = m_expr;
     if('^' != m_expr[0])
       expr = "[.*]*" + expr;
     if('$' != m_expr[m_expr.size() - 1])
       expr = expr + "[.*]*";
     
-    RegexMatcher * matcher = new RegexPatternListMatcher(expr, EXPR_PATTERNLIST, m_backRefManager);
-    if(macher->Compile()){
-      m_matcherList->push_back(matcher);
+    RegexPatternListMatcher * matcher = new RegexPatternListMatcher(expr, m_backRefManager);
+    if(matcher->Compile()){
+      m_matcherList.push_back(matcher);
       return true;
     }
     else
@@ -39,11 +39,6 @@ namespace regex
     return false;
   }
 
-  bool RegexTopMatcher::Match(Name name, const int & offset, const int & len)
-  {
-  }
 }//regex
 
 }//ndn
-
-#endif 

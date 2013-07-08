@@ -11,7 +11,7 @@
 #ifndef NDN_REGEX_REPEAT_MATCHER_H
 #define NDN_REGEX_REPEAT_MATCHER_H
 
-#inclue "regex-matcher.h"
+#include "regex-matcher.h"
 
 using namespace std;
 
@@ -23,22 +23,12 @@ namespace regex
   class RegexRepeatMatcher : public RegexMatcher
   {
   public:
-    ///////////////////////////////////////////////////////////////////////////////
-    //                              CONSTRUCTORS                                 //
-    ///////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * @brief Create a RegexRepeatMatcher matcher from expr
-     * @param expr The standard regular expression to match a component
-     * @param backRefNum The starting back reference number
-     * @param indicator The first index of the repeating structure
-     */
-    Regexrepeatmatcher(const string expr, RegexBRManager *const backRefManager, int indicator)
+    RegexRepeatMatcher(const string expr, RegexBRManager* backRefManager, int indicator)
       : RegexMatcher (expr, EXPR_REPEAT_PATTERN, backRefManager),
         m_indicator(indicator)
-    {};
+    {}
     
-    virtual ~RegexRepeatMatcher();
+    virtual ~RegexRepeatMatcher(){}
 
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
@@ -59,7 +49,7 @@ namespace regex
 
     bool RecursiveMatch(RegexMatcher* matcher,
                         int repeat,
-                        Name, name,
+                        Name name,
                         const int & offset,
                         const int &len);
   

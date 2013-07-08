@@ -15,7 +15,7 @@ namespace ndn
 
 namespace regex
 {
-  int RegexBRManager::PushRef(RegexBackRefMatcher* matcher)
+  int RegexBRManager::PushRef(RegexMatcher* matcher)
   {
     int last = m_backRefs.size();
     m_backRefs.push_back(matcher);

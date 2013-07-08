@@ -8,30 +8,37 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_REGEX_BACKREF_MANAGER_H
-#define NDN_REGEX_BACKREF_MANAGER_H
+#ifndef NDN_REGEX_BRMANAGER_H
+#define NDN_REGEX_BRMANAGER_H
+
+#include <vector>
+
+using namespace std;
 
 namespace ndn
 {
 
 namespace regex
 {
+
+  class RegexMatcher;
+
   class RegexBRManager
   {
   public:
-    RegexBRManager();
+    RegexBRManager(){}
     
-    virtual ~RegexBRManager();
+    virtual ~RegexBRManager(){}
     
-    virtual int PushRef(RegexBackRefMatcher* matcher);
+    virtual int PushRef(RegexMatcher* matcher);
     
     virtual int PopRef();
     
-    virtual RegexBackRefMatcher* getBackRef(int i){return m_backRefs[i];}
+    virtual RegexMatcher* getBackRef(int i){return m_backRefs[i];}
     
   private:
-    vector<RegexBackRefMatcher*> m_backRefs;
-  }
+    vector<RegexMatcher*> m_backRefs;
+  };
 
 }//regex
 

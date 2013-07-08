@@ -12,12 +12,9 @@
 #ifndef NDN_REGEX_COMPONENT_H
 #define NDN_REGEX_COMPONENT_H
 
-#include <string>
 #include <boost/regex.hpp>
 
-#include "ndn.cxx/fields/name.h"
-
-#include "regex-parser.h"
+#include "regex-matcher.h"
 
 
 using namespace std;
@@ -39,11 +36,11 @@ namespace regex
     /**
      * @brief Create a RegexComponent matcher from expr
      * @param expr The standard regular expression to match a component
+     * @param backRefManager The back reference manager
      * @param exact The flag to provide exact match
-     * @param backRefNum The starting back reference number
      */
-    RegexComponent(const string expr, int backRefNum, bool exact = true)
-      : RegexMatcher (expr, EXPR_COMPONENT, backRefNum),
+    RegexComponent(const string expr, RegexBRManager * const backRefManager, bool exact = true)
+      : RegexMatcher (expr, EXPR_COMPONENT, backRefManager),
         m_exact(exact)
     {};
     
@@ -53,7 +50,7 @@ namespace regex
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool Compile() {};
+    virtual bool Compile() {return true;}
 
     /**
      * @brief check if the pattern match the part of name

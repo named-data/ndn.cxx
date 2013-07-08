@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
 /*
  * Copyright (c) 2013, Regents of the University of California
- *                     Alexander Afanasyev
+ *                     Yingdi Yu
  *
  * BSD license, See the LICENSE file for more information
  *
@@ -14,7 +14,7 @@
 #include <set>
 
 #include "regex-matcher.h"
-
+#include "regex-component.h"
 
 using namespace std;
 
@@ -23,6 +23,7 @@ namespace ndn
 
 namespace regex
 {
+
   class RegexComponentSetMatcher : public RegexMatcher
   {
 
@@ -38,9 +39,9 @@ namespace regex
      * @param backRefNum The starting back reference number
      */
     RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager)
-      : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager)
-        m_include(true);
-    {};
+      : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager),
+        m_include(true)
+    {}
     
     virtual ~RegexComponentSetMatcher();
     
@@ -64,9 +65,9 @@ namespace regex
     bool CompileMultipleComponents(const int start, const int lastIndex);
 
   private:
-    set<RegexComponent*> m_compoents;
+    set<RegexComponent*> m_components;
     bool m_include;
-  }
+  };
 
 }//regex
 

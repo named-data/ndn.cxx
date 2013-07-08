@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "regex-matcher.h"
+
 using namespace std;
 
 namespace ndn
@@ -30,8 +32,6 @@ namespace regex
     virtual ~RegexTopMatcher();
 
     virtual bool Compile();
-    
-    virtual bool Match(Name name, const int & offset, const int & len);
 
   private:
     

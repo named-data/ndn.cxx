@@ -9,6 +9,7 @@
  */
 
 #include "regex-patternlist-matcher.h"
+#include "regex-repeat-matcher.h"
 
 using namespace std;
 
@@ -20,14 +21,14 @@ namespace regex
   
   bool RegexPatternListMatcher::Compile()
   {
-    const int len = expr.size();
+    const int len = m_expr.size();
     int index = 0;
     int subHead = index;
     
     while(index < len){
-      subhead = index;
+      subHead = index;
 
-      if(!ExtractPattern(subhead, &index))
+      if(!ExtractPattern(subHead, &index))
 	return false;
     }
     return true;
@@ -36,12 +37,12 @@ namespace regex
 
   bool RegexPatternListMatcher::ExtractPattern(int index, int* next)
   {
-    string errMsg = "Error: RegexPatternListMatcher.ExtractSubPattern(): "
+    string errMsg = "Error: RegexPatternListMatcher.ExtractSubPattern(): ";
     
     const int start = index;
     int end = index;
     int indicator = index;
-    RegexMatcher * matcher = NULL;
+    RegexRepeatMatcher * matcher = NULL;
 
     switch(m_expr[index]){
     case '(':
@@ -64,7 +65,7 @@ namespace regex
     matcher = new RegexRepeatMatcher(m_expr.substr(start, end), m_backRefManager, indicator);
 
     if(matcher->Compile()){
-      m_matcherList->push_back(matcher);
+      m_matcherList.push_back(matcher);
       *next = end;
       return true;
     }
@@ -74,7 +75,7 @@ namespace regex
     }
   }
   
-  int RegexMatcher::ExtractSubPattern(const char left, const char rightint index)
+  int RegexPatternListMatcher::ExtractSubPattern(const char left, const char right, int index)
   {
     int lcount = 1;
     int rcount = 0;
@@ -84,18 +85,40 @@ namespace regex
       if(index >= m_expr.size())
 	throw RegexException("Error: parenthesis mismatch");
 
-      switch(m_expr[index]){
-      case left:
+      if(left == m_expr[index])
         lcount++;
-        break;
 
-      case right:
+      if(right == m_expr[index])
         rcount++;
-        break;
-      }
 
       index++;
     }
+    return index;
+  }
+
+  int RegexPatternListMatcher::ExtractRepetition(int index)
+  {
+    string errMsg = "Error: RegexPatternListMatcher.ExtractRepetition(): ";
+
+    int exprSize = m_expr.size();
+
+    if(index == exprSize)
+      return index;
+    
+    if('+' == m_expr[index] || '?' == m_expr[index] || '*' == m_expr[index]){
+      return ++index;
+    }
+
+    if('{' == m_expr[index]){
+      while('}' != m_expr[index] && index < exprSize){
+        index++;
+      }
+      if(index == exprSize)
+        throw RegexException(errMsg + "Missing right brace bracket");
+      else
+        return ++index;
+    }
+
     return index;
   }
 

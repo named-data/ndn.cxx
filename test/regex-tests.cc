@@ -9,7 +9,6 @@
  */
 
 #include "ndn.cxx/security/regex/regex-component.h"
-#include "ndn.cxx/security/regex/regex-parser.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -29,11 +28,8 @@ BOOST_AUTO_TEST_CASE (Basic)
 
 
   /* Check RegexComponent */
+  
 
-  /* Check Regex  
-
-//   Check RegexParser
-  regex::RegexParser::Compile("(^[abc]+[[xq]]{4,3})*[.*]$");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

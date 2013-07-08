@@ -22,21 +22,20 @@ namespace ndn
 namespace regex
 {
 
-  class RegexBackRefMatcher : public RegexPatternMatcher
+  class RegexBackRefMatcher : public RegexMatcher
   {
   public:
     RegexBackRefMatcher(const string expr, RegexBRManager * const backRefManager)
       : RegexMatcher (expr, EXPR_BACKREF, backRefManager)
-    {};
+    {}
     
-    virtual ~RegexBackRefMatcher();
+    virtual ~RegexBackRefMatcher(){}
 
     virtual bool Compile();
     
   private:
     int m_refNum;
   };
-}
 
 }//regex
 

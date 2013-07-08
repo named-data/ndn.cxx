@@ -11,6 +11,7 @@
 #include <boost/regex.hpp>
 
 #include "regex-backref-matcher.h"
+#include "regex-patternlist-matcher.h"
 
 using namespace std;
 
@@ -21,11 +22,11 @@ namespace regex
 {
   bool RegexBackRefMatcher::Compile()
   {
-    string errMsg = "Error: RegexBackRefMatcher.Compile(): "
+    string errMsg = "Error: RegexBackRefMatcher.Compile(): ";
 
     int lastIndex = m_expr.size() - 1;
     if('(' == m_expr[0] && ')' == m_expr[lastIndex]){
-      m_backRefManager->AddRef(this);
+      PushRef(this);
 
       RegexMatcher* matcher = new RegexPatternListMatcher(m_expr.substr(1, lastIndex - 1), m_backRefManager);
       m_matcherList.push_back(matcher);

@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
 /*
  * Copyright (c) 2013, Regents of the University of California
- *                     Alexander Afanasyev
+ *                     Yingdi Yu
  *
  * BSD license, See the LICENSE file for more information
  *
@@ -12,9 +12,16 @@
 #ifndef NDN_REGEX_MATCHER_H
 #define NDN_REGEX_MATCHER_H
 
+#include <string>
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 #include "ndn.cxx/fields/name.h"
+
+#include "regex-common.h"
+#include "regex-exception.h"
+#include "regex-backref-manager.h"
 
 using namespace std;
 
@@ -23,6 +30,7 @@ namespace ndn
 
 namespace regex
 {
+  class RegexMatcher;
 
   class RegexMatcher
   {
@@ -31,10 +39,6 @@ namespace regex
     enum RegexExprType{
       EXPR_TOP,
 
-      EXPR_HEAD,
-      EXPR_TAIL,
-      EXPR_HEAD_TAIL,     
- 
       EXPR_PATTERNLIST,
 
       EXPR_REPEAT_PATTERN,
@@ -47,7 +51,7 @@ namespace regex
     ///////////////////////////////////////////////////////////////////////////////
     //                              CONSTRUCTORS                                 //
     ///////////////////////////////////////////////////////////////////////////////
-    RegexMatcher(const string expr, RegexExprType type,  RegexBRManager *const backRefManager) 
+    RegexMatcher(const string expr, RegexExprType type,  RegexBRManager * backRefManager) 
       : m_expr(expr), 
         m_type(type),
         m_backRefManager(backRefManager)
@@ -55,37 +59,51 @@ namespace regex
 
     virtual ~RegexMatcher();
 
-    virtual bool Compile();
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
+    virtual bool Compile() = 0;
     
     /**
-     * @brief check if the pattern match the whole component
-     * @param name name against which the pattern is matched
-     * @param index index of the next component to be matched
+     * @brief check if the pattern match the part of name
+     * @param name the name against which the pattern is matched
+     * @param offset the starting index of matching
+     * @param len the number of components to be matched
+     * @returns true if match succeeds
      */
-    virtual bool Match(Name name, const int & offset, const int & len) = 0;
-
-    Name getMatchResult(){return matchResult;}
-
-  private:
-    int ExtractSubPattern(int index);
-
-    int ExtractBackRef(int index);
+    virtual bool Match(Name name, const int & offset, const int & len);
     
-    int ExtractComponent(int index);
-    
-    int ExtractRepetition (int index);
+    /**
+     * @brief get the matched name components
+     * @returns the matched name components
+     */
+    Name GetMatchResult(){return matchResult;}
 
-    int CheckDollar(int index);
-    
-    RegexExprType GetRegexExprType(string expr);
-
-  private:
+  protected:
     const string m_expr;
-    const int m_offset;
-    RegexBRManager *const m_backRefManager;
     const RegexExprType m_type; 
+    RegexBRManager* m_backRefManager;
     vector<RegexMatcher*> m_matcherList;
     Name matchResult;
+
+  protected:
+    int ExtractComponent(int index);
+
+    void PushRef(RegexMatcher* matcher){m_backRefManager->PushRef(matcher);}
+    
+    void PopRef(RegexMatcher* matcher){m_backRefManager->PopRef();}
+
+  private:
+    /**
+     * @brief recursively match name components
+     * @param mId the index of the matcher in the m_matcherLists
+     * @param name the name against which the pattern is matched 
+     * @param len the number of components to be matched
+     * @return true if matching succeeds
+     */
+    bool RecursiveMatch(int mId, Name name, const int & offset, const int & len);
+
   };
 
 }//regex
