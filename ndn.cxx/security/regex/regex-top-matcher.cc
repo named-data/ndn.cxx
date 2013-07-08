@@ -24,9 +24,9 @@ namespace regex
 
     string expr = m_expr;
     if('^' != m_expr[0])
-      expr = "[.*]*" + expr;
+      expr = "<.*>*" + expr;
     if('$' != m_expr[m_expr.size() - 1])
-      expr = expr + "[.*]*";
+      expr = expr + "<.*>*";
     
     RegexPatternListMatcher * matcher = new RegexPatternListMatcher(expr, m_backRefManager);
     if(matcher->Compile()){
