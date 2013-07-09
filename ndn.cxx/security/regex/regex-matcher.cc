@@ -40,7 +40,7 @@ namespace regex
   bool RegexMatcher::Match(Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexMatcher::Match");
-
+    _LOG_DEBUG ("size of matcher list: " << m_matcherList.size());
     return RecursiveMatch(0, name, offset, len);
   }
 
@@ -60,12 +60,9 @@ namespace regex
     RegexMatcher * matcher = m_matcherList[mId];
 
     while(tried <= len){
-      if(matcher->Match(name, offset, tried)){
-	if(!RecursiveMatch(mId + 1, name, offset + tried, len - tried))
-	  tried++;
-	else
-	  return true;
-      }
+      if(matcher->Match(name, offset, tried) && RecursiveMatch(mId + 1, name, offset + tried, len - tried))
+        return true;      
+      tried++;
     }
 
     return false;

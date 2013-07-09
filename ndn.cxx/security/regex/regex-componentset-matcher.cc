@@ -121,6 +121,12 @@ namespace regex
 
     bool matched = false;
 
+    /* componentset only matches one component */
+    if(len != 1){
+      _LOG_DEBUG ("Match Fail: ComponentSet matches only one component");
+      return false;
+    }
+
     set<RegexComponent*>::iterator it = m_components.begin();
 
     for(; it != m_components.end(); it++){

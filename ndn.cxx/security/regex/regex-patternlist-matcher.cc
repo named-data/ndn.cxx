@@ -65,6 +65,7 @@ namespace regex
       index = ExtractSubPattern('(', ')', index);
       indicator = index;
       end = ExtractRepetition(index);
+      break;
       
 
     case '<':
@@ -72,12 +73,15 @@ namespace regex
       index = ExtractSubPattern('<', '>', index);
       indicator = index;
       end = ExtractRepetition(index);
+      _LOG_DEBUG ("start: " << start << " end: " << end << " indicator: " << indicator);
+      break;
 
     default:
       throw RegexException("Error: unexpected syntax");
     }
 
-    matcher = new RegexRepeatMatcher(m_expr.substr(start, end), m_backRefManager, indicator);
+
+    matcher = new RegexRepeatMatcher(m_expr.substr(start, end), m_backRefManager, indicator - start);
     m_matcherList.push_back(matcher);
 
     *next = end;
@@ -111,11 +115,13 @@ namespace regex
   int RegexPatternListMatcher::ExtractRepetition(int index)
   {
     _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractRepetition()");
-    
-    string errMsg = "Error: RegexPatternListMatcher.ExtractRepetition(): ";
 
     int exprSize = m_expr.size();
 
+    _LOG_DEBUG ("expr: " << m_expr << " index: " << index << " char: " << (index == exprSize ? 0 : m_expr[index]));
+
+    string errMsg = "Error: RegexPatternListMatcher.ExtractRepetition(): ";
+    
     if(index == exprSize)
       return index;
     
@@ -124,16 +130,20 @@ namespace regex
     }
 
     if('{' == m_expr[index]){
-      while('}' != m_expr[index] && index < exprSize){
+      while('}' != m_expr[index]){
         index++;
+        if(index == exprSize)
+          break;
       }
       if(index == exprSize)
         throw RegexException(errMsg + "Missing right brace bracket");
       else
         return ++index;
     }
-
-    return index;
+    else{
+      _LOG_DEBUG ("return index: " << index);
+      return index;
+    }
   }
 
 }//regex

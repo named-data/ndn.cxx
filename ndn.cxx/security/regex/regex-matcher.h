@@ -58,12 +58,6 @@ namespace regex
     {};
 
     virtual ~RegexMatcher();
-
-    /**
-     * @brief Compile the regular expression to generate the more matchers when necessary
-     * @returns true if compiling succeeds
-     */
-    virtual bool Compile() = 0;
     
     /**
      * @brief check if the pattern match the part of name
@@ -88,6 +82,12 @@ namespace regex
     Name matchResult;
 
   protected:
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
+    virtual bool Compile() = 0;
+
     int ExtractComponent(int index);
 
     void PushRef(RegexMatcher* matcher){m_backRefManager->PushRef(matcher);}

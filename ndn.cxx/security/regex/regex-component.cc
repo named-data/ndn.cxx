@@ -33,7 +33,7 @@ namespace regex
   bool RegexComponent::Match(Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexComponent::Match: ");
-    _LOG_DEBUG ("name : "<< name << "offset : " << offset << " len: " << len);
+    _LOG_DEBUG ("name : "<< name << " offset : " << offset << " len: " << len);
 
     if(0 == len)
       return false;

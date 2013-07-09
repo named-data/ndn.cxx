@@ -125,10 +125,13 @@ namespace regex
     _LOG_DEBUG ("Enter RegexRepeatMatcher::Match()");
     _LOG_DEBUG ("expr: " << m_expr << " min: " << m_repeatMin << " max: " << m_repeatMax);   
 
-    int repeat = 0;
-    RegexMatcher * matcher = m_matcherList[0];
-    
-    return RecursiveMatch(matcher, repeat, name, offset, len);
+    /* for no repeat case */
+    if(0 == m_repeatMin)
+      if(0 == len)
+        return true;
+
+    /* for repeatMin > 1 */
+    return RecursiveMatch(m_matcherList[0], 0, name, offset, len);
   }
   
   bool RegexRepeatMatcher::RecursiveMatch(RegexMatcher* matcher, 
@@ -139,30 +142,34 @@ namespace regex
   {
     _LOG_DEBUG ("Enter RegexRepeatMatcher::RecursiveMatch()");
     _LOG_DEBUG ("repeat: " << repeat << " name: " << name << " offset: " << offset << " len: " << len);
-
+    _LOG_DEBUG ("min: " << m_repeatMin << " max: " << m_repeatMax);
     int tried = 0;
-    if(repeat > m_repeatMax)
-      return true;
+
+
+    /* if max repeat has been reached, but we still have more to match, matching fails */
+    if(0 < len && repeat > m_repeatMax){
+      _LOG_DEBUG ("Match Fail: Reach m_repeatMax && More components");
+      return false;
+    }
     
+    /* if all components have been matched, but we haven't reach the min repeat, matching fails */
+    if(0 == len && repeat < m_repeatMin){
+      _LOG_DEBUG ("Match Fail: No more components && have NOT reached m_repeatMin");
+      return false;
+    }
+
+    /* if all components have been matched and repeat has been more than min, match succeeds */
+    if(0 == len && repeat >= m_repeatMin){
+      _LOG_DEBUG ("Match Succeed: No more components && reach m_repeatMin");
+      return true;
+    }    
+
     while(tried <= len){
-      _LOG_DEBUG ("tried: " << tried);
-      if(matcher->Match(name, offset, tried)){
-        repeat++;
-        
-        if(repeat >= m_repeatMin)
-          return true;
-        
-        if(RecursiveMatch(matcher, repeat, name, offset + tried, len - tried))
-          return true;
-        else 
-          tried++;
-      }
-      else{
-        if(repeat < m_repeatMin)
-          tried++;
-        else
-          return true;
-      }
+      _LOG_DEBUG ("Attempt tried: " << tried);
+      if(matcher->Match(name, offset, tried) && RecursiveMatch(matcher, repeat + 1, name, offset + tried, len - tried))
+        return true;
+      _LOG_DEBUG ("Failed at tried: " << tried);
+      tried++;
     }
 
     return false;

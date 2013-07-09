@@ -28,18 +28,20 @@ namespace regex
     virtual ~RegexRepeatMatcher(){}
 
     /**
-     * @brief Compile the regular expression to generate the more matchers when necessary
-     * @returns true if compiling succeeds
-     */
-    virtual bool Compile();
-
-    /**
      * @brief check if the pattern match the part of name
      * @param name name against which the pattern is matched
      * @param offset starting index of matching
      * @param len number of components to be matched
      */
     virtual bool Match(Name name, const int & offset, const int & len);
+
+  protected:
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
+    virtual bool Compile();
+
 
   private:
     bool ParseRepetition();

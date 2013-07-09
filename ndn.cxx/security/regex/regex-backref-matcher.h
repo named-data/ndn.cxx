@@ -29,6 +29,7 @@ namespace regex
     
     virtual ~RegexBackRefMatcher(){}
 
+  protected:
     virtual bool Compile();
     
   private:

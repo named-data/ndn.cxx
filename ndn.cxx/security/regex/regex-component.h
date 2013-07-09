@@ -44,12 +44,6 @@ namespace regex
     virtual ~RegexComponent() {};
     
     /**
-     * @brief Compile the regular expression to generate the more matchers when necessary
-     * @returns true if compiling succeeds
-     */
-    virtual bool Compile() {return true;}
-
-    /**
      * @brief check if the pattern match the part of name
      * @param name name against which the pattern is matched
      * @param offset starting index of matching
@@ -57,6 +51,13 @@ namespace regex
      * @returns true if match succeeds
      */
     virtual bool Match(Name name, const int & offset, const int & len = 1);
+
+  protected:
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
+    virtual bool Compile() {return true;}
     
   private:
     bool m_exact;

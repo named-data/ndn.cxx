@@ -28,7 +28,8 @@ namespace regex
     RegexPatternListMatcher(const string expr, RegexBRManager* backRefManager);
     
     virtual ~RegexPatternListMatcher(){};
-    
+
+  protected:    
     virtual bool Compile();
 
   private:

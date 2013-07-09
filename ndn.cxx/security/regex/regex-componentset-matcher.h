@@ -40,12 +40,6 @@ namespace regex
      */
     RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager, bool include = true);    
     virtual ~RegexComponentSetMatcher();
-    
-    /**
-     * @brief Compile the regular expression to generate the more matchers when necessary
-     * @returns true if compiling succeeds
-     */
-    virtual bool Compile();
 
     /**
      * @brief check if the pattern match the part of name
@@ -54,6 +48,13 @@ namespace regex
      * @param len number of components to be matched
      */    
     virtual bool Match(Name name, const int & offset, const int & len = 1);
+
+  protected:    
+    /**
+     * @brief Compile the regular expression to generate the more matchers when necessary
+     * @returns true if compiling succeeds
+     */
+    virtual bool Compile();
 
   private:
     bool CompileSingleComponent();
