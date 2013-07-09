@@ -71,22 +71,29 @@ namespace regex
       }
       else{
         string repeatStruct = m_expr.substr(m_indicator, exprSize - m_indicator);
-        if(boost::regex_match(repeatStruct, boost::regex("{[0-9]+,[0-9]+}"))){
+        int min = 0;
+        int max = 0;
+
+        if(boost::regex_match(repeatStruct, boost::regex("{\\{[0-9]+,[0-9]+\\}"))){
           int separator = repeatStruct.find_first_of(',', 0);
 
-          int min = atoi(repeatStruct.substr(1, separator - 1).c_str());
-          int max = atoi(repeatStruct.substr(separator + 1, exprSize - separator - 1).c_str());
-
-          if(min > intMax || max > intMax || min > max)
-            throw RegexException(errMsg + "Wrong number " + m_expr);
-          
-          m_repeatMin = min;
-          m_repeatMax = max;
-
-          return true;
+          min = atoi(repeatStruct.substr(1, separator - 1).c_str());
+          max = atoi(repeatStruct.substr(separator + 1, exprSize - separator - 1).c_str());
+        }
+        else if(boost::regex_match(repeatStruct, boost::regex("{\\{[0-9]+\\}"))){
+          min = atoi(repeatStruct.substr(1, exprSize - 1).c_str());
+          max = min;
         }
         else
           throw RegexException(errMsg + "Unrecognized format "+ m_expr);
+        
+        if(min > intMax || max > intMax || min > max)
+            throw RegexException(errMsg + "Wrong number " + m_expr);
+          
+        m_repeatMin = min;
+        m_repeatMax = max;
+        
+        return true;
       }
     }
     return false;
