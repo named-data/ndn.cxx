@@ -12,7 +12,7 @@
 
 #include "logging.h"
 
-INIT_LOGGER ("RegexRepeatMatcher");
+INIT_LOGGER ("RegexComponentSetMatcher");
 
 using namespace std;
 
@@ -21,6 +21,14 @@ namespace ndn
 
 namespace regex
 {
+  RegexComponentSetMatcher::RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager, bool include)
+    : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager),
+      m_include(include)
+  {
+    _LOG_DEBUG ("Enter RegexComponent Constructor");
+    if(!Compile())
+      throw RegexException("RegexComponentSetMatcher Constructor: Cannot compile the regex");
+  }
 
   RegexComponentSetMatcher::~RegexComponentSetMatcher()
   {
@@ -32,10 +40,12 @@ namespace regex
 
   bool RegexComponentSetMatcher::Compile()
   {
+    _LOG_DEBUG ("Enter RegexComponentSetMatcher::Compile()");
+    _LOG_DEBUG ("expr: " << m_expr);
+
     string errMsg = "Error: RegexComponentSetMatcher.Compile(): ";
     int index = 0;
 
-    _LOG_DEBUG ("expr: " << m_expr);
 
     switch(m_expr[0]){
     case '<':
@@ -60,6 +70,8 @@ namespace regex
 
   bool RegexComponentSetMatcher::CompileSingleComponent()
   {
+    _LOG_DEBUG ("Enter RegexComponentSetMatcher::CompileSingleComponent()");
+
     string errMsg = "Error: RegexComponentSetMatcher.CompileSingleComponent(): ";
 
     int end = ExtractComponent(1);
@@ -78,6 +90,8 @@ namespace regex
 
   bool RegexComponentSetMatcher::CompileMultipleComponents(const int start, const int lastIndex)
   {
+    _LOG_DEBUG ("Enter RegexComponentSetMatcher::CompileMultipleComponents()");
+
     string errMsg = "Error: RegexComponentSetMatcher.CompileMultipleComponents(): ";
 
     int index = start;
@@ -103,6 +117,8 @@ namespace regex
 
   bool RegexComponentSetMatcher::Match(Name name, const int & offset, const int & len)
   {
+    _LOG_DEBUG ("Enter RegexComponentSetMatcher::Match");
+
     bool matched = false;
 
     set<RegexComponent*>::iterator it = m_components.begin();

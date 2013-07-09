@@ -25,9 +25,7 @@ namespace regex
   class RegexPatternListMatcher : public RegexMatcher
   {
   public:
-    RegexPatternListMatcher(const string expr, RegexBRManager* backRefManager)
-      :RegexMatcher(expr, EXPR_PATTERNLIST, backRefManager)
-    {};
+    RegexPatternListMatcher(const string expr, RegexBRManager* backRefManager);
     
     virtual ~RegexPatternListMatcher(){};
     

@@ -39,10 +39,7 @@ namespace regex
      * @param backRefManager The back reference manager
      * @param exact The flag to provide exact match
      */
-    RegexComponent(const string expr, RegexBRManager * const backRefManager, bool exact = true)
-      : RegexMatcher (expr, EXPR_COMPONENT, backRefManager),
-        m_exact(exact)
-    {};
+    RegexComponent(const string expr, RegexBRManager * const backRefManager, bool exact = true);
     
     virtual ~RegexComponent() {};
     

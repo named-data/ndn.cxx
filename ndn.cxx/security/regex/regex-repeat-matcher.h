@@ -23,10 +23,7 @@ namespace regex
   class RegexRepeatMatcher : public RegexMatcher
   {
   public:
-    RegexRepeatMatcher(const string expr, RegexBRManager* backRefManager, int indicator)
-      : RegexMatcher (expr, EXPR_REPEAT_PATTERN, backRefManager),
-        m_indicator(indicator)
-    {}
+    RegexRepeatMatcher(const string expr, RegexBRManager* backRefManager, int indicator);
     
     virtual ~RegexRepeatMatcher(){}
 

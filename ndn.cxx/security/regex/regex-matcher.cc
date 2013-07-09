@@ -10,6 +10,10 @@
 
 #include "regex-matcher.h"
 
+#include "logging.h"
+
+INIT_LOGGER ("RegexMatcher");
+
 using namespace std;
 
 namespace ndn
@@ -35,11 +39,15 @@ namespace regex
    */
   bool RegexMatcher::Match(Name name, const int & offset, const int & len)
   {
+    _LOG_DEBUG ("Enter RegexMatcher::Match");
+
     return RecursiveMatch(0, name, offset, len);
   }
 
   bool RegexMatcher::RecursiveMatch(int mId, Name name, const int & offset, const int & len)
   {
+    _LOG_DEBUG ("Enter RegexMatcher::RecursiveMatch");
+
     int tried = 0;
 
     if(mId >= m_matcherList.size()){
@@ -65,6 +73,8 @@ namespace regex
   
   int RegexMatcher::ExtractComponent(int index)
   {
+    _LOG_DEBUG ("Enter RegexMatcher::ExtractComponent");
+
     int lcount = 1;
     int rcount = 0;
 

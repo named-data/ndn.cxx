@@ -13,6 +13,10 @@
 #include "regex-backref-matcher.h"
 #include "regex-patternlist-matcher.h"
 
+#include "logging.h"
+
+INIT_LOGGER ("RegexBackRefMatcher");
+
 using namespace std;
 
 namespace ndn
@@ -20,8 +24,18 @@ namespace ndn
 
 namespace regex
 {
+  RegexBackRefMatcher::RegexBackRefMatcher(const string expr, RegexBRManager * const backRefManager)
+    : RegexMatcher (expr, EXPR_BACKREF, backRefManager)
+  {
+    _LOG_DEBUG ("Enter RegexBackRefMatcher Constructor");
+    if(!Compile())
+      throw RegexException("RegexBackRefMatcher Constructor: Cannot compile the regex");
+  }
+
   bool RegexBackRefMatcher::Compile()
   {
+    _LOG_DEBUG ("Enter RegexBackRefMatcher::Compile()");
+
     string errMsg = "Error: RegexBackRefMatcher.Compile(): ";
 
     int lastIndex = m_expr.size() - 1;
@@ -30,7 +44,7 @@ namespace regex
 
       RegexMatcher* matcher = new RegexPatternListMatcher(m_expr.substr(1, lastIndex - 1), m_backRefManager);
       m_matcherList.push_back(matcher);
-      return matcher->Compile();
+      return true;
     }
     else
       throw RegexException(errMsg + " Unrecognoized format " + m_expr);

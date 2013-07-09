@@ -28,20 +28,26 @@ namespace ndn
 
 namespace regex
 {
+  RegexRepeatMatcher::RegexRepeatMatcher(const string expr, RegexBRManager* backRefManager, int indicator)
+    : RegexMatcher (expr, EXPR_REPEAT_PATTERN, backRefManager),
+      m_indicator(indicator)
+  {
+    _LOG_DEBUG ("Enter RegexRepeatMatcher Constructor");
+    if(!Compile())
+      throw RegexException("RegexRepeatMatcher Constructor: Cannot compile the regex");
+  }
 
   bool RegexRepeatMatcher::Compile()
   {
+    _LOG_DEBUG ("Enter RegexRepeatMatcher::Compile()");
+    
     RegexMatcher* matcher;
 
     if('(' == m_expr[0]){
       matcher = (RegexMatcher*) new RegexBackRefMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
-      matcher->Compile();
-      _LOG_DEBUG ("brmatcher: ");
     }
     else{
       matcher = (RegexMatcher*) new RegexComponentSetMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
-      matcher->Compile();
-      _LOG_DEBUG ("csmatcher: ");
     }
     m_matcherList.push_back(matcher);
       
@@ -50,6 +56,8 @@ namespace regex
 
   bool RegexRepeatMatcher::ParseRepetition()
   {
+    _LOG_DEBUG ("Enter RegexRepeatMatcher::ParseRepetition()");
+
     string errMsg = "Error: RegexRepeatMatcher.ParseRepetition(): ";
     
     int exprSize = m_expr.size();
@@ -113,7 +121,10 @@ namespace regex
 
   bool RegexRepeatMatcher::Match(Name name, const int & offset, const int & len)
   {
-    _LOG_DEBUG ("min: " << m_repeatMin << " max: " << m_repeatMax);   
+
+    _LOG_DEBUG ("Enter RegexRepeatMatcher::Match()");
+    _LOG_DEBUG ("expr: " << m_expr << " min: " << m_repeatMin << " max: " << m_repeatMax);   
+
     int repeat = 0;
     RegexMatcher * matcher = m_matcherList[0];
     
@@ -126,6 +137,9 @@ namespace regex
 					  const int & offset, 
 					  const int &len)
   {
+    _LOG_DEBUG ("Enter RegexRepeatMatcher::RecursiveMatch()");
+    _LOG_DEBUG ("repeat: " << repeat << " name: " << name << " offset: " << offset << " len: " << len);
+
     int tried = 0;
     if(repeat > m_repeatMax)
       return true;

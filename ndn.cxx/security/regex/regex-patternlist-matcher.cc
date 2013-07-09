@@ -11,6 +11,10 @@
 #include "regex-patternlist-matcher.h"
 #include "regex-repeat-matcher.h"
 
+#include "logging.h"
+
+INIT_LOGGER ("RegexPatternListMatcher");
+
 using namespace std;
 
 namespace ndn
@@ -18,9 +22,18 @@ namespace ndn
 
 namespace regex
 {
+  RegexPatternListMatcher::RegexPatternListMatcher(const string expr, RegexBRManager* backRefManager)
+    :RegexMatcher(expr, EXPR_PATTERNLIST, backRefManager)
+  {
+    _LOG_DEBUG ("Enter RegexPatternListMatcher Constructor");
+    if(!Compile())
+      throw RegexException("RegexPatternListMatcher Constructor: Cannot compile the regex");
+  }
   
   bool RegexPatternListMatcher::Compile()
   {
+    _LOG_DEBUG ("Enter RegexPatternListMatcher::Compile()");
+
     const int len = m_expr.size();
     int index = 0;
     int subHead = index;
@@ -37,6 +50,8 @@ namespace regex
 
   bool RegexPatternListMatcher::ExtractPattern(int index, int* next)
   {
+    _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractPattern()");
+
     string errMsg = "Error: RegexPatternListMatcher.ExtractSubPattern(): ";
     
     const int start = index;
@@ -63,20 +78,17 @@ namespace regex
     }
 
     matcher = new RegexRepeatMatcher(m_expr.substr(start, end), m_backRefManager, indicator);
+    m_matcherList.push_back(matcher);
 
-    if(matcher->Compile()){
-      m_matcherList.push_back(matcher);
-      *next = end;
-      return true;
-    }
-    else{
-      throw RegexException(errMsg + "Cannot compile subpattern " + m_expr);
-      return false;
-    }
+    *next = end;
+
+    return true;
   }
   
   int RegexPatternListMatcher::ExtractSubPattern(const char left, const char right, int index)
   {
+    _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractSubPattern()");
+
     int lcount = 1;
     int rcount = 0;
 
@@ -98,6 +110,8 @@ namespace regex
 
   int RegexPatternListMatcher::ExtractRepetition(int index)
   {
+    _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractRepetition()");
+    
     string errMsg = "Error: RegexPatternListMatcher.ExtractRepetition(): ";
 
     int exprSize = m_expr.size();

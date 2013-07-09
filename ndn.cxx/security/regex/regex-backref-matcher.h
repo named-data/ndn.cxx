@@ -25,9 +25,7 @@ namespace regex
   class RegexBackRefMatcher : public RegexMatcher
   {
   public:
-    RegexBackRefMatcher(const string expr, RegexBRManager * const backRefManager)
-      : RegexMatcher (expr, EXPR_BACKREF, backRefManager)
-    {}
+    RegexBackRefMatcher(const string expr, RegexBRManager * const backRefManager);
     
     virtual ~RegexBackRefMatcher(){}
 

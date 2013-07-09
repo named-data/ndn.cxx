@@ -12,7 +12,7 @@
 
 #include "logging.h"
 
-INIT_LOGGER ("RegexRepeatMatcher");
+INIT_LOGGER ("RegexComponent");
 
 using namespace std;
 
@@ -21,10 +21,20 @@ namespace ndn
 
 namespace regex
 {
+  RegexComponent::RegexComponent(const string expr, RegexBRManager * const backRefManager, bool exact)
+    : RegexMatcher (expr, EXPR_COMPONENT, backRefManager),
+      m_exact(exact)
+  {
+    _LOG_DEBUG ("Enter RegexComponent Constructor");
+    if(!Compile())
+      throw RegexException("RegexComponent Constructor: Cannot compile the regex");
+  }
+
   bool RegexComponent::Match(Name name, const int & offset, const int & len)
   {
-    _LOG_DEBUG ("offset : " << offset << " len: " << len);
-    _LOG_DEBUG ("name : " << name.get(offset).toUri() << " expr: " << m_expr);
+    _LOG_DEBUG ("Enter RegexComponent::Match: ");
+    _LOG_DEBUG ("name : "<< name << "offset : " << offset << " len: " << len);
+
     if(0 == len)
       return false;
 

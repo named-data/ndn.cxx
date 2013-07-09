@@ -38,11 +38,7 @@ namespace regex
      * @param exact The flag to provide exact match
      * @param backRefNum The starting back reference number
      */
-    RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager, bool include = true)
-      : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager),
-        m_include(include)
-    {}
-    
+    RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager, bool include = true);    
     virtual ~RegexComponentSetMatcher();
     
     /**
