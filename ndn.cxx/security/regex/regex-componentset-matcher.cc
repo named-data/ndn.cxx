@@ -40,7 +40,7 @@ namespace regex
         if(']' != m_expr[lastIndex])
           throw RegexException(errMsg + " No matched ']' " + m_expr);
 
-        if('!' == m_expr[1]){
+        if('^' == m_expr[1]){
           m_include = false;
           return CompileMultipleComponents(2, lastIndex);
         }
