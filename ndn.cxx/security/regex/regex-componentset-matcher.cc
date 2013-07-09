@@ -10,6 +10,10 @@
 
 #include "regex-componentset-matcher.h"
 
+#include "logging.h"
+
+INIT_LOGGER ("RegexRepeatMatcher");
+
 using namespace std;
 
 namespace ndn
@@ -30,7 +34,9 @@ namespace regex
   {
     string errMsg = "Error: RegexComponentSetMatcher.Compile(): ";
     int index = 0;
-    
+
+    _LOG_DEBUG ("expr: " << m_expr);
+
     switch(m_expr[0]){
     case '<':
       return CompileSingleComponent();
@@ -61,6 +67,7 @@ namespace regex
     if(m_expr.size() != end)
       throw RegexException(errMsg + m_expr);
     else{
+      _LOG_DEBUG ("expr: " << m_expr.substr(1, end - 2));
       RegexComponent* component = new RegexComponent(m_expr.substr(1, end - 2), m_backRefManager);
       m_components.insert(component);
       return true;

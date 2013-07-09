@@ -11,6 +11,8 @@
 #include "ndn.cxx/security/regex/regex-backref-manager.h"
 #include "ndn.cxx/security/regex/regex-component.h"
 #include "ndn.cxx/security/regex/regex-componentset-matcher.h"
+#include "ndn.cxx/security/regex/regex-patternlist-matcher.h"
+#include "ndn.cxx/security/regex/regex-repeat-matcher.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -36,9 +38,9 @@ BOOST_AUTO_TEST_CASE (Basic)
 
 
   /* Check boost::regex */
-   string sStr("a{b}");
-   boost::regex r("a\\{b\\}");
-   cout << "Basic Result: " << boolalpha << boost::regex_match(sStr, r) << endl;
+//    string sStr("a{b}");
+//    boost::regex r("a\\{b\\}");
+//    cout << "Basic Result: " << boolalpha << boost::regex_match(sStr, r) << endl;
 
 
   /* Check RegexComponent */
@@ -46,9 +48,20 @@ BOOST_AUTO_TEST_CASE (Basic)
   //  cout << boolalpha << component.Match(name, 2) << endl;
   
   /* Check RegexComponentSetMatcher */
-  regex::RegexComponentSetMatcher componentSetMatcher("[!<ndn-key><ndn-cert>]", backRefManager);
-  cout << "Compile: " << boolalpha << componentSetMatcher.Compile() << endl;
-  cout << "Result: " << boolalpha << componentSetMatcher.Match(name, 3) << endl;
+//   regex::RegexComponentSetMatcher componentSetMatcher("[!<ndn-key><ndn-cert>]", backRefManager);
+//   cout << "Compile: " << boolalpha << componentSetMatcher.Compile() << endl;
+//   cout << "Result: " << boolalpha << componentSetMatcher.Match(name, 3) << endl;
+
+  /* Check RegexRepeatMatcher */
+  regex::RegexRepeatMatcher repeatMatcher("<ndn>", backRefManager, 5);
+  cout << "Compile: " << boolalpha << repeatMatcher.Compile() << endl;
+  cout << "Result: " << boolalpha << repeatMatcher.Match(name, 0, 1) << endl;
+
+  /* Check RegexPatternListMatcher */
+//    regex::RegexPatternListMatcher patternListMatcher("<ndn><ucla\\.edu>", backRefManager);
+//    cout << "Compile: " << boolalpha << patternListMatcher.Compile() << endl;
+//    cout << "Result: " << boolalpha << patternListMatcher.Match(name, 0, 2) << endl;
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

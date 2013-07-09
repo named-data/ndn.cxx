@@ -17,6 +17,10 @@
 #include "regex-backref-matcher.h"
 #include "regex-componentset-matcher.h"
 
+#include "logging.h"
+
+INIT_LOGGER ("RegexRepeatMatcher");
+
 using namespace std;
 
 namespace ndn
@@ -29,11 +33,16 @@ namespace regex
   {
     RegexMatcher* matcher;
 
-    if('(' == m_expr[0])
+    if('(' == m_expr[0]){
       matcher = (RegexMatcher*) new RegexBackRefMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
-    else
+      matcher->Compile();
+      _LOG_DEBUG ("brmatcher: ");
+    }
+    else{
       matcher = (RegexMatcher*) new RegexComponentSetMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
-
+      matcher->Compile();
+      _LOG_DEBUG ("csmatcher: ");
+    }
     m_matcherList.push_back(matcher);
       
     return ParseRepetition();
@@ -49,6 +58,7 @@ namespace regex
     if(exprSize == m_indicator){
       m_repeatMin = 1;
       m_repeatMax = 1;
+
       return true;
     }
     else{
@@ -103,6 +113,7 @@ namespace regex
 
   bool RegexRepeatMatcher::Match(Name name, const int & offset, const int & len)
   {
+    _LOG_DEBUG ("min: " << m_repeatMin << " max: " << m_repeatMax);   
     int repeat = 0;
     RegexMatcher * matcher = m_matcherList[0];
     
@@ -120,6 +131,7 @@ namespace regex
       return true;
     
     while(tried <= len){
+      _LOG_DEBUG ("tried: " << tried);
       if(matcher->Match(name, offset, tried)){
         repeat++;
         

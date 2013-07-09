@@ -10,6 +10,10 @@
 
 #include "regex-component.h"
 
+#include "logging.h"
+
+INIT_LOGGER ("RegexRepeatMatcher");
+
 using namespace std;
 
 namespace ndn
@@ -19,6 +23,11 @@ namespace regex
 {
   bool RegexComponent::Match(Name name, const int & offset, const int & len)
   {
+    _LOG_DEBUG ("offset : " << offset << " len: " << len);
+    _LOG_DEBUG ("name : " << name.get(offset).toUri() << " expr: " << m_expr);
+    if(0 == len)
+      return false;
+
     if(m_exact == true)
       return boost::regex_match(name.get(offset).toUri(), boost::regex(m_expr));
     else
