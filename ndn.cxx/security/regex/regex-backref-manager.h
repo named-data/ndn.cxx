@@ -33,8 +33,10 @@ namespace regex
     virtual int PushRef(RegexMatcher* matcher);
     
     virtual int PopRef();
+
+    virtual int GetNum(){return m_backRefs.size();}
     
-    virtual RegexMatcher* getBackRef(int i){return m_backRefs[i];}
+    virtual RegexMatcher* GetBackRef(int i){return m_backRefs[i];}
     
   private:
     vector<RegexMatcher*> m_backRefs;

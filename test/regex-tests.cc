@@ -13,6 +13,8 @@
 #include "ndn.cxx/security/regex/regex-componentset-matcher.h"
 #include "ndn.cxx/security/regex/regex-patternlist-matcher.h"
 #include "ndn.cxx/security/regex/regex-repeat-matcher.h"
+#include "ndn.cxx/security/regex/regex-backref-matcher.h"
+#include "ndn.cxx/security/regex/regex-top-matcher.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -25,7 +27,7 @@ BOOST_AUTO_TEST_SUITE(RegexTests)
 
 BOOST_AUTO_TEST_CASE (Basic)
 {
-  regex::RegexBRManager * backRefManager = NULL;
+  regex::RegexBRManager * backRefManager = new regex::RegexBRManager();
   Name name("/ndn/ucla.edu/ab/ndn-cert/");
 
 //   try{
@@ -36,7 +38,7 @@ BOOST_AUTO_TEST_CASE (Basic)
 //   }
 
 
-
+  try{
   /* Check boost::regex */
 //    string sStr("a{b}");
 //    boost::regex r("a\\{b\\}");
@@ -52,17 +54,27 @@ BOOST_AUTO_TEST_CASE (Basic)
 //   cout << "Result: " << boolalpha << componentSetMatcher.Match(name, 3) << endl;
 
   /* Check RegexRepeatMatcher */
-//   regex::RegexRepeatMatcher repeatMatcher("<ndn>", backRefManager, 5);
-//   cout << "Result: " << boolalpha << repeatMatcher.Match(name, 0, 2) << endl;
+//   regex::RegexRepeatMatcher repeatMatcher("<ndn>{2,3}", backRefManager, 5);
+//   cout << "Result: " << boolalpha << repeatMatcher.Match(name, 0, 1) << endl;
   
   /* Check RegexPatternListMatcher */
 //   regex::RegexPatternListMatcher patternListMatcher("<ndn><ucla\\.edu>", backRefManager);
 //   cout << "Result: " << boolalpha << patternListMatcher.Match(name, 0, 2) << endl;
 
   /* CheckBackRefMatcher */
-  regex::RegexBackRefMatcher backRefMatcher("<ndn><ucla\\.edu>", backRefManager);
-  cout << "Result: " << boolalpha << backRefMatcher.Match(name, 0, 2) << endl;
-  
+//   regex::RegexBackRefMatcher backRefMatcher("(<ndn>(<ucla\\.edu>))", backRefManager);
+//   cout << "Result: " << boolalpha << backRefMatcher.Match(name, 0, 2) << endl;
+//   cout << "RefNum: " << backRefManager->GetNum() << endl;
+//   cout << "matcher1: " << backRefManager->GetBackRef(0)->GetExpr() << endl;
+//   cout << "matcher2: " << backRefManager->GetBackRef(1)->GetExpr() << endl;
+  /* CheckTopMatcher */
+  regex::RegexTopMatcher topMatcher("(<ndn>(<ucla\\.edu>))");
+  cout << "Result: " << boolalpha << topMatcher.Match(name, 0, 3) << endl;
+
+  }
+  catch (regex::RegexException &e){
+    cout << e.GetMsg() << endl;
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

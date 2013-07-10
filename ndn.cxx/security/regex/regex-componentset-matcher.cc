@@ -25,7 +25,7 @@ namespace regex
     : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager),
       m_include(include)
   {
-    _LOG_DEBUG ("Enter RegexComponent Constructor");
+    _LOG_DEBUG ("Enter RegexComponentSetMatcher Constructor: " << m_expr);
     if(!Compile())
       throw RegexException("RegexComponentSetMatcher Constructor: Cannot compile the regex");
   }
@@ -136,6 +136,34 @@ namespace regex
       }
     }
     return (m_include ? matched : !matched);
+  }
+
+  int RegexComponentSetMatcher::ExtractComponent(int index)
+  {
+    _LOG_DEBUG ("Enter RegexComponentSetMatcher::ExtractComponent");
+
+    int lcount = 1;
+    int rcount = 0;
+
+    while(lcount > rcount){
+      switch(m_expr[index]){
+      case '<':
+        lcount++;
+        break;
+
+      case '>':
+        rcount++;
+        break;
+
+      case 0:
+        throw RegexException("Error: square brackets mismatch");
+        break;
+      }
+      index++;
+
+    }
+    return index;
+
   }
 
 }//regex

@@ -51,7 +51,7 @@ namespace regex
     ///////////////////////////////////////////////////////////////////////////////
     //                              CONSTRUCTORS                                 //
     ///////////////////////////////////////////////////////////////////////////////
-    RegexMatcher(const string expr, RegexExprType type,  RegexBRManager * backRefManager) 
+    RegexMatcher(const string expr, RegexExprType type,  RegexBRManager * backRefManager = NULL) 
       : m_expr(expr), 
         m_type(type),
         m_backRefManager(backRefManager)
@@ -74,6 +74,8 @@ namespace regex
      */
     Name GetMatchResult(){return matchResult;}
 
+    string GetExpr(){return m_expr;} 
+
   protected:
     const string m_expr;
     const RegexExprType m_type; 
@@ -87,12 +89,6 @@ namespace regex
      * @returns true if compiling succeeds
      */
     virtual bool Compile() = 0;
-
-    int ExtractComponent(int index);
-
-    void PushRef(RegexMatcher* matcher){m_backRefManager->PushRef(matcher);}
-    
-    void PopRef(RegexMatcher* matcher){m_backRefManager->PopRef();}
 
   private:
     /**

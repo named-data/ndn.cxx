@@ -25,7 +25,7 @@ namespace regex
   RegexPatternListMatcher::RegexPatternListMatcher(const string expr, RegexBRManager* backRefManager)
     :RegexMatcher(expr, EXPR_PATTERNLIST, backRefManager)
   {
-    _LOG_DEBUG ("Enter RegexPatternListMatcher Constructor");
+    _LOG_DEBUG ("Enter RegexPatternListMatcher Constructor: " << m_expr);
     if(!Compile())
       throw RegexException("RegexPatternListMatcher Constructor: Cannot compile the regex");
   }
@@ -59,6 +59,8 @@ namespace regex
     int indicator = index;
     RegexRepeatMatcher * matcher = NULL;
 
+    _LOG_DEBUG ("m_expr: " << m_expr << " index: " << index);
+
     switch(m_expr[index]){
     case '(':
       index++;
@@ -80,8 +82,8 @@ namespace regex
       throw RegexException("Error: unexpected syntax");
     }
 
-
-    matcher = new RegexRepeatMatcher(m_expr.substr(start, end), m_backRefManager, indicator - start);
+//     _LOG_DEBUG("Generate repeat: " << m_expr.substr(start, end) << " start: " << start << " end: " << end << " indicator: " << indicator);
+    matcher = new RegexRepeatMatcher(m_expr.substr(start, end - start), m_backRefManager, indicator - start);
     m_matcherList.push_back(matcher);
 
     *next = end;

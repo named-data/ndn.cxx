@@ -25,9 +25,16 @@ namespace regex
   RegexTopMatcher::RegexTopMatcher(const string expr, RegexBRManager *const backRefManager)
     : RegexMatcher(expr, EXPR_TOP, backRefManager)
   {
-    _LOG_DEBUG ("Enter RegexTopMatcher Constructor");
+    m_backRefManager = new RegexBRManager();
+
+    _LOG_DEBUG ("Enter RegexTopMatcher Constructor: " << m_expr);
     if(!Compile())
       throw RegexException("RegexTopMatcher Constructor: Cannot compile the regex");
+  }
+
+  RegexTopMatcher::~RegexTopMatcher()
+  {
+    delete m_backRefManager;
   }
 
   bool RegexTopMatcher::Compile()
@@ -37,11 +44,18 @@ namespace regex
     string errMsg = "Error: RegexTopMatcher.Compile(): ";
 
     string expr = m_expr;
-    if('^' != m_expr[0])
+    if('^' != expr[0])
       expr = "<.*>*" + expr;
-    if('$' != m_expr[m_expr.size() - 1])
+    else
+      expr = expr.substr(1, expr.size()-1);
+
+    if('$' != expr[expr.size() - 1])
       expr = expr + "<.*>*";
-    
+    else
+      expr = expr.substr(0, expr.size()-1);
+
+    _LOG_DEBUG ("reconstructed expr: " << expr);
+
     RegexPatternListMatcher * matcher = new RegexPatternListMatcher(expr, m_backRefManager);
     m_matcherList.push_back(matcher);
     return true;

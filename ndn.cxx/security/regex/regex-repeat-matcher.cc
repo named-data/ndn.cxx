@@ -32,7 +32,7 @@ namespace regex
     : RegexMatcher (expr, EXPR_REPEAT_PATTERN, backRefManager),
       m_indicator(indicator)
   {
-    _LOG_DEBUG ("Enter RegexRepeatMatcher Constructor");
+    _LOG_DEBUG ("Enter RegexRepeatMatcher Constructor: " << m_expr);
     if(!Compile())
       throw RegexException("RegexRepeatMatcher Constructor: Cannot compile the regex");
   }
@@ -56,7 +56,7 @@ namespace regex
 
   bool RegexRepeatMatcher::ParseRepetition()
   {
-    _LOG_DEBUG ("Enter RegexRepeatMatcher::ParseRepetition()");
+    _LOG_DEBUG ("Enter RegexRepeatMatcher::ParseRepetition()" << m_expr << " indicator: " << m_indicator);
 
     string errMsg = "Error: RegexRepeatMatcher.ParseRepetition(): ";
     
@@ -92,13 +92,13 @@ namespace regex
         int min = 0;
         int max = 0;
 
-        if(boost::regex_match(repeatStruct, boost::regex("{\\{[0-9]+,[0-9]+\\}"))){
+        if(boost::regex_match(repeatStruct, boost::regex("\\{[0-9]+,[0-9]+\\}"))){
           int separator = repeatStruct.find_first_of(',', 0);
 
           min = atoi(repeatStruct.substr(1, separator - 1).c_str());
           max = atoi(repeatStruct.substr(separator + 1, exprSize - separator - 1).c_str());
         }
-        else if(boost::regex_match(repeatStruct, boost::regex("{\\{[0-9]+\\}"))){
+        else if(boost::regex_match(repeatStruct, boost::regex("\\{[0-9]+\\}"))){
           min = atoi(repeatStruct.substr(1, exprSize - 1).c_str());
           max = min;
         }

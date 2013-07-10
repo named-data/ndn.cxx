@@ -23,8 +23,6 @@ namespace regex
 {
   RegexMatcher::~RegexMatcher()
   {
-    delete m_backRefManager;
-
     vector<RegexMatcher*>::iterator it = m_matcherList.begin();
     for(; it != m_matcherList.end(); it++)
 	delete *it;
@@ -68,33 +66,6 @@ namespace regex
     return false;
   }
   
-  int RegexMatcher::ExtractComponent(int index)
-  {
-    _LOG_DEBUG ("Enter RegexMatcher::ExtractComponent");
-
-    int lcount = 1;
-    int rcount = 0;
-
-    while(lcount > rcount){
-      switch(m_expr[index]){
-      case '<':
-        lcount++;
-        break;
-
-      case '>':
-        rcount++;
-        break;
-
-      case 0:
-        throw RegexException("Error: square brackets mismatch");
-        break;
-      }
-      index++;
-
-    }
-    return index;
-
-  }
 
 }//regex
 

@@ -25,9 +25,9 @@ namespace regex
   class RegexTopMatcher: public RegexMatcher
   {
   public:
-    RegexTopMatcher(const string expr, RegexBRManager *const backRefManager);
+    RegexTopMatcher(const string expr, RegexBRManager *const backRefManager = NULL);
     
-    virtual ~RegexTopMatcher(){}
+    virtual ~RegexTopMatcher();
 
   protected:
     virtual bool Compile();

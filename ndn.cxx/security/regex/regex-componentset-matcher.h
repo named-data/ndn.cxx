@@ -57,6 +57,8 @@ namespace regex
     virtual bool Compile();
 
   private:
+    int ExtractComponent(int index);
+
     bool CompileSingleComponent();
     
     bool CompileMultipleComponents(const int start, const int lastIndex);

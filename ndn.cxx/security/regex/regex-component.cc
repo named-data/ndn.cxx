@@ -25,7 +25,7 @@ namespace regex
     : RegexMatcher (expr, EXPR_COMPONENT, backRefManager),
       m_exact(exact)
   {
-    _LOG_DEBUG ("Enter RegexComponent Constructor");
+    _LOG_DEBUG ("Enter RegexComponent Constructor: " << m_expr);
     if(!Compile())
       throw RegexException("RegexComponent Constructor: Cannot compile the regex");
   }
@@ -43,6 +43,7 @@ namespace regex
     else
       return boost::regex_search(name.get(offset).toUri(), boost::regex(m_expr));
   }
+
 
 } //regex
 
