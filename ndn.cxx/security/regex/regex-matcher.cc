@@ -39,7 +39,15 @@ namespace regex
   {
     _LOG_DEBUG ("Enter RegexMatcher::Match");
     _LOG_DEBUG ("size of matcher list: " << m_matcherList.size());
-    return RecursiveMatch(0, name, offset, len);
+
+    m_matchResult = Name();
+    if(RecursiveMatch(0, name, offset, len)){
+      for (int i = 0; i < len ; i++)
+        m_matchResult.append(name.get(offset+i));
+      return true;
+    }
+    else
+      return false;
   }
 
   bool RegexMatcher::RecursiveMatch(int mId, Name name, const int & offset, const int & len)

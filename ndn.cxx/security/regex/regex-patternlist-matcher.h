@@ -38,6 +38,9 @@ namespace regex
     int ExtractSubPattern(const char left, const char right, int index);
     
     int ExtractRepetition(int index);
+
+  private:
+
   };
 
 }//regex

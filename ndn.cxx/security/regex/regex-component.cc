@@ -35,13 +35,27 @@ namespace regex
     _LOG_DEBUG ("Enter RegexComponent::Match: ");
     _LOG_DEBUG ("name : "<< name << " offset : " << offset << " len: " << len);
 
+    m_matchResult = Name();
+
     if(0 == len)
       return false;
 
-    if(m_exact == true)
-      return boost::regex_match(name.get(offset).toUri(), boost::regex(m_expr));
-    else
-      return boost::regex_search(name.get(offset).toUri(), boost::regex(m_expr));
+    if(m_exact == true){
+      if(boost::regex_match(name.get(offset).toUri(), boost::regex(m_expr))){
+        m_matchResult.append(name.get(offset));
+        return true;
+      }
+      else
+        return false;
+    }
+    else{
+      if(boost::regex_search(name.get(offset).toUri(), boost::regex(m_expr))){
+        m_matchResult.append(name.get(offset));
+        return true;
+      }
+      else
+        return false;
+    }
   }
 
 

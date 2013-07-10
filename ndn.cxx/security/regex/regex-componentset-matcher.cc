@@ -135,7 +135,15 @@ namespace regex
         break;
       }
     }
-    return (m_include ? matched : !matched);
+    
+    m_matchResult = Name();
+
+    if(m_include ? matched : !matched){
+      m_matchResult.append(name.get(offset));
+      return true;
+    }
+    else 
+      return false;
   }
 
   int RegexComponentSetMatcher::ExtractComponent(int index)

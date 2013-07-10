@@ -125,13 +125,21 @@ namespace regex
     _LOG_DEBUG ("Enter RegexRepeatMatcher::Match()");
     _LOG_DEBUG ("expr: " << m_expr << " min: " << m_repeatMin << " max: " << m_repeatMax);   
 
+    m_matchResult = Name();
+
     /* for no repeat case */
     if(0 == m_repeatMin)
       if(0 == len)
         return true;
 
     /* for repeatMin > 1 */
-    return RecursiveMatch(m_matcherList[0], 0, name, offset, len);
+    if(RecursiveMatch(m_matcherList[0], 0, name, offset, len)){
+      for (int i = 0; i < len ; i++)
+        m_matchResult.append(name.get(offset+i));
+      return true;
+    }
+    else
+      return false;
   }
   
   bool RegexRepeatMatcher::RecursiveMatch(RegexMatcher* matcher, 

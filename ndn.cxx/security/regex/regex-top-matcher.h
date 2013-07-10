@@ -14,6 +14,7 @@
 #include <string>
 
 #include "regex-matcher.h"
+#include "regex-patternlist-matcher.h"
 
 using namespace std;
 
@@ -25,14 +26,30 @@ namespace regex
   class RegexTopMatcher: public RegexMatcher
   {
   public:
-    RegexTopMatcher(const string expr, RegexBRManager *const backRefManager = NULL);
+
+    enum RegexTgtCmptType{
+      TCT_REFERENCE,
+      TCT_COMPONENT,
+      TCT_END
+    };
+
+  public:
+    RegexTopMatcher(const string expr, RegexBRManager *const backRefManager = NULL, const string rule = "");
     
     virtual ~RegexTopMatcher();
+
+    virtual bool MatchName(Name name);
+
+    virtual bool MatchRule(Name name, Name target);
 
   protected:
     virtual bool Compile();
 
   private:
+    virtual RegexTgtCmptType ParseRule(int index, int * end);
+
+  private:
+    string m_rule;
     
   };
 }

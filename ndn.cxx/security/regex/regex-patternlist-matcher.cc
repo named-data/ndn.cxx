@@ -127,10 +127,11 @@ namespace regex
     if(index == exprSize)
       return index;
     
-    if('+' == m_expr[index] || '?' == m_expr[index] || '*' == m_expr[index]){
+    if(('+' == m_expr[index] || '?' == m_expr[index] || '*' == m_expr[index])){
       return ++index;
     }
 
+    
     if('{' == m_expr[index]){
       while('}' != m_expr[index]){
         index++;

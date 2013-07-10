@@ -72,7 +72,7 @@ namespace regex
      * @brief get the matched name components
      * @returns the matched name components
      */
-    Name GetMatchResult(){return matchResult;}
+    Name GetMatchResult(){return m_matchResult;}
 
     string GetExpr(){return m_expr;} 
 
@@ -81,7 +81,7 @@ namespace regex
     const RegexExprType m_type; 
     RegexBRManager* m_backRefManager;
     vector<RegexMatcher*> m_matcherList;
-    Name matchResult;
+    Name m_matchResult;
 
   protected:
     /**
