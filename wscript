@@ -10,9 +10,10 @@ def options(opt):
 
     opt.load('compiler_c compiler_cxx boost ccnx doxygen gnu_dirs c_osx')
     opt.load('tinyxml', tooldir=['waf-tools'])
+    opt.load('cryptopp', tooldir=['waf-tools'])
 
 def configure(conf):
-    conf.load("compiler_c compiler_cxx boost ccnx gnu_dirs tinyxml doxygen c_osx")
+    conf.load("compiler_c compiler_cxx boost ccnx gnu_dirs tinyxml doxygen c_osx cryptopp")
 
     if conf.options.debug:
         conf.define ('_DEBUG', 1)
@@ -28,10 +29,10 @@ def configure(conf):
         conf.add_supported_cxxflags (cxxflags = ['-O3', '-g'])
 
     if Utils.unversioned_sys_platform () == "darwin":
-        conf.check_cxx(framework_name='Foundation', uselib_store='OSX_FOUNDATION', mandatory=True, compile_filename='test.mm')
-        conf.check_cxx(framework_name='AppKit',     uselib_store='OSX_APPKIT',     mandatory=True, compile_filename='test.mm')
+        conf.check_cxx(framework_name='CoreFoundation', uselib_store='OSX_COREFOUNDATION', mandatory=True, compile_filename='test.mm')
+        conf.check_cxx(framework_name='CoreServices', uselib_store='OSX_CORESERVICES', mandatory=True, compile_filename='test.mm')
         conf.check_cxx(framework_name='Security',   uselib_store='OSX_SECURITY',   define_name='HAVE_SECURITY',
-                       use="OSX_FOUNDATION", mandatory=True, compile_filename='test.mm')
+                       use="OSX_COREFOUNDATION", mandatory=True, compile_filename='test.mm')
 
     conf.define ("NDN_CXX_VERSION", VERSION)
 
@@ -55,6 +56,7 @@ def configure(conf):
         conf.define ("HAVE_LOG4CXX", 1)
 
     conf.check_tinyxml(path=conf.options.tinyxml_dir)
+    conf.check_cryptopp(path=conf.options.cryptopp_dir)
     conf.check_doxygen(mandatory=False)
 
     conf.check_boost(lib='system test iostreams filesystem thread date_time regex')
@@ -95,16 +97,17 @@ def build (bld):
         target="ndn.cxx",
         features=['cxx', 'cxxshlib'],
         source = bld.path.ant_glob(['ndn.cxx/**/*.cpp', 'ndn.cxx/**/*.cc',
+                                    'ndn.cxx/**/*.mm',
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
-        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor',
+        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor CRYPTOPP',
         includes = ".",
         )
 
     if Utils.unversioned_sys_platform () == "darwin":
         libndn_cxx.mac_app = True
         libndn_cxx.source += bld.path.ant_glob (['platforms/osx/**/*.mm'])
-        libndn_cxx.use += " OSX_FOUNDATION OSX_SECURITY"
+        libndn_cxx.use += " OSX_COREFOUNDATION OSX_SECURITY"
 
     # Unit tests
     if bld.env['TEST']:
@@ -113,7 +116,7 @@ def build (bld):
           features = "cxx cxxprogram",
           defines = "WAF",
           source = bld.path.ant_glob(['test/*.cc']),
-          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME BOOST_REGEX LOG4CXX ndn.cxx',
+          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME BOOST_REGEX LOG4CXX ndn.cxx CRYPTOPP',
           includes = ".",
           install_prefix = None,
           )

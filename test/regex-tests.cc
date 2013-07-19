@@ -8,13 +8,13 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#include "ndn.cxx/security/regex/regex-backref-manager.h"
-#include "ndn.cxx/security/regex/regex-component.h"
-#include "ndn.cxx/security/regex/regex-componentset-matcher.h"
-#include "ndn.cxx/security/regex/regex-patternlist-matcher.h"
-#include "ndn.cxx/security/regex/regex-repeat-matcher.h"
-#include "ndn.cxx/security/regex/regex-backref-matcher.h"
-#include "ndn.cxx/security/regex/regex-top-matcher.h"
+#include "ndn.cxx/regex/regex-backref-manager.h"
+#include "ndn.cxx/regex/regex-component.h"
+#include "ndn.cxx/regex/regex-componentset-matcher.h"
+#include "ndn.cxx/regex/regex-patternlist-matcher.h"
+#include "ndn.cxx/regex/regex-repeat-matcher.h"
+#include "ndn.cxx/regex/regex-backref-matcher.h"
+#include "ndn.cxx/regex/regex-top-matcher.h"
 
 #include <boost/test/unit_test.hpp>
 

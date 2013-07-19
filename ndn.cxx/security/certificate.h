@@ -1,43 +1,65 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
 /*
  * Copyright (c) 2013, Regents of the University of California
- *                     Alexander Afanasyev
+ *                     Yingdi Yu
  *
  * BSD license, See the LICENSE file for more information
  *
- * Author: Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
 #ifndef NDN_CERTIFICATE_H
 #define NDN_CERTIFICATE_H
 
-#include "ndn.cxx/data.h"
+#include <vector>
+#include <string>
 
-namespace ndn {
+#include <boost/date_time/posix_time/posix_time.hpp>
 
-/**
- * @brief Class representing NDN identity
- *
- * - name
- *   - full NDN name of the NDN certificate
- *     - /ndn/ucla.edu/alex/cert/<pubkey.sha256>/<issuer>
- * - content
- *   - X.509 certificate in DER format (X.509 certificate can include any necessary identity information, as well as is fully extendable)
- *     - Subject: 
- *       - full real name, associated with the certificate
- *       - full affiliation, associated with the certificate
- *     - Subject Public Key Info
- *     - Validity
- * - signature
- *   - issuerCertName (KeyLocator/CertName)
- *     - /ndn/ucla.edu/cert/<pubkey.sha256>/<issuer>
- *
- */
-class Certificate : public Data
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/fields/blob.h"
+#include "ndn.cxx/security/exception.h"
+#include "ndn.cxx/security/certificate-subdescrpt.h"
+#include "ndn.cxx/security/certificate-extension.h"
+
+
+using namespace std;
+using namespace boost::posix_time;
+
+namespace ndn
 {
-public:
-};
 
-} // ndn
+namespace security
+{
+  
+  class Certificate
+  {
+  public:
+    Certificate(string sNotBefore, string sNotAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Blob> key);
 
-#endif // NDN_CERTIFICATE_H
+    void AddExtension(Ptr<CertificateExtension> extn);
+    
+    virtual Ptr<Blob> ToDER();
+
+  private:
+    virtual Ptr<Blob> ExtnToDER();
+
+    virtual Ptr<Blob> ValidityToDER();
+
+    virtual Ptr<Blob> SubjectToDER();
+    
+    virtual bool FromDER();
+    
+  private:
+    vector<Ptr<CertificateSubDescrypt> > m_subjectList;
+    ptime m_notBefore;
+    ptime m_notAfter;
+    Ptr<Blob> m_key;
+    vector<Ptr<CertificateExtension> > m_extnList;
+  };
+
+}//security
+
+}//ndn
+
+#endif
