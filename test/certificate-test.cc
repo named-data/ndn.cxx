@@ -59,6 +59,10 @@ BOOST_AUTO_TEST_CASE(Basic)
   security::DERendec endec;
 
   endec.PrintDecoded(cert.ToDER(), "", 0);
+
+  security::Certificate cert2(cert.ToDER());
+  
+  cert2.PrintCertificate();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

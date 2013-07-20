@@ -26,10 +26,16 @@ namespace security
   public:
     CertificateSubDescrypt(string oid, string value);
     
+    CertificateSubDescrypt(Ptr<Blob> blob);
+
     Ptr<Blob> ToDER();
+
+    string GetOid(){return m_oid;}
+
+    string GetValue(){return m_value;}
     
   private:
-    Ptr<vector<int> > m_oid;
+    string m_oid;
     string m_value;
   };
 

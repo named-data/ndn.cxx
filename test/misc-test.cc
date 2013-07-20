@@ -139,19 +139,17 @@ BOOST_AUTO_TEST_CASE (DER)
   // showDER(endec.EncodeIntegerDER(-128));
   // showDER(endec.EncodeIntegerDER(-129));
 
-  showDER(endec.EncodeStringDER("1234567890"));
+  showDER(endec.EncodePrintableStringDER("1234567890"));
   
-  int ints[] = {1, 2, 840, 113549, 1};
-  vector<int> oid(ints, ints+5);
-  showDER(endec.EncodeOidDER(oid));
+  showDER(endec.EncodeOidDER("1.2.840.113549.1"));
 
-  showDER(endec.EncodeGTimeDER(second_clock::universal_time()));
+  showDER(endec.EncodeGTimeDER("20130720010203Z"));
 
   vector<Ptr<Blob> > seq;
   // seq.push_back(endec.EncodeIntegerDER(1));
-  seq.push_back(endec.EncodeStringDER("1"));
-  seq.push_back(endec.EncodeOidDER(oid));
-  seq.push_back(endec.EncodeGTimeDER(second_clock::universal_time()));
+  // seq.push_back(endec.EncodeStringDER("1"));
+  seq.push_back(endec.EncodeOidDER("1.2.840.113549.1"));
+  seq.push_back(endec.EncodeGTimeDER("20130720010203Z"));
   
   showDER(endec.EncodeSequenceDER(seq));
 

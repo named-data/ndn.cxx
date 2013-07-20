@@ -23,8 +23,22 @@ namespace security
   {
     DERendec encoder;
     
-    m_oid = encoder.StringToOid(oid);
+    m_oid = oid;
     m_value = value;
+  }
+
+  CertificateSubDescrypt::CertificateSubDescrypt(Ptr<Blob> blob)
+  {
+    DERendec endec;
+
+    int offset = 0;
+    Ptr<vector<Ptr<Blob> > > items = endec.DecodeSequenceDER(blob, offset);
+    
+    offset = 0;
+    m_oid = endec.DecodeOidDER(items->at(0), offset);
+
+    offset = 0;
+    m_value = *(endec.DecodePrintableStringDER(items->at(1), offset));
   }
 
   Ptr<Blob> CertificateSubDescrypt::ToDER()
@@ -33,7 +47,7 @@ namespace security
 
     vector<Ptr<Blob> > seq;
 
-    seq.push_back(encoder.EncodeOidDER(*m_oid));
+    seq.push_back(encoder.EncodeOidDER(m_oid));
     seq.push_back(encoder.EncodePrintableStringDER(m_value));
 
     return encoder.EncodeSequenceDER(seq);

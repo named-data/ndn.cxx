@@ -36,26 +36,42 @@ namespace security
   {
   public:
     Certificate(string sNotBefore, string sNotAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Blob> key);
+    
+    Certificate(Ptr<Blob> blob);
 
     void AddExtension(Ptr<CertificateExtension> extn);
     
     virtual Ptr<Blob> ToDER();
 
+    void PrintCertificate();
+
+    void PrintSubjectInfo();
+
+    string GetNotBefore(){return m_notBefore;}
+    
+    string GetNotAfter(){return m_notAfter;}
+
+    Ptr<Blob> GetKey(){return m_key;}
+
   private:
     virtual Ptr<Blob> ExtnToDER();
 
+    virtual void DERToExtn (Ptr<Blob> blob);
+
     virtual Ptr<Blob> ValidityToDER();
 
+    virtual void DERToValidity(Ptr<Blob> blob);
+
     virtual Ptr<Blob> SubjectToDER();
-    
-    virtual bool FromDER();
+
+    virtual void DERToSubject(Ptr<Blob> blob);
     
   private:
     vector<Ptr<CertificateSubDescrypt> > m_subjectList;
-    ptime m_notBefore;
-    ptime m_notAfter;
+    string m_notBefore;
+    string m_notAfter;
     Ptr<Blob> m_key;
-    vector<Ptr<CertificateExtension> > m_extnList;
+    vector<Ptr<CertificateExtension> > m_extnList;    
   };
 
 }//security

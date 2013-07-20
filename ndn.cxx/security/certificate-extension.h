@@ -33,7 +33,7 @@ namespace security
   private:
       
   private:
-    vector<int> m_extnID;
+    string m_extnID;
     bool m_critical;
     Ptr<Blob> m_extnValue;
   };

@@ -14,15 +14,10 @@
 #include <string>
 #include <vector>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
 
-
-
 using namespace std;
-using namespace boost::posix_time;
 
 
 namespace ndn
@@ -34,17 +29,17 @@ namespace security
   public:
     DERendec();
     
-    Ptr<Blob> EncodeStringDER(const string & str);
+    Ptr<Blob> EncodeStringDER(const Ptr<Blob> & str);
     
-    Ptr<string> DecodeStringDER(const Ptr<Blob> blob, int & offset);
+    Ptr<Blob> DecodeStringDER(const Ptr<Blob> blob, int & offset);
 
-    Ptr<Blob> EncodeGTimeDER(const ptime &time);
+    Ptr<Blob> EncodeGTimeDER(const string & str);
 
-    Ptr<ptime> DecodeGTimeDER(const Ptr<Blob> blob, int & offset);
+    string DecodeGTimeDER(const Ptr<Blob> blob, int & offset);
 
-    Ptr<Blob> EncodeOidDER(const vector<int> & oid);
+    Ptr<Blob> EncodeOidDER(const string & str);
 
-    Ptr<vector<int> > DecodeOidDER(const Ptr<Blob> blob, int & offset);
+    string DecodeOidDER(const Ptr<Blob> blob, int & offset);
 
     Ptr<Blob> EncodeIntegerDER(const Ptr<Blob>);
     
@@ -83,7 +78,7 @@ namespace security
 
     int DecodeSize(const Ptr<Blob> blob, int & offset);
 
-    Ptr<Blob> EncodeString(const string & str, int type);
+    Ptr<Blob> EncodeString(const Ptr<Blob> & str, int type);
 
     Ptr<Blob> EncodeInteger128(int i);
 
