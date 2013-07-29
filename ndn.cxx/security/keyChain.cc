@@ -121,7 +121,7 @@ namespace security
     const Name & certSigner = keyLocator.getKeyName();
 
     const Blob & certData = certificate.getContent().getContent ();
-    Certificate cert(certData);
+    CertificateData cert(certData);
 
     ptime fresh; //TODO:
     ptime notBefore; //TODO;

@@ -8,8 +8,8 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_CERTIFICATE_H
-#define NDN_CERTIFICATE_H
+#ifndef NDN_CERTIFICATE_DATA_H
+#define NDN_CERTIFICATE_DATA_H
 
 #include <vector>
 #include <string>
@@ -34,14 +34,14 @@ namespace ndn
 namespace security
 {
   
-  class Certificate
+  class CertificateData
   {
   public:
-    Certificate(string sNotBefore, string sNotAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Blob> key);
+    CertificateData(string sNotBefore, string sNotAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Blob> key);
     
-    Certificate(const Blob & blob);
+    CertificateData(const Blob & blob);
 
-    Certificate(const Data & data);
+    CertificateData(const Data & data);
 
     void AddExtension(Ptr<CertificateExtension> extn);
     

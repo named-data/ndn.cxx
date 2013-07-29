@@ -9,7 +9,7 @@
  */
 
 #include "der.h"
-#include "certificate.h"
+#include "certificate-data.h"
 
 
 using namespace std;
@@ -20,7 +20,7 @@ namespace ndn
 
 namespace security
 {
-  Certificate::Certificate(string sNotBefore, string sNotAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Blob> key)
+  CertificateData::CertificateData(string sNotBefore, string sNotAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Blob> key)
   {
     m_notBefore = sNotBefore;
     m_notAfter  = sNotAfter;
@@ -28,7 +28,7 @@ namespace security
     m_subjectList = sSubjectList;
   }
 
-  Certificate::Certificate(const Blob & blob)
+  CertificateData::CertificateData(const Blob & blob)
   {
     DERendec decoder;
 
@@ -44,18 +44,18 @@ namespace security
       DERToExtn(*items->at(3));
   }
 
-  Certificate::Certificate(const Data & data)
+  CertificateData::CertificateData(const Data & data)
   {
     //TODO
   }
 
 
-  void Certificate::AddExtension(Ptr<CertificateExtension> extn)
+  void CertificateData::AddExtension(Ptr<CertificateExtension> extn)
   {
     m_extnList.push_back(extn);
   }
 
-  Ptr<Blob> Certificate::ToDER()
+  Ptr<Blob> CertificateData::ToDER()
   {
     vector<Ptr<Blob> > certSeq;
 
@@ -70,7 +70,7 @@ namespace security
     return encoder.EncodeSequenceDER(certSeq);
   }
 
-  Ptr<Blob> Certificate::SubjectToDER()
+  Ptr<Blob> CertificateData::SubjectToDER()
   {
     vector<Ptr<Blob> > subjectSeq;
 
@@ -87,7 +87,7 @@ namespace security
       return encoder.EncodeSequenceDER(subjectSeq);
   }
 
-  void Certificate::DERToSubject(const Blob & blob)
+  void CertificateData::DERToSubject(const Blob & blob)
   {
     DERendec endec;
 
@@ -102,7 +102,7 @@ namespace security
     }
   }
 
-  Ptr<Blob> Certificate::ValidityToDER()
+  Ptr<Blob> CertificateData::ValidityToDER()
   {
     vector<Ptr<Blob> > validSeq;
     
@@ -114,7 +114,7 @@ namespace security
     return encoder.EncodeSequenceDER(validSeq);
   }
 
-  void Certificate::DERToValidity(const Blob & blob)
+  void CertificateData::DERToValidity(const Blob & blob)
   {
     DERendec decoder;
 
@@ -123,7 +123,7 @@ namespace security
     m_notAfter  = decoder.DecodeGTimeDER(*items->at(1));
   }
 
-  Ptr<Blob> Certificate::ExtnToDER()
+  Ptr<Blob> CertificateData::ExtnToDER()
   {
     vector<Ptr<Blob> > extnSeq;
 
@@ -140,7 +140,7 @@ namespace security
       return encoder.EncodeSequenceDER(extnSeq);
   }
 
-  void Certificate::DERToExtn(const Blob & blob)
+  void CertificateData::DERToExtn(const Blob & blob)
   {
     DERendec endec;
 
@@ -155,7 +155,7 @@ namespace security
     }
   }
 
-  void Certificate::PrintSubjectInfo()
+  void CertificateData::PrintSubjectInfo()
   {
     cout << "Subject Info:" << endl;
       
@@ -165,7 +165,7 @@ namespace security
     }
   }
 
-  void Certificate::PrintCertificate()
+  void CertificateData::PrintCertificate()
   {
     DERendec decoder;
 

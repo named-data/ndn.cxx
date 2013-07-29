@@ -20,7 +20,7 @@
 #include "ndn.cxx/security/privateKeyStore.h"
 #include "ndn.cxx/security/identity-db.h"
 #include "ndn.cxx/security/policyManager.h"
-#include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/security/certificate/certificate-data.h"
 
 using namespace std;
 

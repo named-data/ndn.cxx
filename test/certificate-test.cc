@@ -8,7 +8,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/der.h"
 
 using namespace std;
@@ -54,13 +54,13 @@ BOOST_AUTO_TEST_CASE(Basic)
   subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.4", "Yu")));
   subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.42", "Yingdi")));
   
-  security::Certificate cert(notBefore, notAfter, subjectList, keyPtr);
+  security::CertificateData cert(notBefore, notAfter, subjectList, keyPtr);
 
   security::DERendec endec;
 
   endec.PrintDecoded(*cert.ToDER(), "", 0);
 
-  security::Certificate cert2(*cert.ToDER());
+  security::CertificateData cert2(*cert.ToDER());
   
   cert2.PrintCertificate();
 }
