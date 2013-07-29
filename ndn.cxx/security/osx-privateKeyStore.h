@@ -58,7 +58,9 @@ namespace security
      * @param outputDir the output directory
      * @returns true if export succeeds
      */
-    virtual bool ExportPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat, string outputDir);
+    virtual bool ExportPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat, string outputDir, bool pem);
+
+    virtual Ptr<Blob> GetPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat = KEY_PUBLIC_OPENSSL, bool pem = false);
 
     /**
      * @brief sign data
@@ -96,10 +98,16 @@ namespace security
      */
     bool SetACL(string keyName, KeyType keyType, KeyClass keyClass, int acl, string appPath);
 
+    virtual Ptr<Blob> SignData(const Data & data, string keyName, KeyType, DigestAlgorithm digestAlgo);
+
+    virtual Ptr<Blob> PublicKeyDigest(string keyName, KeyType keyType, KeyFormat keyFormat, DigestAlgorithm digestAlgo);
+
     //Test
     bool Verify(string keyName, KeyType keyType, DigestAlgorithm digestAlgo, Ptr<Blob> pData, Ptr<Blob>pSig);
 
     Ptr<Blob> Encrypt(string keyName, Ptr<Blob> pData);
+
+    void TestDigest();
 
   private:
     /**
@@ -146,6 +154,8 @@ namespace security
      * @returns MAC OS keyformat
      */
     SecExternalFormat GetFormat(KeyFormat format);
+
+    long GetDigestSize(DigestAlgorithm digestAlgo);
 
   private:
     const string m_keychainName;

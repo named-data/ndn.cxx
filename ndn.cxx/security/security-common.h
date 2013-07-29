@@ -31,13 +31,14 @@ namespace security
   };
   
   enum KeyFormat{
-    KEY_X509
+    KEY_PUBLIC_OPENSSL,
   };
 
   enum DigestAlgorithm{
     DIGEST_MD2,
     DIGEST_MD5,
-    DIGEST_SHA1
+    DIGEST_SHA1,
+    DIGEST_SHA256,
   };
 
 }//security

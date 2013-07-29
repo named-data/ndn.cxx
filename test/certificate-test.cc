@@ -8,8 +8,8 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "ndn.cxx/security/certificate.h"
-#include "ndn.cxx/security/der.h"
+#include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/security/certificate/der.h"
 
 using namespace std;
 using namespace boost::posix_time;
@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   security::DERendec endec;
 
-  endec.PrintDecoded(cert.ToDER(), "", 0);
+  endec.PrintDecoded(*cert.ToDER(), "", 0);
 
-  security::Certificate cert2(cert.ToDER());
+  security::Certificate cert2(*cert.ToDER());
   
   cert2.PrintCertificate();
 }

@@ -59,7 +59,7 @@ def configure(conf):
     conf.check_cryptopp(path=conf.options.cryptopp_dir)
     conf.check_doxygen(mandatory=False)
 
-    conf.check_boost(lib='system test iostreams filesystem thread date_time regex')
+    conf.check_boost(lib='system test iostreams filesystem thread date_time regex program_options')
 
     boost_version = conf.env.BOOST_VERSION.split('_')
     if int(boost_version[0]) < 1 or int(boost_version[1]) < 46:
@@ -120,6 +120,18 @@ def build (bld):
           includes = ".",
           install_prefix = None,
           )
+
+    ndn_key_gen = bld.program (
+        target = "ndn-keygen",
+        features = "cxx cxxprogram",
+        defines = "WAF",
+        source = bld.path.ant_glob(['security-tool/ndn-keygen.cc']),
+        use = ' LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
+        includes = ".",
+        install_prefix = None,
+        )
+
+
 
     headers = bld.path.ant_glob(['ndn.cxx.h', 'ndn.cxx/**/*.h'])
     bld.install_files("%s" % bld.env['INCLUDEDIR'], headers, relative_trick=True)

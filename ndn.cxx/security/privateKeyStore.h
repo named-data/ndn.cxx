@@ -17,6 +17,7 @@
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
+#include "ndn.cxx/data.h"
 
 
 using namespace std;
@@ -57,7 +58,12 @@ namespace security
      * @param outputDir the output directory
      * @returns true if export succeeds
      */
-    virtual bool ExportPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat, string outputDir) = 0;
+    virtual bool ExportPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat, string outputDir, bool pem) = 0;
+
+    /**
+     *
+     */
+    virtual Ptr<Blob> GetPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat = KEY_PUBLIC_OPENSSL, bool pem = false) = 0;
 
     /**
      * @brief sign data
@@ -75,6 +81,11 @@ namespace security
      */
     virtual Ptr<Blob> Decrypt(string keyName, Ptr<Blob> pData) = 0;
 
+
+    virtual Ptr<Blob> SignData(const Data & data, string keyName, KeyType, DigestAlgorithm digestAlgo) = 0;
+
+    virtual Ptr<Blob> PublicKeyDigest(string keyName, KeyType keyType, KeyFormat keyFormat, DigestAlgorithm digestAlgo) = 0;
+
     //TODO Symmetrical key stuff.
     /**
      * @brief generate a symmetric keys
@@ -84,6 +95,8 @@ namespace security
      * @returns true if key have been successfully generated
      */
     virtual bool GenerateKey(string keyName, KeyType keyType, int keySize) = 0;
+
+
 
   private:
 
