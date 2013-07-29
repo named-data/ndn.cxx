@@ -1,0 +1,75 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
+/*
+ * Copyright (c) 2013, Regents of the University of California
+ *                     Yingdi Yu
+ *
+ * BSD license, See the LICENSE file for more information
+ *
+ * Author: Yingdi Yu <yingdi@cs.ucla.edu>
+ */
+
+#include "ndn.cxx/security/sql-identity-db.h"
+
+#include "logging.h"
+
+INIT_LOGGER ("SQL.IDENTITY.DB");
+
+
+namespace ndn
+{
+
+namespace security
+{
+  const std::string INIT_DATABASE_CREATE_ID_TABLE = "\
+    CREATE TABLE IF NOT EXISTS                                          \n \
+        Key(                                                            \n \
+            identity_name    TEXT NOT NULL,                             \n \
+            key_identitier   TEXT NOT NULL,                             \n \
+            name_in_keystore BLOB NOT NULL,                             \n \
+            public_key_hash  BLOB NOT NULL,                             \n \
+            create_timestamp TEXT,                                      \n \
+            active           INTEGER NOT NULL,                          \n \
+                                                                        \
+            PRIMARY KEY (identity_name, key_identitier)                 \n \
+        );                                                              \n \
+    CREATE INDEX idName ON File(identity_name);                         \n \
+    CREATE INDEX keyHash ON File(public_key_hash);                      \n \
+    ";
+  
+  const std::string INIT_DATABASE_CREATE_CERT_TABLE = "\
+    CREATE TABLE IF NOT EXISTS                                          \n \
+        Cetificate(                                                     \n \
+            public_key_hash  BLOB NOT NULL,                             \n \
+            cert_name        BLOB NOT NULL,                             \n \
+            cert_seq         INTEGER NOT NULL,                          \n \
+            cert_type        TEXT NOT NULL,                             \n \
+            cert_signer      BLOB NOT NULL,                             \n \
+            notBefore        TEXT,                                      \n \
+            notAfter         TEXT,                                      \n \
+            cert_data        BLOB,                                      \n \
+            expire           TEXT,                                      \n \
+                                                                        \
+            PRIMARY KEY (cert_name, cert_seq)                           \n \
+        );                                                              \n \
+    CREATE INDEX certName ON File(cert_name);                           \n \
+    CREATE INDEX keyHash ON File(public_key_hash);                      \n \
+    ";
+
+
+  SQLIdentityDB::SQLIdentityDB(const fs::path &folder)
+  {
+    fs::path dbFile = folder / "identity.db";
+
+    _LOG_DEBUG ("Open " << dbFile);
+    int res = sqlite3_open(dbFile.c_str (), &m_db);
+
+    if ()
+
+    
+    
+  }
+
+
+}//security
+
+}//ndn
