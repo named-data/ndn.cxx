@@ -8,15 +8,8 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-
-#ifndef NDN_SQL_IDENTITY_DB_H
-#define NDN_SQL_IDENTITY_DB_H
-
-#include <sqlite3.h>
-#include <boost/filesystem.hpp>
-
-#include "ndn.cxx/security/identity-db.h"
-
+#ifndef NDN_CERTIFICATE_CACHE_H
+#define NDN_CERTIFICATE_CACHE_H
 
 namespace ndn
 {
@@ -24,16 +17,15 @@ namespace ndn
 namespace security
 {
 
-  class SQLIdentityDB : public IdentityDB
+  class CertificateCache
   {
   public:
-    SQLIdentityDB(const boost::filesystem::path &folder );
-
+    CertificateCache();
+    
+    virtual bool CheckCertificate(const Name & certName) = 0;
   private:
-    sqlite3 *m_db;
-  }
-
-}//security
+  };
+}
 
 }//ndn
 

@@ -31,22 +31,23 @@ namespace security
   {
     DERendec endec;
 
-    Ptr<vector<Ptr<Blob> > > items = endec.DecodeSequenceDER(blob);
+    Ptr<vector<Ptr<Blob> > > items = endec.decodeSequenceDER(blob);
     
     m_oid = Ptr<OID>(new OID(*(items->at(0))));
-    m_value = *(endec.DecodePrintableStringDER(*(items->at(1))));
+    m_value = *(endec.decodePrintableStringDER(*(items->at(1))));
   }
 
-  Ptr<Blob> CertificateSubDescrypt::ToDER()
+  Ptr<Blob> 
+  CertificateSubDescrypt::toDER()
   {
     DERendec encoder;
 
     vector<Ptr<Blob> > seq;
 
-    seq.push_back(m_oid->ToDER());
-    seq.push_back(encoder.EncodePrintableStringDER(m_value));
+    seq.push_back(m_oid->toDER());
+    seq.push_back(encoder.encodePrintableStringDER(m_value));
 
-    return encoder.EncodeSequenceDER(seq);
+    return encoder.encodeSequenceDER(seq);
   }
 
 }//ndn

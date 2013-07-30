@@ -26,11 +26,11 @@ namespace regex
       m_exact(exact)
   {
     _LOG_DEBUG ("Enter RegexComponent Constructor: " << m_expr);
-    if(!Compile())
+    if(!compile())
       throw RegexException("RegexComponent Constructor: Cannot compile the regex");
   }
 
-  bool RegexComponent::Match(Name name, const int & offset, const int & len)
+  bool RegexComponent::match(Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexComponent::Match: ");
     _LOG_DEBUG ("name : "<< name << " offset : " << offset << " len: " << len);

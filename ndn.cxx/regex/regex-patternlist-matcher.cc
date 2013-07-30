@@ -26,11 +26,12 @@ namespace regex
     :RegexMatcher(expr, EXPR_PATTERNLIST, backRefManager)
   {
     _LOG_DEBUG ("Enter RegexPatternListMatcher Constructor: " << m_expr);
-    if(!Compile())
+    if(!compile())
       throw RegexException("RegexPatternListMatcher Constructor: Cannot compile the regex");
   }
   
-  bool RegexPatternListMatcher::Compile()
+  bool 
+  RegexPatternListMatcher::compile()
   {
     _LOG_DEBUG ("Enter RegexPatternListMatcher::Compile()");
 
@@ -41,14 +42,15 @@ namespace regex
     while(index < len){
       subHead = index;
 
-      if(!ExtractPattern(subHead, &index))
+      if(!extractPattern(subHead, &index))
 	return false;
     }
     return true;
 
   }
 
-  bool RegexPatternListMatcher::ExtractPattern(int index, int* next)
+  bool 
+  RegexPatternListMatcher::extractPattern(int index, int* next)
   {
     _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractPattern()");
 
@@ -64,17 +66,17 @@ namespace regex
     switch(m_expr[index]){
     case '(':
       index++;
-      index = ExtractSubPattern('(', ')', index);
+      index = extractSubPattern('(', ')', index);
       indicator = index;
-      end = ExtractRepetition(index);
+      end = extractRepetition(index);
       break;
       
 
     case '<':
       index++;
-      index = ExtractSubPattern('<', '>', index);
+      index = extractSubPattern('<', '>', index);
       indicator = index;
-      end = ExtractRepetition(index);
+      end = extractRepetition(index);
       _LOG_DEBUG ("start: " << start << " end: " << end << " indicator: " << indicator);
       break;
 
@@ -91,7 +93,8 @@ namespace regex
     return true;
   }
   
-  int RegexPatternListMatcher::ExtractSubPattern(const char left, const char right, int index)
+  int 
+  RegexPatternListMatcher::extractSubPattern(const char left, const char right, int index)
   {
     _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractSubPattern()");
 
@@ -114,7 +117,8 @@ namespace regex
     return index;
   }
 
-  int RegexPatternListMatcher::ExtractRepetition(int index)
+  int 
+  RegexPatternListMatcher::extractRepetition(int index)
   {
     _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractRepetition()");
 

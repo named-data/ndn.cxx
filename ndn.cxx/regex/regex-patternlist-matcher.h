@@ -30,14 +30,17 @@ namespace regex
     virtual ~RegexPatternListMatcher(){};
 
   protected:    
-    virtual bool Compile();
+    virtual bool compile();
 
   private:
-    bool ExtractPattern(int index, int* next);
+    bool 
+    extractPattern(int index, int* next);
     
-    int ExtractSubPattern(const char left, const char right, int index);
+    int 
+    extractSubPattern(const char left, const char right, int index);
     
-    int ExtractRepetition(int index);
+    int 
+    extractRepetition(int index);
 
   private:
 

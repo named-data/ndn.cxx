@@ -33,20 +33,20 @@ namespace regex
      * @param offset starting index of matching
      * @param len number of components to be matched
      */
-    virtual bool Match(Name name, const int & offset, const int & len);
+    virtual bool match(Name name, const int & offset, const int & len);
 
   protected:
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool Compile();
+    virtual bool compile();
 
 
   private:
-    bool ParseRepetition();
+    bool parseRepetition();
 
-    bool RecursiveMatch(RegexMatcher* matcher,
+    bool recursiveMatch(RegexMatcher* matcher,
                         int repeat,
                         Name name,
                         const int & offset,

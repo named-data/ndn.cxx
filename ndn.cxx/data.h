@@ -11,6 +11,8 @@
 #ifndef NDN_DATA_H
 #define NDN_DATA_H
 
+
+
 #include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/fields/content.h"
 #include "ndn.cxx/fields/signature.h"
@@ -123,6 +125,17 @@ public:
    */
   inline Blob &
   content ();
+  
+  /**
+   * @brief method to generate unsigned version of file
+   *
+   * Added temporarily by Yingdi for security library, may be changed.
+   */
+  const Ptr<Blob>
+  toUnsignedWire () const
+  { 
+    return NULL;
+  }
 
 private:
   Name m_name;

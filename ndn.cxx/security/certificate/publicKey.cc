@@ -11,12 +11,12 @@
 #include <cryptopp/sha.h>
 
 #include "ndn.cxx/security/exception.h"
-#include "publicKey.h"
+#include "publickey.h"
 #include "der.h"
 
 #include "logging.h"
 
-INIT_LOGGER ("PublicKey");
+INIT_LOGGER ("Publickey");
 
 using namespace std;
 
@@ -26,22 +26,22 @@ namespace ndn
 namespace security
 {
 
-  PublicKey::PublicKey(const Blob & blob, bool pem)
+  Publickey::Publickey(const Blob & blob, bool pem)
   {
     bool res = false;
     m_key = Ptr<Blob>(new Blob(blob.buf(), blob.size()));
 
     if(pem)
-      res = FromPEM(blob);
+      res = fromPEM(blob);
     else
-      res = FromDER(blob);
+      res = fromDER(blob);
 
     if(!res){
       throw SecException("public key is not created!");
     }
   }
 
-  Ptr<Blob> PublicKey::GetDigest()
+  Ptr<Blob> Publickey::getDigest()
   {
     CryptoPP::SHA256 hash;
     byte digest[CryptoPP::SHA256::DIGESTSIZE];
@@ -51,19 +51,19 @@ namespace security
     return Ptr<Blob>( new Blob (digest, CryptoPP::SHA256::DIGESTSIZE));
   }
 
-  bool PublicKey::FromDER(const Blob & blob)
+  bool Publickey::fromDER(const Blob & blob)
   {
     DERendec endec;
-    Ptr<vector<Ptr<Blob> > > sequence = endec.DecodeSequenceDER(blob);
+    Ptr<vector<Ptr<Blob> > > sequence = endec.decodeSequenceDER(blob);
 
-    m_algorithm = Ptr<OID>(new OID(*endec.DecodeSequenceDER(*sequence->at(0))->at(0)));
+    m_algorithm = Ptr<OID>(new OID(*endec.decodeSequenceDER(*sequence->at(0))->at(0)));
       
     m_keyBits = sequence->at(1);
     
     return true;
   }
     
-  bool PublicKey::FromPEM(const Blob & blob)
+  bool Publickey::fromPEM(const Blob & blob)
   {
     //TODO:
     _LOG_DEBUG("PEM format is not supported yet!");

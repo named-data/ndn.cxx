@@ -30,7 +30,7 @@ namespace regex
     virtual ~RegexBackRefMatcher(){}
 
   protected:
-    virtual bool Compile();
+    virtual bool compile();
     
   private:
     int m_refNum;

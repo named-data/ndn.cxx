@@ -30,13 +30,13 @@ namespace regex
     
     virtual ~RegexBRManager(){}
     
-    virtual int PushRef(RegexMatcher* matcher);
+    virtual int pushRef(RegexMatcher* matcher);
     
-    virtual int PopRef();
+    virtual int popRef();
 
-    virtual int GetNum(){return m_backRefs.size();}
+    virtual int getNum(){return m_backRefs.size();}
     
-    virtual RegexMatcher* GetBackRef(int i){return m_backRefs[i];}
+    virtual RegexMatcher* getBackRef(int i){return m_backRefs[i];}
     
   private:
     vector<RegexMatcher*> m_backRefs;

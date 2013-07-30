@@ -29,11 +29,19 @@ namespace security
     
     CertificateSubDescrypt(const Blob & blob);
 
-    Ptr<Blob> ToDER();
+    Ptr<Blob> 
+    toDER();
 
-    string GetOid(){return m_oid->ToString();}
+    string 
+    getOidStr()
+    {
+      return m_oid->toString();
+    }
 
-    string GetValue(){return m_value;}
+    string getValue()
+    {
+      return m_value;
+    }
     
   private:
     Ptr<OID> m_oid;

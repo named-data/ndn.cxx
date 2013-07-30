@@ -12,12 +12,13 @@
 #define NDN_PRIVATEKEY_STORE_H
 
 #include <string>
-#include "ndn.cxx/security/pubkey.h"
 #include "ndn.cxx/security/security-common.h"
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/data.h"
+
+#include "certificate/publickey.h"
 
 
 using namespace std;
@@ -29,18 +30,18 @@ namespace ndn
 namespace security
 {
   
-  class PrivateKeyStore{
+  class PrivatekeyStore{
 
   public:
     /**
      * @brief constructor of PrivateKeyStore
      */
-    PrivateKeyStore() {};
+    PrivatekeyStore() {};
 
     /**
      * @brief destructor of PrivateKeyStore
      */    
-    virtual ~PrivateKeyStore() {};
+    virtual ~PrivatekeyStore() {};
 
     /**
      * @brief generate a pair of asymmetric keys
@@ -49,29 +50,21 @@ namespace security
      * @param keySize the size of the key pair
      * @returns true if keys have been successfully generated
      */
-    virtual bool GenerateKeyPair(string keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048) = 0;
-
-    /**
-     * @brief export public key
-     * @param keyName the name of the public key to be exported
-     * @param outputFormat the output format of key, e.g. PEM
-     * @param outputDir the output directory
-     * @returns true if export succeeds
-     */
-    virtual bool ExportPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat, string outputDir, bool pem) = 0;
+    virtual bool generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048) = 0;
 
     /**
      *
      */
-    virtual Ptr<Blob> GetPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat = KEY_PUBLIC_OPENSSL, bool pem = false) = 0;
+    virtual Ptr<Publickey> getPublickey(const string & keyName) = 0;
 
     /**
      * @brief sign data
      * @param keyName the name of the signing key
+     * @param digestAlgo the digest algorithm
      * @param pData the pointer to data
      * @returns signature, NULL if signing fails
      */
-    virtual Ptr<Blob> Sign(string keyName, KeyType keyType, DigestAlgorithm digestAlgo, Ptr<Blob> pData) = 0;
+    virtual Ptr<Blob> sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256) = 0;
     
     /**
      * @brief decrypt data
@@ -79,12 +72,8 @@ namespace security
      * @param pData the pointer to encrypted data
      * @returns decrypted data
      */
-    virtual Ptr<Blob> Decrypt(string keyName, Ptr<Blob> pData) = 0;
+    virtual Ptr<Blob> decrypt(const string & keyName, const Blob & pData) = 0;
 
-
-    virtual Ptr<Blob> SignData(const Data & data, string keyName, KeyType, DigestAlgorithm digestAlgo) = 0;
-
-    virtual Ptr<Blob> PublicKeyDigest(string keyName, KeyType keyType, KeyFormat keyFormat, DigestAlgorithm digestAlgo) = 0;
 
     //TODO Symmetrical key stuff.
     /**
@@ -94,7 +83,7 @@ namespace security
      * @param keySize the size of the key
      * @returns true if key have been successfully generated
      */
-    virtual bool GenerateKey(string keyName, KeyType keyType, int keySize) = 0;
+    virtual bool generateKey(const string & keyName, KeyType keyType, int keySize) = 0;
 
 
 

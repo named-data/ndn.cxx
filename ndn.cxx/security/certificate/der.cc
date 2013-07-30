@@ -14,11 +14,14 @@
 #include "der.h"
 #include "ndn.cxx/security/exception.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include "logging.h"
 
 INIT_LOGGER ("OSXPrivateKeyStore");
 
 using namespace std;
+
 
 namespace ndn
 {
@@ -31,19 +34,21 @@ namespace security
     m_littleEndian = (1 == *(char *)&i);
   }
 
-  Ptr<Blob> DERendec::EncodeStringDER(const Blob & str)
+  Ptr<Blob> 
+  DERendec::encodeStringDER(const Blob & str)
   {
-    return EncodeString(str, 0x04);
+    return encodeString(str, 0x04);
   }
 
-  Ptr<Blob> DERendec::DecodeStringDER(const Blob & blob)
+  Ptr<Blob> 
+  DERendec::decodeStringDER(const Blob & blob)
   {
     if(0x04 != blob[0])
-      throw SecException("Decode Octet String, Type mismatch");
+      throw SecException("decode Octet String, Type mismatch");
 
     int offset = 1;
 
-    int size = DecodeSize(blob, offset);
+    int size = decodeSize(blob, offset);
     
     Ptr<Blob> result = Ptr<Blob>::Create();
     result->insert(result->end(), blob.begin() + offset , blob.begin() + offset + size);
@@ -51,27 +56,30 @@ namespace security
     return result;
   }
 
-  Ptr<Blob> DERendec::EncodePrintableStringDER(const string & str)
+  Ptr<Blob> 
+  DERendec::encodePrintableStringDER(const string & str)
   {
-    return EncodeString(Blob(str.c_str(), str.size()), 0x13);
+    return encodeString(Blob(str.c_str(), str.size()), 0x13);
   }
     
-  Ptr<string> DERendec::DecodePrintableStringDER(const Blob & blob)
+  Ptr<string> 
+  DERendec::decodePrintableStringDER(const Blob & blob)
   {
     int offset = 0;
 
     if(0x13 != blob[offset])
-      throw SecException("Decode Printable String, Type mismatch");
+      throw SecException("decode Printable String, Type mismatch");
 
     offset++;
 
-    int size = DecodeSize(blob, offset);
+    int size = decodeSize(blob, offset);
 
     return Ptr<string>(new string(blob.begin() + offset, blob.begin() + offset + size));
   }
 
 
-  Ptr<Blob> DERendec::EncodeSize(int size)
+  Ptr<Blob> 
+  DERendec::encodeSize(int size)
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
     if(size >= 127){
@@ -96,7 +104,7 @@ namespace security
     return result;
   }
 
-  int DERendec::DecodeSize(const Blob & blob, int & offset)
+  int DERendec::decodeSize(const Blob & blob, int & offset)
   {
     uint8_t flagMask = 0x80;
 
@@ -117,13 +125,13 @@ namespace security
     }
   }
 
-  Ptr<Blob> DERendec::EncodeString(const Blob & str, int type)
+  Ptr<Blob> DERendec::encodeString(const Blob & str, int type)
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
     result->push_back(type);
 
     int size = str.size();
-    Ptr<Blob> lenBytes = EncodeSize(size);
+    Ptr<Blob> lenBytes = encodeSize(size);
 
     result->insert(result->end(), lenBytes->begin(), lenBytes->end());
     result->insert(result->end(), str.begin(), str.end());
@@ -131,24 +139,32 @@ namespace security
     return result;
   }
 
-  Ptr<Blob> DERendec::EncodeGTimeDER(const string & str)
+  Ptr<Blob> DERendec::encodeGTimeDER(const Time & time)
   {
-    return EncodeString(Blob(str.c_str(), str.size()), 0x18);
+    string pTimeStr = boost::posix_time::to_iso_string(time);
+    int index = pTimeStr.find_first_of('T');
+    string str = pTimeStr.substr(0, index) + pTimeStr.substr(index+1, pTimeStr.size() - index -1) + "Z";
+
+    return encodeString(Blob(str.c_str(), str.size()), 0x18);
   }
 
-  string DERendec::DecodeGTimeDER(const Blob & blob)
+  Time DERendec::decodeGTimeDER(const Blob & blob)
   {
     if(0x18 != blob[0])
-      throw SecException("Decode GeneralizeTime, Type mismatch");
+      throw SecException("decode GeneralizeTime, Type mismatch");
 
     int offset = 1;
 
-    int size = DecodeSize(blob, offset);
+    int size = decodeSize(blob, offset);
 
-    return string(blob.begin() + offset , blob.begin() + offset + size);
+    string str(blob.begin() + offset , blob.begin() + offset + size);
+    if(15 != str.size())
+      throw SecException("Wrong Time Length!");
+    
+    return boost::posix_time::from_iso_string(str.substr(0, 8) + "T" + str.substr(8, 6));
   }
 
-  Ptr<Blob> DERendec::EncodeInteger128(int i)
+  Ptr<Blob> DERendec::encodeInteger128(int i)
   {
     Ptr<Blob> result =  Ptr<Blob>::Create();
     
@@ -176,7 +192,7 @@ namespace security
     return result;
   }
 
-  int DERendec::DecodeInteger128(const Blob & blob, int & offset)
+  int DERendec::decodeInteger128(const Blob & blob, int & offset)
   {
     uint8_t flagMask = 0x80;
     int result = 0;
@@ -191,7 +207,7 @@ namespace security
     return result;
   }
 
-  Ptr<Blob> DERendec::EncodeInteger32bDER(int32_t i)
+  Ptr<Blob> DERendec::encodeInteger32bDER(int32_t i)
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
     result->push_back(2);
@@ -246,12 +262,12 @@ namespace security
 
   }
 
-  Ptr<Blob> DERendec::EncodeIntegerDER(const Blob & blob)
+  Ptr<Blob> DERendec::encodeIntegerDER(const Blob & blob)
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
     result->push_back(0x02);
 
-    Ptr<Blob> lenPtr = EncodeSize(blob.size());
+    Ptr<Blob> lenPtr = encodeSize(blob.size());
 
     result->insert(result->end(), lenPtr->begin(), lenPtr->end());
     result->insert(result->end(), blob.begin(), blob.end());
@@ -259,16 +275,16 @@ namespace security
     return result;
   }
 
-  Ptr<Blob> DERendec::DecodeIntegerDER(const Blob & blob)
+  Ptr<Blob> DERendec::decodeIntegerDER(const Blob & blob)
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
     int offset = 0;
     if(0x02 != blob[offset])
-      throw SecException("Decode Integer, Type mismatch");
+      throw SecException("decode Integer, Type mismatch");
 
     offset++;
 
-    int size = DecodeSize(blob, offset);
+    int size = decodeSize(blob, offset);
 
     result->insert(result->end(), blob.begin() + offset, blob.begin() + offset + size);
     
@@ -277,7 +293,7 @@ namespace security
     return result;
   }
 
-  Ptr<Blob> DERendec::EncodeSequenceDER(vector<Ptr<Blob> > & components)
+  Ptr<Blob> DERendec::encodeSequenceDER(vector<Ptr<Blob> > & components)
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
 
@@ -288,7 +304,7 @@ namespace security
     for(; it < components.end(); it++)
       size += (*it)->size();
 
-    Ptr<Blob> lenBytes = EncodeSize(size);
+    Ptr<Blob> lenBytes = encodeSize(size);
 
     result->insert(result->end(), lenBytes->begin(), lenBytes->end());
 
@@ -299,17 +315,17 @@ namespace security
     return result;
   }
 
-  Ptr<vector<Ptr<Blob> > > DERendec::DecodeSequenceDER(const Blob & blob)
+  Ptr<vector<Ptr<Blob> > > DERendec::decodeSequenceDER(const Blob & blob)
   {
     Ptr<vector<Ptr<Blob> > > blobList = Ptr<vector<Ptr<Blob> > >::Create();
     int offset = 0;
 
     if(0x30 != blob[offset])
-      throw SecException("Decode Sequence, Type mismatch");
+      throw SecException("decode Sequence, Type mismatch");
     
     offset++;
 
-    int size = DecodeSize(blob, offset);
+    int size = decodeSize(blob, offset);
     int end = offset + size;
     int tmpSize = 0;
     int begin = 0;
@@ -318,7 +334,7 @@ namespace security
       begin = offset;
       offset++;
  
-      tmpSize = DecodeSize(blob, offset);
+      tmpSize = decodeSize(blob, offset);
       
       Ptr<Blob> item = Ptr<Blob>::Create();      
       item->insert(item->end(), blob.begin() + begin, blob.end() + offset + tmpSize);
@@ -330,13 +346,13 @@ namespace security
     return blobList;
   }
 
-  Ptr<Blob> DERendec::EncodeBitStringDER(const Blob & bits, int paddingLen)
+  Ptr<Blob> DERendec::encodeBitStringDER(const Blob & bits, int paddingLen)
   {
     Ptr<Blob> result =  Ptr<Blob>::Create();
     
     result->push_back(0x03);
 
-    Ptr<Blob> lenBytes = EncodeSize(bits.size()+1);
+    Ptr<Blob> lenBytes = encodeSize(bits.size()+1);
     result->insert(result->end(), lenBytes->begin(), lenBytes->end());
 
     result->push_back(paddingLen);
@@ -346,17 +362,17 @@ namespace security
     return result;
   }
 
-  Ptr<Blob> DERendec::DecodeBitStringDER(const Blob & blob, int & paddingLen)
+  Ptr<Blob> DERendec::decodeBitStringDER(const Blob & blob, int & paddingLen)
   {
     int offset = 0;
     if(0x03 != blob[offset])
-      throw SecException("Decode Bit String, Type mismatch");
+      throw SecException("decode Bit String, Type mismatch");
 
     offset++;
     
     Ptr<Blob> result = Ptr<Blob>::Create();
     
-    int size = DecodeSize(blob, offset);
+    int size = decodeSize(blob, offset);
 
     paddingLen = blob.at(offset);
 
@@ -369,7 +385,7 @@ namespace security
     return result;
   }
 
-  Ptr<Blob> DERendec::EncodeBoolDER(bool b)
+  Ptr<Blob> DERendec::encodeBoolDER(bool b)
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
     result->push_back(1);
@@ -382,16 +398,16 @@ namespace security
     return result;
   }
 
-  bool DERendec::DecodeBoolDER(const Blob & blob)
+  bool DERendec::decodeBoolDER(const Blob & blob)
   {
     int offset = 0;
 
     if(0x01 != blob[offset])
-      throw SecException("Decode Boolean, Type mismatch");
+      throw SecException("decode Boolean, Type mismatch");
     offset++;
 
     if(0x01 != blob[offset])
-      throw SecException("Decode Boolean, Wrong size");
+      throw SecException("decode Boolean, Wrong size");
     offset++;
 
     if(0 == blob[offset]){
@@ -404,7 +420,7 @@ namespace security
     }
   }
 
-  Ptr<Blob> DERendec::EncodeNULLDER()
+  Ptr<Blob> DERendec::encodeNULLDER()
   {
     Ptr<Blob> result = Ptr<Blob>::Create();
     result->push_back(0x05);
@@ -412,19 +428,19 @@ namespace security
     return result;
   }
 
-  void DERendec::DecodeNULLDER(const Blob & blob)
+  void DERendec::decodeNULLDER(const Blob & blob)
   {
     int offset = 0;
     if(0x05 != blob[offset])
-      throw SecException("Decode Boolean, Type mismatch");
+      throw SecException("decode Boolean, Type mismatch");
     offset++;
 
     if(0x05 != blob[offset])
-      throw SecException("Decode Boolean, Wrong size");
+      throw SecException("decode Boolean, Wrong size");
     offset++;
   }
 
-  void DERendec::PrintBlob(const Blob & p, string indent)
+  void DERendec::printBlob(const Blob & p, string indent)
   {
     Blob::const_iterator it = p.begin();
     cout << indent;
@@ -441,17 +457,17 @@ namespace security
     cout << endl;
   }
 
-  void DERendec::PrintDecoded(const Blob & blob, string indent, int offset)
+  void DERendec::printDecoded(const Blob & blob, string indent, int offset)
   {
     int begin = offset;
     cout << indent << hex << setw(2) << setfill('0') << (int)(uint8_t)blob[offset];
 
     offset++;
-    int size = DecodeSize(blob, offset);
+    int size = decodeSize(blob, offset);
 
     Blob sizeBlob;
     sizeBlob.insert(sizeBlob.end(), blob.begin() + begin + 1, blob.begin() + offset);
-    PrintBlob(sizeBlob, "");
+    printBlob(sizeBlob, "");
     
     if(0x30 != blob[begin]){
       Blob dataBlob;
@@ -459,16 +475,16 @@ namespace security
       if(0x03 == blob[begin]){
 	cout << (indent + "   ") << hex << setw(2) << setfill('0') << (int)(uint8_t)dataBlob[0] << endl;
 	dataBlob.erase(dataBlob.begin());
-	PrintDecoded(dataBlob, indent + "   ", 0);
+	printDecoded(dataBlob, indent + "   ", 0);
       }
       else
-      PrintBlob(dataBlob, indent + " | ");      
+      printBlob(dataBlob, indent + " | ");      
     }
     else{
-      Ptr<vector<Ptr<Blob> > > blobList = DecodeSequenceDER(blob);
+      Ptr<vector<Ptr<Blob> > > blobList = decodeSequenceDER(blob);
       int i = 0;
       for(; i < blobList->size(); i++){
-    	PrintDecoded(*blobList->at(i), indent + " | ", 0);
+    	printDecoded(*blobList->at(i), indent + " | ", 0);
       }
     }
   }

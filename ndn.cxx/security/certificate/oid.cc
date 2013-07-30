@@ -54,13 +54,13 @@ namespace security
   OID::OID(const Blob & blob)
   {
     if(0x06 != blob[0])
-      throw SecException("Decode Object Identifier, Type mismatch");
+      throw SecException("decode Object Identifier, Type mismatch");
 
     DERendec endec;
 
     int offset = 1;
 
-    int size = endec.DecodeSize(blob, offset);
+    int size = endec.decodeSize(blob, offset);
     int end = offset + size;
 
     int first = blob[offset];
@@ -71,11 +71,11 @@ namespace security
     offset++;
     
     while(offset < end){
-      m_oid.push_back(endec.DecodeInteger128(blob, offset));
+      m_oid.push_back(endec.decodeInteger128(blob, offset));
     }
   }
 
-  Ptr<Blob> OID::ToDER()
+  Ptr<Blob> OID::toDER()
   {
     DERendec endec;
     Ptr<Blob> result = Ptr<Blob>::Create();
@@ -102,19 +102,19 @@ namespace security
 
     Ptr<Blob> tmpResult = Ptr<Blob>::Create();
 
-    Ptr<Blob> dataPtr = endec.EncodeInteger128(data);
+    Ptr<Blob> dataPtr = endec.encodeInteger128(data);
 
     tmpResult->insert(tmpResult->end(), dataPtr->begin(), dataPtr->end());
 
     if(m_oid.size() > 2){
       int i = 2;
       for(; i < m_oid.size(); i++){
-	dataPtr = endec.EncodeInteger128(m_oid[i]);
+	dataPtr = endec.encodeInteger128(m_oid[i]);
 	tmpResult->insert(tmpResult->end(), dataPtr->begin(), dataPtr->end());
       }
     }
 
-    Ptr<Blob> lenPtr = endec.EncodeSize(tmpResult->size());
+    Ptr<Blob> lenPtr = endec.encodeSize(tmpResult->size());
 
     result->insert(result->end(), lenPtr->begin(), lenPtr->end());
     result->insert(result->end(), tmpResult->begin(), tmpResult->end());
@@ -122,7 +122,7 @@ namespace security
     return result;
   }
 
-  string OID::ToString()
+  string OID::toString()
   {
     ostringstream convert;
     vector<int>::iterator it = m_oid.begin();
@@ -134,7 +134,7 @@ namespace security
     return convert.str();
   }
 
-  bool OID::Equal(const OID & oid)
+  bool OID::equal(const OID & oid)
   {
     vector<int>::const_iterator i = m_oid.begin();
     vector<int>::const_iterator j = oid.m_oid.begin();
@@ -153,12 +153,12 @@ namespace security
 
   bool OID::operator == (const OID & oid)
   {
-    return Equal(oid);
+    return equal(oid);
   }
 
   bool OID::operator != (const OID & oid)
   {
-    return !Equal(oid);
+    return !equal(oid);
   }
 
 }//security

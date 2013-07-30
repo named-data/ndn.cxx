@@ -17,7 +17,8 @@
 #include <Security/Security.h>
 #include <CoreServices/CoreServices.h>
 
-#include "ndn.cxx/security/privateKeyStore.h"
+#include "ndn.cxx/security/privatekey-store.h"
+
 
 using namespace std;
 using namespace ndn;
@@ -27,20 +28,20 @@ namespace ndn
 
 namespace security
 {
-  class OSXPrivateKeyStore : public PrivateKeyStore
+  class OSXPrivatekeyStore : public PrivatekeyStore
   {
   public:
 
     /**
-     * @brief constructor of OSXPrivateKeyStore
+     * @brief constructor of OSXPrivatekeyStore
      * @param keychainName the name of keychain
      */
-    OSXPrivateKeyStore(string keychainName = "");
+    OSXPrivatekeyStore(const string & keychainName = "");
 
     /**
      * @brief destructor of OSXPrivateKeyStore
      */    
-    virtual ~OSXPrivateKeyStore();
+    virtual ~OSXPrivatekeyStore();
 
     /**
      * @brief generate a pair of asymmetric keys
@@ -49,26 +50,23 @@ namespace security
      * @param keySize the size of the key pair
      * @returns true if keys have been successfully generated
      */
-    virtual bool GenerateKeyPair(string keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+    virtual bool generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 
     /**
-     * @brief export public key
-     * @param keyName the name of the public key to be exported
-     * @param outputFormat the output format of key, e.g. PEM
-     * @param outputDir the output directory
-     * @returns true if export succeeds
+     * @brief get public key by key name
+     * @param keyName the name of the key pair
+     * @returns public key
      */
-    virtual bool ExportPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat, string outputDir, bool pem);
-
-    virtual Ptr<Blob> GetPublicKey(string keyName, KeyType keyType, KeyFormat keyFormat = KEY_PUBLIC_OPENSSL, bool pem = false);
+    virtual Ptr<Publickey> getPublickey(const string & keyName);
 
     /**
      * @brief sign data
      * @param keyName the name of the signing key
+     * @param digestAlgo the digest algorithm
      * @param pData the pointer to data
      * @returns signature, NULL if signing fails
      */
-    virtual Ptr<Blob> Sign(string keyName, KeyType keyType, DigestAlgorithm digestAlgo, Ptr<Blob> pData);
+    virtual Ptr<Blob> sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256);
     
     /**
      * @brief decrypt data
@@ -76,7 +74,7 @@ namespace security
      * @param pData the pointer to encrypted data
      * @returns decrypted data
      */
-    virtual Ptr<Blob> Decrypt(string keyName, Ptr<Blob> pData);
+    virtual Ptr<Blob> decrypt(const string & keyName, const Blob & pData);
 
     //TODO Symmetrical key stuff.
     /**
@@ -86,7 +84,7 @@ namespace security
      * @param keySize the size of the key
      * @returns true if key have been successfully generated
      */
-    virtual bool GenerateKey(string keyName, KeyType keyType, int keySize);
+    virtual bool generateKey(const string & keyName, KeyType keyType, int keySize);
 
     /**
      * @brief configure ACL of a particular key
@@ -96,18 +94,11 @@ namespace security
      * @param acl the new acl of the key
      * @returns true if setting succeeds
      */
-    bool SetACL(string keyName, KeyType keyType, KeyClass keyClass, int acl, string appPath);
+    bool setACL (const string & keyName, KeyClass keyClass, int acl, const string & appPath);
 
-    virtual Ptr<Blob> SignData(const Data & data, string keyName, KeyType, DigestAlgorithm digestAlgo);
+    bool verifyData (const string & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo = DIGEST_SHA256);
 
-    virtual Ptr<Blob> PublicKeyDigest(string keyName, KeyType keyType, KeyFormat keyFormat, DigestAlgorithm digestAlgo);
-
-    //Test
-    bool Verify(string keyName, KeyType keyType, DigestAlgorithm digestAlgo, Ptr<Blob> pData, Ptr<Blob>pSig);
-
-    Ptr<Blob> Encrypt(string keyName, Ptr<Blob> pData);
-
-    void TestDigest();
+    Ptr<Blob> encrypt (const string & keyName, const Blob & pData);
 
   private:
     /**
@@ -116,46 +107,45 @@ namespace security
      * @param keyClass the class of the key, e.g. Private Key
      * @returns true if the keyname exists
      */
-    bool NameExists(string keyName, KeyClass keyClass);
+    bool doesNameExist(string keyName, KeyClass keyClass);
 
     /**
-     * @brief fetch key
+     * @brief Get key
      * @param keyName the name of the key
-     * @param keyType the type of the key
      * @param keyClass the class of the key
      * @returns pointer to the key
      */
-    SecKeychainItemRef FetchKey(string keyName, KeyType keyType, KeyClass keyClass);
+    SecKeychainItemRef getKey(string keyName, KeyClass keyClass);
       
     /**
      * @brief convert keyType to MAC OS key type
      * @param keyType
      * @returns MAC OS key type
      */
-    const CFTypeRef GetKeyType(KeyType keyType);
+    const CFTypeRef getKeyType(KeyType keyType);
 
     /**
      * @brief convert keyClass to MAC OS key class
      * @param keyClass
      * @returns MAC OS key class
      */
-    const CFTypeRef GetKeyClass(KeyClass keyClass);
+    const CFTypeRef getKeyClass(KeyClass keyClass);
 
     /**
      * @brief convert digestAlgo to MAC OS algorithm id
      * @param digestAlgo
      * @returns MAC OS algorithm id
      */
-    const CFStringRef GetDigestAlgorithm(DigestAlgorithm digestAlgo);
+    const CFStringRef getDigestAlgorithm(DigestAlgorithm digestAlgo);
 
      /**
      * @brief convert format to MAC OS key format
      * @param format
      * @returns MAC OS keyformat
      */
-    SecExternalFormat GetFormat(KeyFormat format);
+    SecExternalFormat getFormat(KeyFormat format);
 
-    long GetDigestSize(DigestAlgorithm digestAlgo);
+    long getDigestSize(DigestAlgorithm digestAlgo);
 
   private:
     const string m_keychainName;

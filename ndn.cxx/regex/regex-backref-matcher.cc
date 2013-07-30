@@ -28,11 +28,11 @@ namespace regex
     : RegexMatcher (expr, EXPR_BACKREF, backRefManager)
   {
     _LOG_DEBUG ("Enter RegexBackRefMatcher Constructor: " << m_expr);
-    if(!Compile())
+    if(!compile())
       throw RegexException("RegexBackRefMatcher Constructor: Cannot compile the regex");
   }
 
-  bool RegexBackRefMatcher::Compile()
+  bool RegexBackRefMatcher::compile()
   {
     _LOG_DEBUG ("Enter RegexBackRefMatcher::Compile()");
 
@@ -42,7 +42,7 @@ namespace regex
 
     int lastIndex = m_expr.size() - 1;
     if('(' == m_expr[0] && ')' == m_expr[lastIndex]){
-      m_backRefManager->PushRef(this);
+      m_backRefManager->pushRef(this);
 
       RegexMatcher* matcher = new RegexPatternListMatcher(m_expr.substr(1, lastIndex - 1), m_backRefManager);
       m_matcherList.push_back(matcher);

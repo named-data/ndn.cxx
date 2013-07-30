@@ -8,26 +8,29 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_POLICY_MANAGER_H
-#define NDN_POLICY_MANAGER_H
+
+#ifndef NDN_POLICY_H
+#define NDN_POLICY_H
+
+#include "ndn.cxx/data.h"
 
 namespace ndn
 {
 
 namespace security
 {
-  class PolicyManager
+
+  class Policy
   {
+    enum PolicyType{
+      IDENTITY_POLICY,
+    };
+
   public:
-    PolicyManager();
-
-    virtual bool SetSigningPolicy(const string & policy) = 0;
-
-    virtual bool SetVerificationPolicy(const string & policy) = 0;
-
-    virtual bool CheckPolicy(const Name & dataName, const Name & certName) = 0;
-
+    virtual bool Match(const Data & data) = 0;
+    
   private:
+    PolicyType m_type;
   };
 
 }//security

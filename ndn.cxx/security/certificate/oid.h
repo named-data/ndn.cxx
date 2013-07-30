@@ -33,16 +33,16 @@ namespace security
 
     OID(const Blob & blob); //For DER
 
-    string ToString();
+    string toString();
 
-    Ptr<Blob> ToDER();
+    Ptr<Blob> toDER();
 
     bool operator == (const OID & oid);
 
     bool operator != (const OID & oid);
 
   private:
-    bool Equal(const OID & oid);
+    bool equal(const OID & oid);
 
   private:
     vector<int> m_oid;

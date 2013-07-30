@@ -66,15 +66,15 @@ namespace regex
      * @param len the number of components to be matched
      * @returns true if match succeeds
      */
-    virtual bool Match(Name name, const int & offset, const int & len);
+    virtual bool match(Name name, const int & offset, const int & len);
     
     /**
      * @brief get the matched name components
      * @returns the matched name components
      */
-    Name GetMatchResult(){return m_matchResult;}
+    Name getMatchResult(){return m_matchResult;}
 
-    string GetExpr(){return m_expr;} 
+    string getExpr(){return m_expr;} 
 
   protected:
     const string m_expr;
@@ -88,7 +88,7 @@ namespace regex
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool Compile() = 0;
+    virtual bool compile() = 0;
 
   private:
     /**
@@ -98,7 +98,7 @@ namespace regex
      * @param len the number of components to be matched
      * @return true if matching succeeds
      */
-    bool RecursiveMatch(int mId, Name name, const int & offset, const int & len);
+    bool recursiveMatch(int mId, Name name, const int & offset, const int & len);
 
   };
 

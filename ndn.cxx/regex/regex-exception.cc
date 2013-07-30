@@ -26,7 +26,7 @@ namespace regex
   {
   }
 
-  string RegexException::GetMsg()
+  string RegexException::getMsg()
   { 
     return m_msg;
   }

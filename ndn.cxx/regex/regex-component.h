@@ -50,14 +50,14 @@ namespace regex
      * @param len number of components to be matched
      * @returns true if match succeeds
      */
-    virtual bool Match(Name name, const int & offset, const int & len = 1);
+    virtual bool match(Name name, const int & offset, const int & len = 1);
 
   protected:
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool Compile() {return true;}
+    virtual bool compile() {return true;}
     
   private:
     bool m_exact;

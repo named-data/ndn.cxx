@@ -20,17 +20,32 @@ namespace ndn
 
 namespace security
 {
-  class PublicKey
+  class Publickey
   {
   public:
-    PublicKey(const Blob & blob, bool pem);
+    Publickey(const Blob & blob, bool pem =false);
 
-    Ptr<Blob> GetDigest();
+    Ptr<Blob> 
+    getDigest();
+
+    Ptr<Blob> 
+    getKeyBlob()
+    { 
+      return m_key; 
+    }
+
+    const Ptr<Blob> 
+    getKeyBlob() const
+    {
+      return m_key; 
+    }
     
   private:
-    bool FromDER(const Blob & blob);
+    bool 
+    fromDER(const Blob & blob);
     
-    bool FromPEM(const Blob & blob);
+    bool 
+    fromPEM(const Blob & blob);
     
   private:
     Ptr<OID> m_algorithm; //Algorithm

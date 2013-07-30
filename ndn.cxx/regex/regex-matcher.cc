@@ -35,13 +35,14 @@ namespace regex
    * @param len number of components to be matched
    * @returns true if match succeeds
    */
-  bool RegexMatcher::Match(Name name, const int & offset, const int & len)
+  bool 
+  RegexMatcher::match(Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexMatcher::Match");
     _LOG_DEBUG ("size of matcher list: " << m_matcherList.size());
 
     m_matchResult = Name();
-    if(RecursiveMatch(0, name, offset, len)){
+    if(recursiveMatch(0, name, offset, len)){
       for (int i = 0; i < len ; i++)
         m_matchResult.append(name.get(offset+i));
       return true;
@@ -50,7 +51,8 @@ namespace regex
       return false;
   }
 
-  bool RegexMatcher::RecursiveMatch(int mId, Name name, const int & offset, const int & len)
+  bool 
+  RegexMatcher::recursiveMatch(int mId, Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexMatcher::RecursiveMatch");
 
@@ -66,7 +68,7 @@ namespace regex
     RegexMatcher * matcher = m_matcherList[mId];
 
     while(tried <= len){
-      if(matcher->Match(name, offset, tried) && RecursiveMatch(mId + 1, name, offset + tried, len - tried))
+      if(matcher->match(name, offset, tried) && recursiveMatch(mId + 1, name, offset + tried, len - tried))
         return true;      
       tried++;
     }

@@ -31,7 +31,9 @@ namespace security
     
     CertificateExtension(const Blob & blob);
 
-    Ptr<Blob> ToDER();
+    Ptr<Blob> 
+    toDER();
+
   private:
       
   private:

@@ -17,10 +17,17 @@
 #include "ndn.cxx/data.h"
 #include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/fields/blob.h"
-#include "ndn.cxx/security/privateKeyStore.h"
-#include "ndn.cxx/security/identity-db.h"
-#include "ndn.cxx/security/policyManager.h"
-#include "ndn.cxx/security/certificate/certificate-data.h"
+#include "ndn.cxx/fields/signature.h"
+
+#include "ndn.cxx/security/privatekey-store.h"
+#include "ndn.cxx/security/identity-storage.h"
+#include "ndn.cxx/security/cert-cache.h"
+
+#include "policy/policy-manager.h"
+#include "policy/policy.h"
+#include "certificate/certificate.h"
+
+
 
 using namespace std;
 
@@ -29,9 +36,17 @@ namespace ndn
 
 namespace security
 {
-  class KeyChain{
-  public:
-    KeyChain();
+  /**
+   * @brief Keychain class, the main class of security library
+   *
+   * Keychain provide a set of interfaces to the security libray,
+   * such as identity management, policy configuration, security
+   * transform (packet signing and verification, encryption and 
+   * decryption), and etc.
+   */
+  class Keychain{
+  public:    
+    Keychain(int maxStep = 100);
 
     /*****************************************
      *          Identity Management          *
@@ -42,17 +57,43 @@ namespace security
      * @param identity the name of the identity
      * @returns True if succeeds, False otherwise
      */
-    virtual bool CreateIdentity(const string & identity);
+    virtual bool createIdentity(const Name & identity);
 
     /**
      * @brief Generate a pair of asymmetric keys
      * @param identity the name of the identity
-     * @param keyID on return the identifier of the key 
+     * @param keyName on return the identifier of the key 
      * @param keyType the type of the key
      * @param keySize the size of the key
-     * @returns True if succeeds, False otherwise
+     * @returns pointer to the keyName, NULL if key generation fails
      */
-    virtual bool GenerateKeyPair(const string & identity, string & keyID, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+    virtual Name generateKeyPair(const Name & identity, const Name & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+
+    /**
+     * @brief Helper function to generate a pair of RSA keys
+     * @param identity the name of the identity
+     * @param keyName on return the identifier of the key 
+     * @param keySize the size of the key
+     * @returns pointer to the keyName, NULL if key generation fails
+     */
+    virtual Name generateRSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
+    {
+      return generateKeyPair(identity, keyName, KEY_TYPE_RSA, keySize); 
+    }
+
+    /**
+     * @brief Helper function to generate a pair of DSA keys
+     * @param identity the name of the identity
+     * @param keyName on return the identifier of the key 
+     * @param keySize the size of the key
+     * @returns pointer to the keyName, NULL if key generation fails
+     */
+    virtual Name generateDSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
+    {
+      return generateKeyPair(identity, keyName, KEY_TYPE_DSA, keySize); 
+    }
+
+
 
     /**
      * @brief Create a public key signing request
@@ -62,16 +103,14 @@ namespace security
      * @param pem True if output is encoded as PEM, False if output is encoded as DER
      * @returns signing request blob
      */
-    virtual Ptr<Blob> CreateSigningRequest(const string & identity, const string & keyID, KeyFormat keyFormat=KEY_PUBLIC_OPENSSL, bool pem=false);
+    virtual Ptr<Blob> createSigningRequest(const Name & keyName);
 
     /**
      * @brief Install a certificate into identity
-     * @param identity the name of the identity
-     * @param keyID the identifier of the public key
      * @param certificate the certificate in terms of Data packet
      * @returns True if succeeds, False otherwise
      */
-    virtual bool InstallCertificate(const string & identity, const string & keyID, const Data & certificate);
+    virtual bool installCertificate(const Certificate & certificate);
 
 
     /**
@@ -81,46 +120,58 @@ namespace security
      * @param certType type of the cert
      * @returns certificate Data 
      */
-    virtual Ptr<Blob> GetCertificate(const Name & certName, const Name & certSigner, const string & certType);
+    virtual Ptr<Certificate> getCertificate(const Name & certName, const Name & certSigner, const string & certType);
 
-    virtual Ptr<Blob> RevokeKey(const Name & identity, string keyID);
+    virtual Ptr<Blob> revokeKey(const Name & keyName);
 
-    virtual Ptr<Blob> RevokeCertificate(const Name & certName, const int & certSeq);
+    virtual Ptr<Blob> revokeCertificate(const Name & certName);
 
     /*****************************************
      *           Policy Management           *
      *****************************************/
 
-    virtual bool SetSigningPolicy(const string & policy);
+    virtual bool setSigningPolicy(const Policy & policy);
 
-    virtual bool SetVerificationPolicy(const string & policy);
+    virtual bool setVerificationPolicy(const Policy & policy);
 
 
     /*****************************************
      *              Sign/Verify              *
      *****************************************/
 
-    virtual Ptr<Blob> Sign();
+    virtual void 
+    sign(Data & data, const Name & certName = Name());
+    
+    virtual Ptr<Signature> 
+    sign(const Blob & buf, const Name & certName);
 
-    virtual bool Verify(const Data & data);
+    virtual bool 
+    verify(const Data & data);
+
+    virtual bool 
+    verifySignature(const Data & data, const Publickey & publicKey);
 
     /*****************************************
      *           Encrypt/Decrypt             *
      *****************************************/
 
-    virtual Ptr<Blob> GenerateSymmetricKey();
+    virtual Ptr<Blob> generateSymmetricKey();
 
-    virtual Ptr<Blob> Encrypt();
+    virtual Ptr<Blob> encrypt();
 
-    virtual Ptr<Blob> Decrypt();
-
-  private:
-    Ptr<Blob> Digest(Ptr<Blob>blob);
+    virtual Ptr<Blob> decrypt();
 
   private:
-    Ptr<IdentityDB> m_identityDB;
-    Ptr<PrivateKeyStore> m_privateKeyStore;
+    Ptr<Data> fetchData(const Name & name);
+
+    virtual bool stepVerify(const Data & data, const int & stepCount);
+
+  private:
+    Ptr<IdentityStorage> m_identityStorage;
+    Ptr<PrivatekeyStore> m_privatekeyStore;
     Ptr<PolicyManager> m_policyManager;
+    Ptr<CertificateCache> m_certCache;
+    const int m_maxStep;
   };
   
 

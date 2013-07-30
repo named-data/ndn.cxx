@@ -28,7 +28,7 @@ namespace regex
     
     virtual ~RegexException() throw();
     
-    string GetMsg();
+    string getMsg();
 
   private:
     const string m_msg;

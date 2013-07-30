@@ -23,6 +23,7 @@
 
 #include "certificate-subdescrpt.h"
 #include "certificate-extension.h"
+#include "publickey.h"
 
 
 using namespace std;
@@ -37,44 +38,66 @@ namespace security
   class CertificateData
   {
   public:
-    CertificateData(string sNotBefore, string sNotAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Blob> key);
+    CertificateData(Time notBefore, Time notAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Publickey> key);
     
     CertificateData(const Blob & blob);
 
     CertificateData(const Data & data);
 
-    void AddExtension(Ptr<CertificateExtension> extn);
+    void 
+    addExtension (Ptr<CertificateExtension> extn);
     
-    virtual Ptr<Blob> ToDER();
+    virtual Ptr<Blob> 
+    toDER ();
 
-    void PrintCertificate();
+    void 
+    printCertificate ();
 
-    void PrintSubjectInfo();
+    void 
+    printSubjectInfo ();
 
-    string GetNotBefore(){return m_notBefore;}
+    Time & 
+    getNotBefore ()
+    {
+      return m_notBefore;
+    }
     
-    string GetNotAfter(){return m_notAfter;}
+    Time & 
+    getNotAfter ()
+    {
+      return m_notAfter;
+    }
 
-    Ptr<Blob> GetKey(){return m_key;}
+    Publickey & 
+    getKey ()
+    {
+      return *m_key;
+    }
 
   private:
-    virtual Ptr<Blob> ExtnToDER();
+    virtual Ptr<Blob> 
+    encodeExtn ();
 
-    virtual void DERToExtn (const Blob & blob);
+    virtual void 
+    decodeExtn (const Blob & blob);
 
-    virtual Ptr<Blob> ValidityToDER();
+    virtual Ptr<Blob> 
+    encodeValidity ();
 
-    virtual void DERToValidity(const Blob & blob);
+    virtual void 
+    decodeValidity (const Blob & blob);
 
-    virtual Ptr<Blob> SubjectToDER();
+    virtual Ptr<Blob> 
+    encodeSubject ();
 
-    virtual void DERToSubject(const Blob & blob);
+    virtual void 
+    decodeSubject (const Blob & blob);
     
   private:
     vector<Ptr<CertificateSubDescrypt> > m_subjectList;
-    string m_notBefore;
-    string m_notAfter;
-    Ptr<Blob> m_key;
+    Time m_notBefore;
+    Time m_notAfter;
+    Ptr<Publickey> m_key;
     vector<Ptr<CertificateExtension> > m_extnList;    
   };
 

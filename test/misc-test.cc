@@ -8,9 +8,10 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "ndn.cxx/security/osx-privatekey-store.h"
 #include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/der.h"
-#include "ndn.cxx/security/certificate/publicKey.h"
+#include "ndn.cxx/security/certificate/publickey.h"
 
 using namespace std;
 using namespace boost::posix_time;
@@ -210,12 +211,99 @@ BOOST_AUTO_TEST_CASE (Digest)
 
   Ptr<Blob> keyPtr = readKey("out1.pub");
 
-  security::PublicKey pubKey(*keyPtr, false);
+  security::Publickey pubKey(*keyPtr, false);
 
-  Ptr<Blob> digest = pubKey.GetDigest();
+  Ptr<Blob> digest = pubKey.getDigest();
 
   security::DERendec endec;
-  endec.PrintBlob(*digest, "");
+  endec.printBlob(*digest, "");
+}
+
+BOOST_AUTO_TEST_CASE (SignVerify)
+{
+  // RSA::PublicKey pubKey;
+
+  // ByteQueue queue;
+
+  // FileSource file("out1.pub", true);
+  // file.TransferTo(queue);
+  // queue.MessageEnd();
+
+  // pubKey.Load(queue);
+
+  // RSASSA_PKCS1v15_SHA_Verifier verifier(pubKey);
+  
+  // string data = "testDataTestData";
+  // char * sig = new char[256];
+  // ifstream sigStream("sig.sig");
+  // sigStream.read(sig, 256);
+  // string sigs(sig, 256);
+
+  
+  // StringSource(data+sigs, 
+  // 	       true,
+  // 	       new SignatureVerificationFilter(verifier, 
+  // 					       NULL,
+  // 					       SignatureVerificationFilter::THROW_EXCEPTION
+  // 					       ) // SignatureVerificationFilter
+  // 	       ); // StringSource
+
+  // delete sig;
+  
+  using namespace CryptoPP;
+
+  security::OSXPrivatekeyStore keystore;
+  string keyName = "/ndn/ucla/yingdi";
+  string testData = "testDataTestData";
+
+  Ptr<security::Publickey> publickeyPtr = keystore.getPublickey(keyName);
+
+  Ptr<Blob> pTestData = Ptr<Blob>(new Blob(testData.c_str(), testData.size()));
+
+  RSA::PublicKey pubKey;
+  // ByteQueue queue;
+  // FileSource file("out1.pub", true);
+  // file.TransferTo(queue);
+  // queue.MessageEnd();
+  // pubKey.Load(queue);
+  ByteQueue queue;
+  queue.Put((const byte*)publickeyPtr->getKeyBlob ()->buf (), publickeyPtr->getKeyBlob ()->size ());
+  pubKey.Load(queue);
+
+
+  try{
+    Ptr<Blob> pSig = keystore.sign(*pTestData, keyName, security::DIGEST_SHA256);
+    string sigs(pSig->buf(), pSig->size());
+
+    RSASS<PKCS1v15, SHA256>::Signer signer;
+
+    string cppsig;
+
+    // StringSource(testData, 
+    // 		 true, 
+    // 		 new SignerFilter(NullRNG(), signer,
+    // 				  new StringSink(cppsig)
+    // 				  ) // SignerFilter
+    // 		 ); // StringSource
+
+
+    RSASS<PKCS1v15, SHA256>::Verifier verifier (pubKey);
+    bool result = verifier.VerifyMessage((const byte*) testData.c_str(), testData.length(), (const byte*)pSig->buf(), pSig->size());
+
+    cout << boolalpha << result << endl;
+    // StringSource(testData+sigs, 
+    // 		 true,
+    // 		 new SignatureVerificationFilter(verifier, 
+    // 						 NULL,
+    // 						 SignatureVerificationFilter::THROW_EXCEPTION
+    // 						 ) // SignatureVerificationFilter
+    // 		 ); // StringSource
+  }catch (security::SecException & e){
+    cerr << e.Msg() << endl;
+  }
+
+
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

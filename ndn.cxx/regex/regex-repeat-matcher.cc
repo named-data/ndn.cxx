@@ -33,11 +33,11 @@ namespace regex
       m_indicator(indicator)
   {
     _LOG_DEBUG ("Enter RegexRepeatMatcher Constructor: " << m_expr);
-    if(!Compile())
+    if(!compile())
       throw RegexException("RegexRepeatMatcher Constructor: Cannot compile the regex");
   }
 
-  bool RegexRepeatMatcher::Compile()
+  bool RegexRepeatMatcher::compile()
   {
     _LOG_DEBUG ("Enter RegexRepeatMatcher::Compile()");
     
@@ -51,10 +51,10 @@ namespace regex
     }
     m_matcherList.push_back(matcher);
       
-    return ParseRepetition();
+    return parseRepetition();
   }
 
-  bool RegexRepeatMatcher::ParseRepetition()
+  bool RegexRepeatMatcher::parseRepetition()
   {
     _LOG_DEBUG ("Enter RegexRepeatMatcher::ParseRepetition()" << m_expr << " indicator: " << m_indicator);
 
@@ -119,7 +119,7 @@ namespace regex
 
 
 
-  bool RegexRepeatMatcher::Match(Name name, const int & offset, const int & len)
+  bool RegexRepeatMatcher::match(Name name, const int & offset, const int & len)
   {
 
     _LOG_DEBUG ("Enter RegexRepeatMatcher::Match()");
@@ -133,7 +133,7 @@ namespace regex
         return true;
 
     /* for repeatMin > 1 */
-    if(RecursiveMatch(m_matcherList[0], 0, name, offset, len)){
+    if(recursiveMatch(m_matcherList[0], 0, name, offset, len)){
       for (int i = 0; i < len ; i++)
         m_matchResult.append(name.get(offset+i));
       return true;
@@ -142,7 +142,7 @@ namespace regex
       return false;
   }
   
-  bool RegexRepeatMatcher::RecursiveMatch(RegexMatcher* matcher, 
+  bool RegexRepeatMatcher::recursiveMatch(RegexMatcher* matcher, 
 					  int repeat, 
 					  Name name, 
 					  const int & offset, 
@@ -174,7 +174,7 @@ namespace regex
 
     while(tried <= len){
       _LOG_DEBUG ("Attempt tried: " << tried);
-      if(matcher->Match(name, offset, tried) && RecursiveMatch(matcher, repeat + 1, name, offset + tried, len - tried))
+      if(matcher->match(name, offset, tried) && recursiveMatch(matcher, repeat + 1, name, offset + tried, len - tried))
         return true;
       _LOG_DEBUG ("Failed at tried: " << tried);
       tried++;

@@ -47,21 +47,21 @@ namespace regex
      * @param offset starting index of matching
      * @param len number of components to be matched
      */    
-    virtual bool Match(Name name, const int & offset, const int & len = 1);
+    virtual bool match(Name name, const int & offset, const int & len = 1);
 
   protected:    
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool Compile();
+    virtual bool compile();
 
   private:
-    int ExtractComponent(int index);
+    int extractComponent(int index);
 
-    bool CompileSingleComponent();
+    bool compileSingleComponent();
     
-    bool CompileMultipleComponents(const int start, const int lastIndex);
+    bool compileMultipleComponents(const int start, const int lastIndex);
 
   private:
     set<RegexComponent*> m_components;

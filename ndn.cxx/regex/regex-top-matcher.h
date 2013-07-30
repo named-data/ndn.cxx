@@ -31,7 +31,7 @@ namespace regex
     virtual ~RegexTopMatcher();
 
   protected:
-    virtual bool Compile();
+    virtual bool compile();
 
   private:
     string m_rule;

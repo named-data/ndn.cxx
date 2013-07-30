@@ -26,7 +26,7 @@ namespace regex
       m_include(include)
   {
     _LOG_DEBUG ("Enter RegexComponentSetMatcher Constructor: " << m_expr);
-    if(!Compile())
+    if(!compile())
       throw RegexException("RegexComponentSetMatcher Constructor: Cannot compile the regex");
   }
 
@@ -38,7 +38,8 @@ namespace regex
       delete *it;
   }
 
-  bool RegexComponentSetMatcher::Compile()
+  bool 
+  RegexComponentSetMatcher::compile()
   {
     _LOG_DEBUG ("Enter RegexComponentSetMatcher::Compile()");
     _LOG_DEBUG ("expr: " << m_expr);
@@ -49,7 +50,7 @@ namespace regex
 
     switch(m_expr[0]){
     case '<':
-      return CompileSingleComponent();
+      return compileSingleComponent();
     case '[':
       {
         int lastIndex = m_expr.size() - 1;
@@ -58,23 +59,24 @@ namespace regex
 
         if('^' == m_expr[1]){
           m_include = false;
-          return CompileMultipleComponents(2, lastIndex);
+          return compileMultipleComponents(2, lastIndex);
         }
         else
-          return CompileMultipleComponents(1, lastIndex);
+          return compileMultipleComponents(1, lastIndex);
       }
     default:
         throw RegexException(errMsg + "Parsing error in expr " + m_expr);
     }
   }
 
-  bool RegexComponentSetMatcher::CompileSingleComponent()
+  bool 
+  RegexComponentSetMatcher::compileSingleComponent()
   {
     _LOG_DEBUG ("Enter RegexComponentSetMatcher::CompileSingleComponent()");
 
     string errMsg = "Error: RegexComponentSetMatcher.CompileSingleComponent(): ";
 
-    int end = ExtractComponent(1);
+    int end = extractComponent(1);
 
     if(m_expr.size() != end)
       throw RegexException(errMsg + m_expr);
@@ -88,7 +90,8 @@ namespace regex
     return false;
   }
 
-  bool RegexComponentSetMatcher::CompileMultipleComponents(const int start, const int lastIndex)
+  bool 
+  RegexComponentSetMatcher::compileMultipleComponents(const int start, const int lastIndex)
   {
     _LOG_DEBUG ("Enter RegexComponentSetMatcher::CompileMultipleComponents()");
 
@@ -102,7 +105,7 @@ namespace regex
         throw RegexException(errMsg + "Component expr error " + m_expr);
       
       tmp_index = index + 1;
-      index = ExtractComponent(tmp_index);
+      index = extractComponent(tmp_index);
 
       RegexComponent* component = new RegexComponent(m_expr.substr(tmp_index, index - tmp_index - 1), m_backRefManager);
       m_components.insert(component);
@@ -115,7 +118,8 @@ namespace regex
   }
 
 
-  bool RegexComponentSetMatcher::Match(Name name, const int & offset, const int & len)
+  bool 
+  RegexComponentSetMatcher::match(Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexComponentSetMatcher::Match");
 
@@ -130,7 +134,7 @@ namespace regex
     set<RegexComponent*>::iterator it = m_components.begin();
 
     for(; it != m_components.end(); it++){
-      if((*it)->Match(name, offset, len)){
+      if((*it)->match(name, offset, len)){
         matched = true;
         break;
       }
@@ -146,7 +150,8 @@ namespace regex
       return false;
   }
 
-  int RegexComponentSetMatcher::ExtractComponent(int index)
+  int 
+  RegexComponentSetMatcher::extractComponent(int index)
   {
     _LOG_DEBUG ("Enter RegexComponentSetMatcher::ExtractComponent");
 

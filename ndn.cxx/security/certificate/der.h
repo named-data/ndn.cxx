@@ -31,56 +31,77 @@ namespace security
   public:
     DERendec();
     
-    Ptr<Blob> EncodeStringDER(const Blob & str);
+    Ptr<Blob> 
+    encodeStringDER(const Blob & str);
     
-    Ptr<Blob> DecodeStringDER(const Blob & blob);
+    Ptr<Blob> 
+    decodeStringDER(const Blob & blob);
 
-    Ptr<Blob> EncodeGTimeDER(const string & str);
+    Ptr<Blob> 
+    encodeBitStringDER(const Blob & bits, int paddingLen);
 
-    string DecodeGTimeDER(const Blob & blob);
+    Ptr<Blob> 
+    decodeBitStringDER(const Blob & blob, int & paddingLen);
 
-    Ptr<Blob> EncodeIntegerDER(const Blob & blob);
+    Ptr<Blob> 
+    encodePrintableStringDER(const string & str);
     
-    Ptr<Blob> DecodeIntegerDER(const Blob & blob);
+    Ptr<string> 
+    decodePrintableStringDER(const Blob & blob);
 
-    Ptr<Blob> EncodeBitStringDER(const Blob & bits, int paddingLen);
+    Ptr<Blob> 
+    encodeGTimeDER(const Time & str);
 
-    Ptr<Blob> DecodeBitStringDER(const Blob & blob, int & paddingLen);
+    Time 
+    decodeGTimeDER(const Blob & blob);
 
-    Ptr<Blob> EncodeSequenceDER(vector<Ptr<Blob> > & components);
-
-    Ptr<vector<Ptr<Blob> > > DecodeSequenceDER(const Blob & blob);
-
-    Ptr<Blob> EncodeBoolDER(bool b);
-
-    bool DecodeBoolDER(const Blob & blob);
-
-    Ptr<Blob> EncodeNULLDER();
-
-    void DecodeNULLDER(const Blob & blob);
-
-    Ptr<Blob> EncodePrintableStringDER(const string & str);
+    Ptr<Blob> 
+    encodeIntegerDER(const Blob & blob);
     
-    Ptr<string> DecodePrintableStringDER(const Blob & blob);
+    Ptr<Blob> 
+    decodeIntegerDER(const Blob & blob);
 
-    void PrintDecoded(const Blob & blob, string indent, int offset);
+    Ptr<Blob> 
+    encodeSequenceDER(vector<Ptr<Blob> > & components);
 
-    void PrintBlob(const Blob & blob, string indent);
+    Ptr<vector<Ptr<Blob> > > 
+    decodeSequenceDER(const Blob & blob);
 
-    Ptr<Blob> EncodeSize(int size);
+    Ptr<Blob> 
+    encodeBoolDER(bool b);
 
-    int DecodeSize(const Blob & blob, int & offset);
+    bool 
+    decodeBoolDER(const Blob & blob);
+
+    Ptr<Blob> 
+    encodeNULLDER();
+
+    void 
+    decodeNULLDER(const Blob & blob);
+
+    void 
+    printDecoded(const Blob & blob, string indent, int offset);
+
+    void 
+    printBlob(const Blob & blob, string indent);
+
+    Ptr<Blob> 
+    encodeSize(int size);
+
+    int 
+    decodeSize(const Blob & blob, int & offset);
     
-    Ptr<Blob> EncodeString(const Blob & str, int type);
+    Ptr<Blob> 
+    encodeString(const Blob & str, int type);
 
-    Ptr<Blob> EncodeInteger128(int i);
+    Ptr<Blob> 
+    encodeInteger128(int i);
 
-    int DecodeInteger128(const Blob & blob, int & offset);
+    int 
+    decodeInteger128(const Blob & blob, int & offset);
 			 
   private:
-
-
-    Ptr<Blob> EncodeInteger32bDER(int32_t i);
+    Ptr<Blob> encodeInteger32bDER(int32_t i);
 
   private:
     bool m_littleEndian;

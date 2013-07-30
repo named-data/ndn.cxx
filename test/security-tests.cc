@@ -10,7 +10,7 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ndn.cxx/security/osx-privateKeyStore.h"
+#include "ndn.cxx/security/osx-privatekey-store.h"
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/security/certificate/der.h"
 
@@ -28,22 +28,22 @@ BOOST_AUTO_TEST_SUITE(SecurityTests)
 BOOST_AUTO_TEST_CASE (Basic)
 {
   string keyName = "/ndn/ucla/yingdi";
-  security::OSXPrivateKeyStore keystore;
+  security::OSXPrivatekeyStore keystore;
   //  keystore.GenerateKeyPair(keyName);
   
   string testData = "testDataTestData";
   Ptr<Blob> pTestData = Ptr<Blob>(new Blob(testData.c_str(), testData.size()));
   try{
-    Ptr<Blob> pSig = keystore.Sign(keyName, security::KEY_TYPE_RSA, security::DIGEST_SHA256, pTestData);
+    Ptr<Blob> pSig = keystore.sign(*pTestData, keyName, security::DIGEST_SHA256);
     
     ofstream os("sig.sig");
     os.write(pSig->buf(), pSig->size());
     cerr << pSig->size()<< endl;
   
-    cout << boolalpha << keystore.Verify(keyName, security::KEY_TYPE_RSA, security::DIGEST_SHA256, pTestData, pSig) << endl;
+    //    cout << boolalpha << keystore.verify(keyName, security::KEY_TYPE_RSA, security::DIGEST_SHA256, pTestData, pSig) << endl;
 
-    Ptr<Blob> pEncrypt = keystore.Encrypt(keyName, pTestData);
-    Ptr<Blob> pDecrypt = keystore.Decrypt(keyName, pEncrypt);
+    Ptr<Blob> pEncrypt = keystore.encrypt(keyName, *pTestData);
+    Ptr<Blob> pDecrypt = keystore.decrypt(keyName, *pEncrypt);
 
     string output(pDecrypt->buf(), pDecrypt->size());
     cout << output << endl;
@@ -53,20 +53,12 @@ BOOST_AUTO_TEST_CASE (Basic)
 
 }
 
-BOOST_AUTO_TEST_CASE (Export)
-{
-  string keyName = "/ndn/ucla/yingdi";
-  security::OSXPrivateKeyStore keystore;
-  
-  keystore.ExportPublicKey(keyName, security::KEY_TYPE_RSA, security::KEY_PUBLIC_OPENSSL, "", false);
-}
-
 BOOST_AUTO_TEST_CASE (Digest)
 {
   string keyName = "/ndn/ucla/yingdi";
   security::DERendec endec;
 
-  security::OSXPrivateKeyStore keystore;
+  security::OSXPrivatekeyStore keystore;
   try{
     Data data;
     // //.../DNS/.../zsk-seq#(for key)/NDNCERT/certSeq#(for certificate)

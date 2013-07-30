@@ -31,7 +31,7 @@ namespace regex
     m_backRefManager = new RegexBRManager();
 
     _LOG_DEBUG ("Enter RegexTopMatcher Constructor: " << m_expr);
-    if(!Compile())
+    if(!compile())
       throw RegexException("RegexTopMatcher Constructor: Cannot compile the regex");
   }
 
@@ -40,7 +40,7 @@ namespace regex
     delete m_backRefManager;
   }
 
-  bool RegexTopMatcher::Compile()
+  bool RegexTopMatcher::compile()
   {
     _LOG_DEBUG ("Enter RegexTopMatcher::Compile()");
 
