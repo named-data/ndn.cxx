@@ -119,7 +119,7 @@ namespace regex
 
 
   bool 
-  RegexComponentSetMatcher::match(Name name, const int & offset, const int & len)
+  RegexComponentSetMatcher::cMatch(Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexComponentSetMatcher::Match");
 
@@ -134,7 +134,7 @@ namespace regex
     set<RegexComponent*>::iterator it = m_components.begin();
 
     for(; it != m_components.end(); it++){
-      if((*it)->match(name, offset, len)){
+      if((*it)->cMatch(name, offset, len)){
         matched = true;
         break;
       }

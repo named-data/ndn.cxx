@@ -58,7 +58,7 @@ namespace regex
     {};
 
     virtual ~RegexMatcher();
-    
+
     /**
      * @brief check if the pattern match the part of name
      * @param name the name against which the pattern is matched
@@ -66,8 +66,9 @@ namespace regex
      * @param len the number of components to be matched
      * @returns true if match succeeds
      */
-    virtual bool match(Name name, const int & offset, const int & len);
-    
+    virtual bool cMatch(Name name, const int & offset, const int & len);
+   
+
     /**
      * @brief get the matched name components
      * @returns the matched name components
@@ -91,6 +92,9 @@ namespace regex
     virtual bool compile() = 0;
 
   private:
+ 
+
+
     /**
      * @brief recursively match name components
      * @param mId the index of the matcher in the m_matcherLists
@@ -98,7 +102,7 @@ namespace regex
      * @param len the number of components to be matched
      * @return true if matching succeeds
      */
-    bool recursiveMatch(int mId, Name name, const int & offset, const int & len);
+    bool cRecursiveMatch(int mId, Name name, const int & offset, const int & len);
 
   };
 

@@ -119,7 +119,7 @@ namespace regex
 
 
 
-  bool RegexRepeatMatcher::match(Name name, const int & offset, const int & len)
+  bool RegexRepeatMatcher::cMatch(Name name, const int & offset, const int & len)
   {
 
     _LOG_DEBUG ("Enter RegexRepeatMatcher::Match()");
@@ -133,7 +133,7 @@ namespace regex
         return true;
 
     /* for repeatMin > 1 */
-    if(recursiveMatch(m_matcherList[0], 0, name, offset, len)){
+    if(cRecursiveMatch(m_matcherList[0], 0, name, offset, len)){
       for (int i = 0; i < len ; i++)
         m_matchResult.append(name.get(offset+i));
       return true;
@@ -142,7 +142,7 @@ namespace regex
       return false;
   }
   
-  bool RegexRepeatMatcher::recursiveMatch(RegexMatcher* matcher, 
+  bool RegexRepeatMatcher::cRecursiveMatch(RegexMatcher* matcher, 
 					  int repeat, 
 					  Name name, 
 					  const int & offset, 
@@ -174,7 +174,7 @@ namespace regex
 
     while(tried <= len){
       _LOG_DEBUG ("Attempt tried: " << tried);
-      if(matcher->match(name, offset, tried) && recursiveMatch(matcher, repeat + 1, name, offset + tried, len - tried))
+      if(matcher->cMatch(name, offset, tried) && cRecursiveMatch(matcher, repeat + 1, name, offset + tried, len - tried))
         return true;
       _LOG_DEBUG ("Failed at tried: " << tried);
       tried++;

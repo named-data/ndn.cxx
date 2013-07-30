@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE (Basic)
 //   cout << "matcher2: " << backRefManager->GetBackRef(1)->GetExpr() << endl;
   /* CheckTopMatcher */
   regex::RegexTopMatcher topMatcher("(<ndn>(<ucla\\.edu>))");
-  cout << "Result: " << boolalpha << topMatcher.match(name, 0, 3) << " Name: " << topMatcher.getMatchResult() << endl;
+  cout << "Result: " << boolalpha << topMatcher.cMatch(name, 0, 3) << " Name: " << topMatcher.getMatchResult() << endl;
 
   }
   catch (regex::RegexException &e){

@@ -47,7 +47,7 @@ namespace regex
      * @param offset starting index of matching
      * @param len number of components to be matched
      */    
-    virtual bool match(Name name, const int & offset, const int & len = 1);
+    virtual bool cMatch(Name name, const int & offset, const int & len = 1);
 
   protected:    
     /**

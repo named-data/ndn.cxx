@@ -50,7 +50,7 @@ namespace regex
      * @param len number of components to be matched
      * @returns true if match succeeds
      */
-    virtual bool match(Name name, const int & offset, const int & len = 1);
+    virtual bool cMatch(Name name, const int & offset, const int & len = 1);
 
   protected:
     /**

@@ -30,7 +30,7 @@ namespace regex
       throw RegexException("RegexComponent Constructor: Cannot compile the regex");
   }
 
-  bool RegexComponent::match(Name name, const int & offset, const int & len)
+  bool RegexComponent::cMatch(Name name, const int & offset, const int & len)
   {
     _LOG_DEBUG ("Enter RegexComponent::Match: ");
     _LOG_DEBUG ("name : "<< name << " offset : " << offset << " len: " << len);
