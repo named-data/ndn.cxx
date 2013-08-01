@@ -27,7 +27,7 @@ namespace security
     };
 
   public:
-    virtual bool Match(const Data & data) = 0;
+    virtual bool match(const Data & data) = 0;
     
   private:
     PolicyType m_type;

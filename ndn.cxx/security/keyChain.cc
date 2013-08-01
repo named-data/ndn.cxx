@@ -231,7 +231,7 @@ namespace security
     }
 
     _LOG_DEBUG("Check if data comply with the policy");
-    if(!policy->Match(data)){
+    if(!policy->match(data)){
       _LOG_DEBUG("data does not comply with the policy");
       return false;
     }
