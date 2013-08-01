@@ -24,17 +24,18 @@ namespace ndn
 
 namespace regex
 {
-  RegexBackRefMatcher::RegexBackRefMatcher(const string expr, RegexBRManager * const backRefManager)
+  RegexBackRefMatcher::RegexBackRefMatcher(const string expr, Ptr<RegexBRManager> backRefManager)
     : RegexMatcher (expr, EXPR_BACKREF, backRefManager)
   {
-    _LOG_DEBUG ("Enter RegexBackRefMatcher Constructor: " << m_expr);
-    if(!compile())
-      throw RegexException("RegexBackRefMatcher Constructor: Cannot compile the regex");
+    // _LOG_TRACE ("Enter RegexBackRefMatcher Constructor: ");
+    // compile();
+    // _LOG_TRACE ("Exit RegexBackRefMatcher Constructor: ");
   }
 
-  bool RegexBackRefMatcher::compile()
+  void 
+  RegexBackRefMatcher::compile()
   {
-    _LOG_DEBUG ("Enter RegexBackRefMatcher::Compile()");
+    _LOG_TRACE ("Enter RegexBackRefMatcher::compile()");
 
     string errMsg = "Error: RegexBackRefMatcher.Compile(): ";
     
@@ -42,16 +43,16 @@ namespace regex
 
     int lastIndex = m_expr.size() - 1;
     if('(' == m_expr[0] && ')' == m_expr[lastIndex]){
-      m_backRefManager->pushRef(this);
+      // m_backRefManager->pushRef(this);
 
-      RegexMatcher* matcher = new RegexPatternListMatcher(m_expr.substr(1, lastIndex - 1), m_backRefManager);
+      Ptr<RegexMatcher> matcher = Ptr<RegexMatcher>(new RegexPatternListMatcher(m_expr.substr(1, lastIndex - 1), m_backRefManager));
       m_matcherList.push_back(matcher);
-
-      _LOG_DEBUG ("Exit RegexBackRefMatcher::Compile()");
-      return true;
+      
     }
     else
       throw RegexException(errMsg + " Unrecognoized format " + m_expr);
+    
+    _LOG_TRACE ("Exit RegexBackRefMatcher::compile");
   }
 
 }//regex

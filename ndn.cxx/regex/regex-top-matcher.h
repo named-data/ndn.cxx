@@ -26,17 +26,35 @@ namespace regex
   class RegexTopMatcher: public RegexMatcher
   {
   public:
-    RegexTopMatcher(const string expr, RegexBRManager *const backRefManager = NULL, const string rule = "");
+    RegexTopMatcher(const string & expr, Ptr<RegexBRManager> backRefManager = NULL);
     
     virtual ~RegexTopMatcher();
 
+    bool 
+    match(const Name & name);
+
+    virtual bool
+    match (const Name & name, const int & offset, const int & len);
+
+    virtual Name 
+    expand (const string & expand);
+
   protected:
-    virtual bool compile();
+    virtual void 
+    compile();
 
   private:
-    string m_rule;
-    
+    string
+    getItemFromExpand(const string & expand, int & offset);
+
+  private:
+    Ptr<RegexPatternListMatcher> m_primaryMatcher;
+    Ptr<RegexPatternListMatcher> m_secondaryMatcher;
+    Ptr<RegexBRManager> m_primaryBackRefManager;
+    Ptr<RegexBRManager> m_secondaryBackRefManager;
+    bool m_secondaryUsed;
   };
+  typedef RegexTopMatcher Regex;
 }
 
 }

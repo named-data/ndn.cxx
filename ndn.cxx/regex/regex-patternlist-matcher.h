@@ -25,12 +25,13 @@ namespace regex
   class RegexPatternListMatcher : public RegexMatcher
   {
   public:
-    RegexPatternListMatcher(const string expr, RegexBRManager* backRefManager);
+    RegexPatternListMatcher(const string expr, Ptr<RegexBRManager> backRefManager);
     
     virtual ~RegexPatternListMatcher(){};
 
   protected:    
-    virtual bool compile();
+    virtual void 
+    compile();
 
   private:
     bool 

@@ -38,33 +38,33 @@ namespace regex
      * @param exact The flag to provide exact match
      * @param backRefNum The starting back reference number
      */
-    RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager, bool include = true);    
+    RegexComponentSetMatcher(const string expr, Ptr<RegexBRManager> backRefManager);    
+
     virtual ~RegexComponentSetMatcher();
 
-    /**
-     * @brief check if the pattern match the part of name
-     * @param name name against which the pattern is matched
-     * @param offset starting index of matching
-     * @param len number of components to be matched
-     */    
-    virtual bool cMatch(Name name, const int & offset, const int & len = 1);
+    virtual bool 
+    match(const Name & name, const int & offset, const int & len = 1);
 
   protected:    
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool compile();
+    virtual void 
+    compile();
 
   private:
-    int extractComponent(int index);
+    int
+    extractComponent(int index);
 
-    bool compileSingleComponent();
+    void
+    compileSingleComponent();
     
-    bool compileMultipleComponents(const int start, const int lastIndex);
+    void
+    compileMultipleComponents(const int start, const int lastIndex);
 
   private:
-    set<RegexComponent*> m_components;
+    set<Ptr<RegexComponent> > m_components;
     bool m_include;
   };
 

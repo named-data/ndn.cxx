@@ -21,30 +21,29 @@ namespace ndn
 
 namespace regex
 {
-  RegexComponentSetMatcher::RegexComponentSetMatcher(const string expr, RegexBRManager *const backRefManager, bool include)
+  RegexComponentSetMatcher::RegexComponentSetMatcher(const string expr, Ptr<RegexBRManager> backRefManager)
     : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager),
-      m_include(include)
+      m_include(true)
   {
-    _LOG_DEBUG ("Enter RegexComponentSetMatcher Constructor: " << m_expr);
-    if(!compile())
-      throw RegexException("RegexComponentSetMatcher Constructor: Cannot compile the regex");
+    _LOG_TRACE ("Enter RegexComponentSetMatcher Constructor");
+    compile();
+    _LOG_TRACE ("Exit RegexComponentSetMatcher Constructor");
   }
 
   RegexComponentSetMatcher::~RegexComponentSetMatcher()
   {
-    set<RegexComponent*>::iterator it = m_components.begin();
+    // set<Ptr<RegexComponent> >::iterator it = m_components.begin();
 
-    for(; it != m_components.end(); it++)
-      delete *it;
+    // for(; it != m_components.end(); it++)
+    //   delete *it;
   }
 
-  bool 
+  void 
   RegexComponentSetMatcher::compile()
   {
-    _LOG_DEBUG ("Enter RegexComponentSetMatcher::Compile()");
-    _LOG_DEBUG ("expr: " << m_expr);
+    _LOG_TRACE ("Enter RegexComponentSetMatcher::compile");
 
-    string errMsg = "Error: RegexComponentSetMatcher.Compile(): ";
+    string errMsg = "Error: RegexComponentSetMatcher.compile(): ";
     int index = 0;
 
 
@@ -56,46 +55,49 @@ namespace regex
         int lastIndex = m_expr.size() - 1;
         if(']' != m_expr[lastIndex])
           throw RegexException(errMsg + " No matched ']' " + m_expr);
-
+      
         if('^' == m_expr[1]){
           m_include = false;
-          return compileMultipleComponents(2, lastIndex);
+          compileMultipleComponents(2, lastIndex);
         }
         else
-          return compileMultipleComponents(1, lastIndex);
+          compileMultipleComponents(1, lastIndex);
+        break;
       }
     default:
         throw RegexException(errMsg + "Parsing error in expr " + m_expr);
     }
+
+    _LOG_TRACE ("Exit RegexComponentSetMatcher::compile");
   }
 
-  bool 
+  void 
   RegexComponentSetMatcher::compileSingleComponent()
   {
-    _LOG_DEBUG ("Enter RegexComponentSetMatcher::CompileSingleComponent()");
+    _LOG_TRACE ("Enter RegexComponentSetMatcher::compileSingleComponent");
 
-    string errMsg = "Error: RegexComponentSetMatcher.CompileSingleComponent(): ";
+    string errMsg = "Error: RegexComponentSetMatcher.compileSingleComponent: ";
 
     int end = extractComponent(1);
 
     if(m_expr.size() != end)
       throw RegexException(errMsg + m_expr);
     else{
-      _LOG_DEBUG ("expr: " << m_expr.substr(1, end - 2));
-      RegexComponent* component = new RegexComponent(m_expr.substr(1, end - 2), m_backRefManager);
+      _LOG_DEBUG ("RegexComponentSetMatcher::compileSingleComponent expr: " << m_expr.substr(1, end - 2));
+      Ptr<RegexComponent> component = Ptr<RegexComponent>(new RegexComponent(m_expr.substr(1, end - 2), m_backRefManager));
       m_components.insert(component);
-      return true;
+      
     }
 
-    return false;
+    _LOG_TRACE ("Exit RegexComponentSetMatcher::compileSingleComponent");
   }
 
-  bool 
+  void 
   RegexComponentSetMatcher::compileMultipleComponents(const int start, const int lastIndex)
   {
-    _LOG_DEBUG ("Enter RegexComponentSetMatcher::CompileMultipleComponents()");
+    _LOG_TRACE ("Enter RegexComponentSetMatcher::compileMultipleComponents");
 
-    string errMsg = "Error: RegexComponentSetMatcher.CompileMultipleComponents(): ";
+    string errMsg = "Error: RegexComponentSetMatcher.compileMultipleComponents: ";
 
     int index = start;
     int tmp_index = start;
@@ -107,21 +109,20 @@ namespace regex
       tmp_index = index + 1;
       index = extractComponent(tmp_index);
 
-      RegexComponent* component = new RegexComponent(m_expr.substr(tmp_index, index - tmp_index - 1), m_backRefManager);
+      Ptr<RegexComponent> component = Ptr<RegexComponent>(new RegexComponent(m_expr.substr(tmp_index, index - tmp_index - 1), m_backRefManager));
       m_components.insert(component);
     }
     
-    if(index == lastIndex)
-      return true;
-    else
+    if(index != lastIndex)
       throw RegexException(errMsg + "Not sufficient expr to parse " + m_expr);        
+
+    _LOG_TRACE ("Exit RegexComponentSetMatcher::compileMultipleComponents");
   }
 
-
   bool 
-  RegexComponentSetMatcher::cMatch(Name name, const int & offset, const int & len)
+  RegexComponentSetMatcher::match(const Name & name, const int & offset, const int & len)
   {
-    _LOG_DEBUG ("Enter RegexComponentSetMatcher::Match");
+    _LOG_TRACE ("Enter RegexComponentSetMatcher::match");
 
     bool matched = false;
 
@@ -131,29 +132,61 @@ namespace regex
       return false;
     }
 
-    set<RegexComponent*>::iterator it = m_components.begin();
+    set<Ptr<RegexComponent> >::iterator it = m_components.begin();
 
     for(; it != m_components.end(); it++){
-      if((*it)->cMatch(name, offset, len)){
+      if((*it)->match(name, offset, len)){
         matched = true;
         break;
       }
     }
     
-    m_matchResult = Name();
+    m_matchResult.clear();
 
     if(m_include ? matched : !matched){
-      m_matchResult.append(name.get(offset));
+      m_matchResult.push_back(name.get(offset));
       return true;
     }
     else 
       return false;
   }
 
+  // bool 
+  // RegexComponentSetMatcher::cMatch(Name name, const int & offset, const int & len)
+  // {
+  //   _LOG_DEBUG ("Enter RegexComponentSetMatcher::Match");
+
+  //   bool matched = false;
+
+  //   /* componentset only matches one component */
+  //   if(len != 1){
+  //     _LOG_DEBUG ("Match Fail: ComponentSet matches only one component");
+  //     return false;
+  //   }
+
+  //   set<Ptr<RegexComponent> >::iterator it = m_components.begin();
+
+  //   for(; it != m_components.end(); it++){
+  //     if((*it)->cMatch(name, offset, len)){
+  //       matched = true;
+  //       break;
+  //     }
+  //   }
+    
+  //   m_matchResult = Name();
+
+  //   if(m_include ? matched : !matched){
+  //     m_matchResult.append(name.get(offset));
+  //     return true;
+  //   }
+  //   else 
+  //     return false;
+  // }
+
   int 
   RegexComponentSetMatcher::extractComponent(int index)
   {
-    _LOG_DEBUG ("Enter RegexComponentSetMatcher::ExtractComponent");
+    _LOG_TRACE ("Enter RegexComponentSetMatcher::extractComponent");
 
     int lcount = 1;
     int rcount = 0;
@@ -175,6 +208,8 @@ namespace regex
       index++;
 
     }
+
+    _LOG_TRACE ("Exit RegexComponentSetMatcher::extractComponent");
     return index;
 
   }

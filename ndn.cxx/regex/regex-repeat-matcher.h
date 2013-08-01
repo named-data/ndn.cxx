@@ -23,34 +23,31 @@ namespace regex
   class RegexRepeatMatcher : public RegexMatcher
   {
   public:
-    RegexRepeatMatcher(const string expr, RegexBRManager* backRefManager, int indicator);
+    RegexRepeatMatcher(const string expr, Ptr<RegexBRManager> backRefManager, int indicator);
     
     virtual ~RegexRepeatMatcher(){}
 
-    /**
-     * @brief check if the pattern match the part of name
-     * @param name name against which the pattern is matched
-     * @param offset starting index of matching
-     * @param len number of components to be matched
-     */
-    virtual bool cMatch(Name name, const int & offset, const int & len);
+    virtual bool 
+    match(const Name & name, const int & offset, const int & len);
 
   protected:
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool compile();
+    virtual void 
+    compile();
 
 
   private:
-    bool parseRepetition();
+    bool 
+    parseRepetition();
 
-    bool cRecursiveMatch(RegexMatcher* matcher,
-                        int repeat,
-                        Name name,
-                        const int & offset,
-                        const int &len);
+    bool 
+    recursiveMatch (int repeat,
+                    const Name & name,
+                    const int & offset,
+                    const int &len);
   
   private:
     int m_indicator;

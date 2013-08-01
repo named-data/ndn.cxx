@@ -14,7 +14,10 @@
 
 #include <boost/regex.hpp>
 
+#include "ndn.cxx/common.h"
+
 #include "regex-matcher.h"
+#include "regex-pseudo-matcher.h"
 
 
 using namespace std;
@@ -39,28 +42,26 @@ namespace regex
      * @param backRefManager The back reference manager
      * @param exact The flag to provide exact match
      */
-    RegexComponent(const string expr, RegexBRManager * const backRefManager, bool exact = true);
+    RegexComponent(const string & expr, Ptr<RegexBRManager> backRefManager, bool exact = true);
     
     virtual ~RegexComponent() {};
-    
-    /**
-     * @brief check if the pattern match the part of name
-     * @param name name against which the pattern is matched
-     * @param offset starting index of matching
-     * @param len number of components to be matched
-     * @returns true if match succeeds
-     */
-    virtual bool cMatch(Name name, const int & offset, const int & len = 1);
+
+    virtual bool 
+    match(const Name & name, const int & offset, const int &len = 1);
 
   protected:
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool compile() {return true;}
+    virtual void 
+    compile();
     
   private:
     bool m_exact;
+    boost::regex m_componentRegex;
+    vector<Ptr<RegexPseudoMatcher> > m_pseudoMatcher;
+    
   };
 
 }//regex

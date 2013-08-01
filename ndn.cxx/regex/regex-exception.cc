@@ -17,7 +17,7 @@ namespace ndn
 
 namespace regex
 {
-  RegexException::RegexException(const string sStr) throw()
+  RegexException::RegexException(const string & sStr) throw()
     : m_msg(sStr)
   {
   }

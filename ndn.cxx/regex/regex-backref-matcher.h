@@ -14,6 +14,8 @@
 
 #include "regex-matcher.h"
 
+#include <boost/enable_shared_from_this.hpp>
+
 using namespace std;
 
 namespace ndn
@@ -25,12 +27,19 @@ namespace regex
   class RegexBackRefMatcher : public RegexMatcher
   {
   public:
-    RegexBackRefMatcher(const string expr, RegexBRManager * const backRefManager);
+    RegexBackRefMatcher(const string expr, Ptr<RegexBRManager> backRefManager);
     
     virtual ~RegexBackRefMatcher(){}
 
+    void 
+    lateCompile()
+    {
+      compile();
+    }
+
   protected:
-    virtual bool compile();
+    virtual void 
+    compile();
     
   private:
     int m_refNum;

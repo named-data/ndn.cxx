@@ -28,33 +28,40 @@ namespace ndn
 
 namespace regex
 {
-  RegexRepeatMatcher::RegexRepeatMatcher(const string expr, RegexBRManager* backRefManager, int indicator)
+  RegexRepeatMatcher::RegexRepeatMatcher(const string expr, Ptr<RegexBRManager> backRefManager, int indicator)
     : RegexMatcher (expr, EXPR_REPEAT_PATTERN, backRefManager),
       m_indicator(indicator)
   {
-    _LOG_DEBUG ("Enter RegexRepeatMatcher Constructor: " << m_expr);
-    if(!compile())
-      throw RegexException("RegexRepeatMatcher Constructor: Cannot compile the regex");
+    _LOG_TRACE ("Enter RegexRepeatMatcher Constructor");
+    compile();
+    _LOG_TRACE ("Exit RegexRepeatMatcher Constructor");
   }
 
-  bool RegexRepeatMatcher::compile()
+  void 
+  RegexRepeatMatcher::compile()
   {
-    _LOG_DEBUG ("Enter RegexRepeatMatcher::Compile()");
+    _LOG_TRACE ("Enter RegexRepeatMatcher::compile");
     
-    RegexMatcher* matcher;
+    Ptr<RegexMatcher> matcher;
 
     if('(' == m_expr[0]){
-      matcher = (RegexMatcher*) new RegexBackRefMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
+      matcher = Ptr<RegexMatcher>(new RegexBackRefMatcher(m_expr.substr(0, m_indicator), m_backRefManager));
+      m_backRefManager->pushRef(matcher);
+      boost::dynamic_pointer_cast<RegexBackRefMatcher>(matcher)->lateCompile();
     }
     else{
-      matcher = (RegexMatcher*) new RegexComponentSetMatcher(m_expr.substr(0, m_indicator), m_backRefManager);
+      matcher = Ptr<RegexMatcher>(new RegexComponentSetMatcher(m_expr.substr(0, m_indicator), m_backRefManager));
     }
     m_matcherList.push_back(matcher);
       
-    return parseRepetition();
+    parseRepetition();
+
+    _LOG_TRACE ("Exit RegexRepeatMatcher::compile");
+
   }
 
-  bool RegexRepeatMatcher::parseRepetition()
+  bool 
+  RegexRepeatMatcher::parseRepetition()
   {
     _LOG_DEBUG ("Enter RegexRepeatMatcher::ParseRepetition()" << m_expr << " indicator: " << m_indicator);
 
@@ -89,17 +96,27 @@ namespace regex
       }
       else{
         string repeatStruct = m_expr.substr(m_indicator, exprSize - m_indicator);
+        int rsSize = repeatStruct.size();
         int min = 0;
         int max = 0;
 
         if(boost::regex_match(repeatStruct, boost::regex("\\{[0-9]+,[0-9]+\\}"))){
           int separator = repeatStruct.find_first_of(',', 0);
-
           min = atoi(repeatStruct.substr(1, separator - 1).c_str());
-          max = atoi(repeatStruct.substr(separator + 1, exprSize - separator - 1).c_str());
+          max = atoi(repeatStruct.substr(separator + 1, rsSize - separator - 2).c_str());
+        }
+        else if(boost::regex_match(repeatStruct, boost::regex("\\{,[0-9]+\\}"))){
+          int separator = repeatStruct.find_first_of(',', 0);
+          min = 0;
+          max = atoi(repeatStruct.substr(separator + 1, rsSize - separator - 2).c_str());
+        }
+        else if(boost::regex_match(repeatStruct, boost::regex("\\{[0-9]+,\\}"))){
+          int separator = repeatStruct.find_first_of(',', 0);
+          min = atoi(repeatStruct.substr(1, separator).c_str());
+          max = intMax;
         }
         else if(boost::regex_match(repeatStruct, boost::regex("\\{[0-9]+\\}"))){
-          min = atoi(repeatStruct.substr(1, exprSize - 1).c_str());
+          min = atoi(repeatStruct.substr(1, rsSize - 1).c_str());
           max = min;
         }
         else
@@ -117,71 +134,132 @@ namespace regex
     return false;
   }
 
-
-
-  bool RegexRepeatMatcher::cMatch(Name name, const int & offset, const int & len)
+  bool
+  RegexRepeatMatcher::match(const Name & name, const int & offset, const int & len)
   {
+    _LOG_TRACE ("Enter RegexRepeatMatcher::match");
 
-    _LOG_DEBUG ("Enter RegexRepeatMatcher::Match()");
-    _LOG_DEBUG ("expr: " << m_expr << " min: " << m_repeatMin << " max: " << m_repeatMax);   
+    m_matchResult.clear();
 
-    m_matchResult = Name();
-
-    /* for no repeat case */
-    if(0 == m_repeatMin)
-      if(0 == len)
+    if (0 == m_repeatMin)
+      if (0 == len)
         return true;
 
-    /* for repeatMin > 1 */
-    if(cRecursiveMatch(m_matcherList[0], 0, name, offset, len)){
-      for (int i = 0; i < len ; i++)
-        m_matchResult.append(name.get(offset+i));
-      return true;
-    }
+    if (recursiveMatch(0, name, offset, len))
+      {
+        for (int i = offset; i < offset + len; i++)
+          m_matchResult.push_back(name.get(i));
+        return true;
+      }
     else
       return false;
   }
-  
-  bool RegexRepeatMatcher::cRecursiveMatch(RegexMatcher* matcher, 
-					  int repeat, 
-					  Name name, 
-					  const int & offset, 
-					  const int &len)
+
+  bool 
+  RegexRepeatMatcher::recursiveMatch(int repeat, const Name & name, const int & offset, const int & len)
   {
-    _LOG_DEBUG ("Enter RegexRepeatMatcher::RecursiveMatch()");
-    _LOG_DEBUG ("repeat: " << repeat << " name: " << name << " offset: " << offset << " len: " << len);
-    _LOG_DEBUG ("min: " << m_repeatMin << " max: " << m_repeatMax);
-    int tried = 0;
+    _LOG_TRACE ("Enter RegexRepeatMatcher::recursiveMatch");
 
+    _LOG_DEBUG ("repeat: " << repeat << " offset: " << offset << " len: " << len);
+    _LOG_DEBUG ("m_repeatMin: " << m_repeatMin << " m_repeatMax: " << m_repeatMax);
 
-    /* if max repeat has been reached, but we still have more to match, matching fails */
-    if(0 < len && repeat > m_repeatMax){
-      _LOG_DEBUG ("Match Fail: Reach m_repeatMax && More components");
-      return false;
-    }
-    
-    /* if all components have been matched, but we haven't reach the min repeat, matching fails */
-    if(0 == len && repeat < m_repeatMin){
-      _LOG_DEBUG ("Match Fail: No more components && have NOT reached m_repeatMin");
-      return false;
-    }
+    int tried = len;
+    Ptr<RegexMatcher> matcher = m_matcherList[0];
 
-    /* if all components have been matched and repeat has been more than min, match succeeds */
-    if(0 == len && repeat >= m_repeatMin){
-      _LOG_DEBUG ("Match Succeed: No more components && reach m_repeatMin");
-      return true;
-    }    
+    if (0 < len && repeat >= m_repeatMax)
+      {
+        _LOG_DEBUG("Match Fail: Reach m_repeatMax && More components");
+        return false;
+      }
 
-    while(tried <= len){
-      _LOG_DEBUG ("Attempt tried: " << tried);
-      if(matcher->cMatch(name, offset, tried) && cRecursiveMatch(matcher, repeat + 1, name, offset + tried, len - tried))
+    if (0 == len && repeat < m_repeatMin)
+      {
+        _LOG_DEBUG("Match Fail: No more components && have NOT reached m_repeatMin " << len << ", " << m_repeatMin);
+        return false;
+      }
+
+    if (0 == len && repeat >= m_repeatMin)
+      {
+        _LOG_DEBUG("Match Succeed: No more components && reach m_repeatMin");
         return true;
-      _LOG_DEBUG ("Failed at tried: " << tried);
-      tried++;
-    }
+      }
+    
+    while(tried >= 0)
+      {
+        _LOG_DEBUG("Attempt tried: " << tried);
+
+        if (matcher->match(name, offset, tried) and recursiveMatch(repeat + 1, name, offset + tried, len - tried))
+          return true;
+        _LOG_DEBUG("Failed at tried: " << tried);
+        tried --;
+      }
 
     return false;
   }
+
+  // bool RegexRepeatMatcher::cMatch(Name name, const int & offset, const int & len)
+  // {
+
+  //   _LOG_DEBUG ("Enter RegexRepeatMatcher::Match()");
+  //   _LOG_DEBUG ("expr: " << m_expr << " min: " << m_repeatMin << " max: " << m_repeatMax);   
+
+  //   m_matchResult = Name();
+
+  //   /* for no repeat case */
+  //   if(0 == m_repeatMin)
+  //     if(0 == len)
+  //       return true;
+
+  //   /* for repeatMin > 1 */
+  //   if(cRecursiveMatch(m_matcherList[0], 0, name, offset, len)){
+  //     for (int i = 0; i < len ; i++)
+  //       m_matchResult.append(name.get(offset+i));
+  //     return true;
+  //   }
+  //   else
+  //     return false;
+  // }
+  
+  // bool RegexRepeatMatcher::cRecursiveMatch(Ptr<RegexMatcher> matcher, 
+  //       				  int repeat, 
+  //       				  Name name, 
+  //       				  const int & offset, 
+  //       				  const int &len)
+  // {
+  //   _LOG_DEBUG ("Enter RegexRepeatMatcher::RecursiveMatch()");
+  //   _LOG_DEBUG ("repeat: " << repeat << " name: " << name << " offset: " << offset << " len: " << len);
+  //   _LOG_DEBUG ("min: " << m_repeatMin << " max: " << m_repeatMax);
+  //   int tried = 0;
+
+
+  //   /* if max repeat has been reached, but we still have more to match, matching fails */
+  //   if(0 < len && repeat > m_repeatMax){
+  //     _LOG_DEBUG ("Match Fail: Reach m_repeatMax && More components");
+  //     return false;
+  //   }
+    
+  //   /* if all components have been matched, but we haven't reach the min repeat, matching fails */
+  //   if(0 == len && repeat < m_repeatMin){
+  //     _LOG_DEBUG ("Match Fail: No more components && have NOT reached m_repeatMin");
+  //     return false;
+  //   }
+
+  //   /* if all components have been matched and repeat has been more than min, match succeeds */
+  //   if(0 == len && repeat >= m_repeatMin){
+  //     _LOG_DEBUG ("Match Succeed: No more components && reach m_repeatMin");
+  //     return true;
+  //   }    
+
+  //   while(tried <= len){
+  //     _LOG_DEBUG ("Attempt tried: " << tried);
+  //     if(matcher->cMatch(name, offset, tried) && cRecursiveMatch(matcher, repeat + 1, name, offset + tried, len - tried))
+  //       return true;
+  //     _LOG_DEBUG ("Failed at tried: " << tried);
+  //     tried++;
+  //   }
+
+  //   return false;
+  // }
 
 }//regex
 

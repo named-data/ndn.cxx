@@ -24,44 +24,164 @@ namespace ndn
 
 namespace regex
 {
-  RegexTopMatcher::RegexTopMatcher(const string expr, RegexBRManager *const backRefManager, const string rule)
+  RegexTopMatcher::RegexTopMatcher(const string & expr, Ptr<RegexBRManager> backRefManager)
     : RegexMatcher(expr, EXPR_TOP, backRefManager),
-      m_rule(rule)
+      m_secondaryMatcher(NULL),
+      m_secondaryUsed(false)
   {
-    m_backRefManager = new RegexBRManager();
+    _LOG_TRACE ("Enter RegexTopMatcher Constructor");
 
-    _LOG_DEBUG ("Enter RegexTopMatcher Constructor: " << m_expr);
-    if(!compile())
-      throw RegexException("RegexTopMatcher Constructor: Cannot compile the regex");
+    m_primaryBackRefManager = Ptr<RegexBRManager>(new RegexBRManager());
+    m_secondaryBackRefManager = Ptr<RegexBRManager>(new RegexBRManager());
+    compile();
+
+    _LOG_TRACE ("Exit RegexTopMatcher Constructor");
   }
 
   RegexTopMatcher::~RegexTopMatcher()
   {
-    delete m_backRefManager;
+    // delete m_backRefManager;
   }
 
-  bool RegexTopMatcher::compile()
+  void 
+  RegexTopMatcher::compile()
   {
-    _LOG_DEBUG ("Enter RegexTopMatcher::Compile()");
+    _LOG_TRACE ("Enter RegexTopMatcher::compile");
 
     string errMsg = "Error: RegexTopMatcher.Compile(): ";
 
     string expr = m_expr;
-    if('^' != expr[0])
-      expr = "<.*>*" + expr;
-    else
-      expr = expr.substr(1, expr.size()-1);
 
     if('$' != expr[expr.size() - 1])
       expr = expr + "<.*>*";
     else
       expr = expr.substr(0, expr.size()-1);
 
-    _LOG_DEBUG ("reconstructed expr: " << expr);
+    if('^' != expr[0])
+      m_secondaryMatcher = Ptr<RegexPatternListMatcher>(new RegexPatternListMatcher("<.*>*" + expr, m_secondaryBackRefManager));
+    else
+      expr = expr.substr(1, expr.size()-1);
 
-    RegexPatternListMatcher * matcher = new RegexPatternListMatcher(expr, m_backRefManager);
-    m_matcherList.push_back(matcher);
-    return true;
+    _LOG_DEBUG ("reconstructed expr: " << expr);
+                                                        
+                                                        
+    m_primaryMatcher = Ptr<RegexPatternListMatcher>(new RegexPatternListMatcher(expr, m_primaryBackRefManager));
+
+    _LOG_TRACE ("Exit RegexTopMatcher::compile");
+  }
+
+  bool 
+  RegexTopMatcher::match(const Name & name)
+  {
+    _LOG_DEBUG("Enter RegexTopMatcher::match");
+
+    m_secondaryUsed = false;
+
+    m_matchResult.clear();
+
+    if(m_primaryMatcher->match(name, 0, name.size()))
+      {
+        m_matchResult = m_primaryMatcher->getMatchResult();
+        return true;
+      }
+    else
+      {
+        if (NULL != m_secondaryMatcher && m_secondaryMatcher->match(name, 0, name.size()))
+          {
+            m_matchResult = m_secondaryMatcher->getMatchResult();
+            m_secondaryUsed = true;
+            return true;
+          }
+        return false;
+      }
+  }
+  
+  bool 
+  RegexTopMatcher::match (const Name & name, const int & offset, const int & len)
+  {
+    return match(name);
+  }
+
+  Name 
+  RegexTopMatcher::expand (const string & expand)
+  {
+    _LOG_TRACE("Enter RegexTopMatcher::expand");
+
+    Name result;
+    
+    Ptr<RegexBRManager> backRefManager = (m_secondaryUsed ? m_secondaryBackRefManager : m_primaryBackRefManager);
+    
+    int backRefNum = backRefManager->getNum();
+
+    int offset = 0;
+    while(offset < expand.size())
+      {
+        string item = getItemFromExpand(expand, offset);
+        if(item[0] == '<')
+          {
+            result.append(item.substr(1, item.size() - 2));
+          }
+        if(item[0] == '\\')
+          {
+            int index = atoi(item.substr(1, item.size() - 1).c_str()) - 1;
+            if(index < backRefNum && index >= 0)
+              {
+                vector<name::Component>::const_iterator it = backRefManager->getBackRef (index)->getMatchResult ().begin();
+                vector<name::Component>::const_iterator end = backRefManager->getBackRef (index)->getMatchResult ().end();
+                for(; it != end; it++)
+                    result.append (*it);
+              }
+            else
+              throw RegexException("Exceed the range of back reference!");
+          }   
+      }
+    return result;
+  }
+
+  string
+  RegexTopMatcher::getItemFromExpand(const string & expand, int & offset)
+  {
+    _LOG_TRACE("Enter RegexTopMatcher::getItemFromExpand ");
+    int begin = offset;
+
+    if(expand[offset] == '\\')
+      {
+        offset++;
+        if(offset >= expand.size())
+          throw RegexException("wrong format of expand string!");
+
+        while(expand[offset] <= '9' and expand[offset] >= '0'){
+          offset++;
+          if(offset > expand.size())
+            throw RegexException("wrong format of expand string!");
+        }
+        if(offset > begin + 1)
+          return expand.substr(begin, offset - begin);
+        else
+          throw RegexException("wrong format of expand string!");
+    }
+    else if(expand[offset] == '<')
+      {
+        offset++;
+        if(offset >= expand.size())
+          throw RegexException("wrong format of expand string!");
+        
+        int left = 1;
+        int right = 0;
+        while(right < left)
+          {
+            if(expand[offset] == '<')
+              left++;
+            if(expand[offset] == '>')
+              right++;            
+            offset++;
+            if(offset >= expand.size())
+              throw RegexException("wrong format of expand string!");
+          }
+        return expand.substr(begin, offset - begin);
+      }
+    else
+      throw RegexException("wrong format of expand string!");
   }
 
 }//regex

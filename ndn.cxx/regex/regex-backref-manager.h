@@ -12,6 +12,7 @@
 #define NDN_REGEX_BRMANAGER_H
 
 #include <vector>
+#include "ndn.cxx/common.h"
 
 using namespace std;
 
@@ -28,18 +29,22 @@ namespace regex
   public:
     RegexBRManager(){}
     
-    virtual ~RegexBRManager(){}
+    virtual ~RegexBRManager();
     
-    virtual int pushRef(RegexMatcher* matcher);
+    virtual int 
+    pushRef(Ptr<RegexMatcher> matcher);
     
-    virtual int popRef();
+    virtual int 
+    popRef();
 
-    virtual int getNum(){return m_backRefs.size();}
+    virtual int 
+    getNum(){return m_backRefs.size();}
     
-    virtual RegexMatcher* getBackRef(int i){return m_backRefs[i];}
+    virtual Ptr<RegexMatcher> 
+    getBackRef(int i){return m_backRefs[i];}
     
   private:
-    vector<RegexMatcher*> m_backRefs;
+    vector<Ptr<RegexMatcher> > m_backRefs;
   };
 
 }//regex

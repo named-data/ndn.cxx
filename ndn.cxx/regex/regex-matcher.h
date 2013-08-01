@@ -17,6 +17,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/name.h"
 
 #include "regex-common.h"
@@ -45,13 +46,15 @@ namespace regex
       
       EXPR_BACKREF,
       EXPR_COMPONENT_SET,
-      EXPR_COMPONENT
+      EXPR_COMPONENT,
+
+      EXPR_PSEUDO
     };    
 
     ///////////////////////////////////////////////////////////////////////////////
     //                              CONSTRUCTORS                                 //
     ///////////////////////////////////////////////////////////////////////////////
-    RegexMatcher(const string expr, RegexExprType type,  RegexBRManager * backRefManager = NULL) 
+    RegexMatcher(const string expr, RegexExprType type,  Ptr<RegexBRManager> backRefManager = NULL) 
       : m_expr(expr), 
         m_type(type),
         m_backRefManager(backRefManager)
@@ -59,50 +62,38 @@ namespace regex
 
     virtual ~RegexMatcher();
 
-    /**
-     * @brief check if the pattern match the part of name
-     * @param name the name against which the pattern is matched
-     * @param offset the starting index of matching
-     * @param len the number of components to be matched
-     * @returns true if match succeeds
-     */
-    virtual bool cMatch(Name name, const int & offset, const int & len);
-   
+    virtual bool match(const Name & name, const int & offset, const int & len);
 
     /**
      * @brief get the matched name components
      * @returns the matched name components
      */
-    Name getMatchResult(){return m_matchResult;}
+    const vector<name::Component> & 
+    getMatchResult() const
+    {
+      return m_matchResult;
+    }
 
     string getExpr(){return m_expr;} 
-
-  protected:
-    const string m_expr;
-    const RegexExprType m_type; 
-    RegexBRManager* m_backRefManager;
-    vector<RegexMatcher*> m_matcherList;
-    Name m_matchResult;
 
   protected:
     /**
      * @brief Compile the regular expression to generate the more matchers when necessary
      * @returns true if compiling succeeds
      */
-    virtual bool compile() = 0;
+    virtual void compile() = 0;
 
   private:
- 
 
+    bool recursiveMatch(int mId, Name name, const int & offset, const int & len);
 
-    /**
-     * @brief recursively match name components
-     * @param mId the index of the matcher in the m_matcherLists
-     * @param name the name against which the pattern is matched 
-     * @param len the number of components to be matched
-     * @return true if matching succeeds
-     */
-    bool cRecursiveMatch(int mId, Name name, const int & offset, const int & len);
+  protected:
+    const string m_expr;
+    const RegexExprType m_type; 
+    Ptr<RegexBRManager> m_backRefManager;
+    vector<Ptr<RegexMatcher> > m_matcherList;
+    vector<name::Component> m_matchResult;
+
 
   };
 

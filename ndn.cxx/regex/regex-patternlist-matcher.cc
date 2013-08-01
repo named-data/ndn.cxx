@@ -9,6 +9,7 @@
  */
 
 #include "regex-patternlist-matcher.h"
+#include "regex-backref-matcher.h"
 #include "regex-repeat-matcher.h"
 
 #include "logging.h"
@@ -22,18 +23,18 @@ namespace ndn
 
 namespace regex
 {
-  RegexPatternListMatcher::RegexPatternListMatcher(const string expr, RegexBRManager* backRefManager)
+  RegexPatternListMatcher::RegexPatternListMatcher(const string expr, Ptr<RegexBRManager> backRefManager)
     :RegexMatcher(expr, EXPR_PATTERNLIST, backRefManager)
   {
-    _LOG_DEBUG ("Enter RegexPatternListMatcher Constructor: " << m_expr);
-    if(!compile())
-      throw RegexException("RegexPatternListMatcher Constructor: Cannot compile the regex");
+    _LOG_TRACE ("Enter RegexPatternListMatcher Constructor");
+    compile();
+    _LOG_TRACE ("Exit RegexPatternListMatcher Constructor");
   }
   
-  bool 
+  void 
   RegexPatternListMatcher::compile()
   {
-    _LOG_DEBUG ("Enter RegexPatternListMatcher::Compile()");
+    _LOG_TRACE ("Enter RegexPatternListMatcher::compile");
 
     const int len = m_expr.size();
     int index = 0;
@@ -43,10 +44,9 @@ namespace regex
       subHead = index;
 
       if(!extractPattern(subHead, &index))
-	return false;
+	throw RegexException("RegexPatternListMatcher compile: cannot compile");
     }
-    return true;
-
+    _LOG_TRACE ("Exit RegexPatternListMatcher::compile");
   }
 
   bool 
@@ -59,7 +59,7 @@ namespace regex
     const int start = index;
     int end = index;
     int indicator = index;
-    RegexRepeatMatcher * matcher = NULL;
+    
 
     _LOG_DEBUG ("m_expr: " << m_expr << " index: " << index);
 
@@ -69,24 +69,36 @@ namespace regex
       index = extractSubPattern('(', ')', index);
       indicator = index;
       end = extractRepetition(index);
+      if(indicator == end){
+        Ptr<RegexMatcher> matcher = Ptr<RegexMatcher>(new RegexBackRefMatcher(m_expr.substr(start, end - start), m_backRefManager));
+        m_backRefManager->pushRef(matcher);
+        boost::dynamic_pointer_cast<RegexBackRefMatcher>(matcher)->lateCompile();
+
+        m_matcherList.push_back(matcher);
+      }
+      else
+        m_matcherList.push_back(Ptr<RegexMatcher>(new RegexRepeatMatcher(m_expr.substr(start, end - start), m_backRefManager, indicator - start)));
       break;
       
-
     case '<':
       index++;
-      index = extractSubPattern('<', '>', index);
+      index = extractSubPattern ('<', '>', index);
       indicator = index;
       end = extractRepetition(index);
-      _LOG_DEBUG ("start: " << start << " end: " << end << " indicator: " << indicator);
+      m_matcherList.push_back(Ptr<RegexMatcher>(new RegexRepeatMatcher(m_expr.substr(start, end - start), m_backRefManager, indicator - start)));
+      break;
+
+    case '[':
+      index++;
+      index = extractSubPattern ('[', ']', index);
+      indicator = index;
+      end = extractRepetition(index);
+      m_matcherList.push_back(Ptr<RegexMatcher>(new RegexRepeatMatcher(m_expr.substr(start, end - start), m_backRefManager, indicator - start)));
       break;
 
     default:
       throw RegexException("Error: unexpected syntax");
     }
-
-//     _LOG_DEBUG("Generate repeat: " << m_expr.substr(start, end) << " start: " << start << " end: " << end << " indicator: " << indicator);
-    matcher = new RegexRepeatMatcher(m_expr.substr(start, end - start), m_backRefManager, indicator - start);
-    m_matcherList.push_back(matcher);
 
     *next = end;
 
