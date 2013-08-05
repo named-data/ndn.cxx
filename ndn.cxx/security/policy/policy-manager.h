@@ -35,19 +35,37 @@ namespace security
   public:
     PolicyManager();
 
-    virtual bool setSigningPolicy(const Policy & policy) = 0;
+    virtual void 
+    setSigningPolicy(const string & policy) = 0;
 
-    virtual bool setVerificationPolicy(const Policy & policy) = 0;
+    virtual void 
+    setSigningInference(const string & inference) = 0;
 
-    virtual bool setTrustAnchor(const Certificate & certificate) = 0;
+    virtual void 
+    setVerificationPolicy(const string & policy) = 0;
 
-    virtual Ptr<Policy> getVerificationPolicy(const Data & data) = 0;
+    virtual void 
+    setTrustAnchor(const Certificate & certificate) = 0;
+
+    virtual bool 
+    skipVerify (const Data & data) = 0;
+
+    virtual bool
+    requireVerify (const Data & data) = 0;
+
+    virtual Ptr<const Certificate>
+    getTrustAnchor(const Name & anchorName) = 0;
+
+    virtual bool 
+    checkVerificationPolicy(const Data & data) = 0;
     
-    virtual bool checkSigningPolicy(const Name & dataName, const Name & certName) = 0;
+    virtual bool 
+    checkSigningPolicy(const Name & dataName, const Name & certName) = 0;
     
-    virtual Name getSigningCertName(const Name & dataName) = 0;
+    virtual Name 
+    inferSigningCert(const Name & dataName) = 0;
 
-    virtual Ptr<Data> getAnchor(const Data & data) = 0;
+
   private:
   };
 

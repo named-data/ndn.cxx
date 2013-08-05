@@ -22,15 +22,48 @@ namespace security
 
   class Policy
   {
+  public:
+
     enum PolicyType{
       IDENTITY_POLICY,
     };
 
-  public:
-    virtual bool match(const Data & data) = 0;
+    Policy(PolicyType policyType, bool mustVerify)
+      :m_type(policyType),
+       m_mustVerify(mustVerify)
+    {}
+
+    virtual 
+    ~Policy() 
+    {}
+
+    virtual bool 
+    matchDataName(const Data & data) = 0;
+
+    virtual bool 
+    matchSignerName(const Data & data) = 0;
+
+    virtual bool
+    satisfy(const Data & data) = 0;
+
+    virtual bool
+    satisfy(const Name & dataName, const Name & signerName) = 0;
+
+    PolicyType 
+    policyType()
+    {
+      return m_type;
+    }
+
+    bool
+    mustVerify()
+    {
+      return m_mustVerify;
+    }
     
   private:
     PolicyType m_type;
+    bool m_mustVerify;
   };
 
 }//security

@@ -19,10 +19,10 @@
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/fields/signature.h"
 
-#include "ndn.cxx/security/privatekey-store.h"
-#include "ndn.cxx/security/identity-storage.h"
-#include "ndn.cxx/security/cert-cache.h"
+#include "privatekey-store.h"
+#include "cert-cache.h"
 
+#include "identity/identity-storage.h"
 #include "policy/policy-manager.h"
 #include "policy/policy.h"
 #include "certificate/certificate.h"
@@ -57,7 +57,8 @@ namespace security
      * @param identity the name of the identity
      * @returns True if succeeds, False otherwise
      */
-    virtual bool createIdentity(const Name & identity);
+    virtual bool 
+    createIdentity(const Name & identity);
 
     /**
      * @brief Generate a pair of asymmetric keys
@@ -67,7 +68,8 @@ namespace security
      * @param keySize the size of the key
      * @returns pointer to the keyName, NULL if key generation fails
      */
-    virtual Name generateKeyPair(const Name & identity, const Name & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+    virtual Name 
+    generateKeyPair(const Name & identity, const Name & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 
     /**
      * @brief Helper function to generate a pair of RSA keys
@@ -76,7 +78,8 @@ namespace security
      * @param keySize the size of the key
      * @returns pointer to the keyName, NULL if key generation fails
      */
-    virtual Name generateRSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
+    virtual Name 
+    generateRSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
     {
       return generateKeyPair(identity, keyName, KEY_TYPE_RSA, keySize); 
     }
@@ -88,7 +91,8 @@ namespace security
      * @param keySize the size of the key
      * @returns pointer to the keyName, NULL if key generation fails
      */
-    virtual Name generateDSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
+    virtual Name 
+    generateDSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
     {
       return generateKeyPair(identity, keyName, KEY_TYPE_DSA, keySize); 
     }
@@ -103,14 +107,16 @@ namespace security
      * @param pem True if output is encoded as PEM, False if output is encoded as DER
      * @returns signing request blob
      */
-    virtual Ptr<Blob> createSigningRequest(const Name & keyName);
+    virtual Ptr<Blob> 
+    createSigningRequest(const Name & keyName);
 
     /**
      * @brief Install a certificate into identity
      * @param certificate the certificate in terms of Data packet
      * @returns True if succeeds, False otherwise
      */
-    virtual bool installCertificate(const Certificate & certificate);
+    virtual bool 
+    installCertificate(const Certificate & certificate);
 
 
     /**
@@ -120,20 +126,30 @@ namespace security
      * @param certType type of the cert
      * @returns certificate Data 
      */
-    virtual Ptr<Certificate> getCertificate(const Name & certName, const Name & certSigner, const string & certType);
+    virtual Ptr<Certificate> 
+    getCertificate(const Name & certName);
 
-    virtual Ptr<Blob> revokeKey(const Name & keyName);
+    virtual Ptr<Blob> 
+    revokeKey(const Name & keyName);
 
-    virtual Ptr<Blob> revokeCertificate(const Name & certName);
+    virtual Ptr<Blob> 
+    revokeCertificate(const Name & certName);
 
     /*****************************************
      *           Policy Management           *
      *****************************************/
 
-    virtual bool setSigningPolicy(const Policy & policy);
+    virtual void 
+    setSigningPolicy(const string & policy);
 
-    virtual bool setVerificationPolicy(const Policy & policy);
+    virtual void 
+    setVerificationPolicy(const string & policy);
 
+    virtual void 
+    setSigningInference(const string & inference);
+
+    virtual void 
+    setTrustAnchor(const Certificate & certificate);
 
     /*****************************************
      *              Sign/Verify              *
@@ -155,16 +171,25 @@ namespace security
      *           Encrypt/Decrypt             *
      *****************************************/
 
-    virtual Ptr<Blob> generateSymmetricKey();
+    virtual Ptr<Blob> 
+    generateSymmetricKey();
 
-    virtual Ptr<Blob> encrypt();
+    virtual Ptr<Blob> 
+    encrypt();
 
-    virtual Ptr<Blob> decrypt();
+    virtual Ptr<Blob> 
+    decrypt();
+    
 
   private:
-    Ptr<Data> fetchData(const Name & name);
+    void
+    sign(Data & data, const Name & keyName, const Publickey & publickey);
+    
+    Ptr<Data> 
+    fetchData(const Name & name);
 
-    virtual bool stepVerify(const Data & data, const int & stepCount);
+    virtual bool 
+    stepVerify(const Data & data, const int & stepCount);
 
   private:
     Ptr<IdentityStorage> m_identityStorage;

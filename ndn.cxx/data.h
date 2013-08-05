@@ -126,17 +126,6 @@ public:
   inline Blob &
   content ();
   
-  /**
-   * @brief method to generate unsigned version of file
-   *
-   * Added temporarily by Yingdi for security library, may be changed.
-   */
-  const Ptr<Blob>
-  toUnsignedWire () const
-  { 
-    return NULL;
-  }
-
 private:
   Name m_name;
   Ptr<Signature> m_signature; // signature with its parameters "binds" name and content

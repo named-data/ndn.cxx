@@ -17,6 +17,7 @@
 #include "ndn.cxx/regex/regex-repeat-matcher.h"
 #include "ndn.cxx/regex/regex-backref-matcher.h"
 #include "ndn.cxx/regex/regex-top-matcher.h"
+#include "ndn.cxx/regex/regex.h"
 
 #include <boost/test/unit_test.hpp>
 #include <boost/regex.hpp>
@@ -445,6 +446,12 @@ BOOST_AUTO_TEST_CASE (TopMatcherAdvanced)
   BOOST_CHECK_EQUAL(res, true);
   BOOST_CHECK_EQUAL(cm->getMatchResult ().size(), 6);
   BOOST_CHECK_EQUAL(cm->expand("<ndn>\\2\\1\\3"), Name("/ndn/edu/ucla/yingdi/mac/"));
+
+  cm = Ptr<Regex>(new Regex ("^<ndn><(.*)\\.(.*)><DNS>(<>*)<>", "<ndn>\\2\\1\\3"));
+  res = cm->match(Name("/ndn/ucla.edu/DNS/yingdi/mac/ksk-1/"));
+  BOOST_CHECK_EQUAL(res, true);
+  BOOST_CHECK_EQUAL(cm->getMatchResult ().size(), 6);
+  BOOST_CHECK_EQUAL(cm->expand(), Name("/ndn/edu/ucla/yingdi/mac/"));
 }
 
 BOOST_AUTO_TEST_CASE (SampleTest)

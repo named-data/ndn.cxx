@@ -36,6 +36,7 @@ def configure(conf):
 
     conf.define ("NDN_CXX_VERSION", VERSION)
 
+    conf.check_cfg(package='sqlite3', args=['--cflags', '--libs'], uselib_store='SQLITE3', mandatory=True)
     conf.check_cfg(package='libevent', args=['--cflags', '--libs'], uselib_store='LIBEVENT', mandatory=True)
     conf.check_cfg(package='libevent_pthreads', args=['--cflags', '--libs'], uselib_store='LIBEVENT_PTHREADS', mandatory=True)
 
@@ -100,7 +101,7 @@ def build (bld):
                                     'ndn.cxx/**/*.mm',
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
-        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor CRYPTOPP',
+        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
         includes = ".",
         )
 

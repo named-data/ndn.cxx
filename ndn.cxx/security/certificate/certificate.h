@@ -26,7 +26,16 @@ namespace security
   class Certificate : public Data
   {
   public:
+    enum CertificateType{
+      IDENTITY_CERT,
+    };
+
+  public:
+    Certificate() {}
+
     Certificate(const Data & data);
+    
+    virtual ~Certificate();
 
     Name 
     getCertName();

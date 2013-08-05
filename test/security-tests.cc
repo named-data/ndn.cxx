@@ -10,11 +10,18 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
+#include <boost/test/unit_test.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+
 #include "ndn.cxx/security/osx-privatekey-store.h"
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/security/certificate/der.h"
+#include "ndn.cxx/security/policy/identity-policy.h"
+#include "ndn.cxx/security/identity/basic-identity-storage.h"
 
-#include <boost/test/unit_test.hpp>
+#include "ndn.cxx/fields/signature-sha256-with-rsa.h"
+
 
 #include <iostream>
 #include <fstream>
@@ -86,7 +93,43 @@ BOOST_AUTO_TEST_CASE (Digest)
   }catch (security::SecException & e){
     cerr << e.Msg() << endl;
   }
+
+}
+
+BOOST_AUTO_TEST_CASE (IdentityPolicy)
+{
+
+}
+
+BOOST_AUTO_TEST_CASE (WireFormat)
+{
+  // using namespace boost::posix_time;
+
+  // Data data;
+
+  // data.setName(Name("/ndn/ucla.edu/cs/yingdi/"));
   
+  // string contentStr = "hello, world!";
+  
+  // Content content(contentStr.c_str(), 
+  //                 contentStr.size(),
+  //                 second_clock::universal_time());
+
+  // data.setContent(content);
+
+  // Sha256WithRsa signature;
+
+}
+
+BOOST_AUTO_TEST_CASE (IdentityStorage)
+{
+  try{
+    security::BasicIdentityStorage idStore;
+
+    cout << boolalpha << idStore.doesIdentityExist(Name("/ndn/ucla.edu/yingdi")) << endl;
+  }catch(security::SecException & e){
+    cerr << e.Msg();
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

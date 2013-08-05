@@ -47,7 +47,7 @@ namespace security
     void 
     addExtension (Ptr<CertificateExtension> extn);
     
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     toDER ();
 
     void 
@@ -75,22 +75,22 @@ namespace security
     }
 
   private:
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     encodeExtn ();
 
-    virtual void 
+    void 
     decodeExtn (const Blob & blob);
 
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     encodeValidity ();
 
-    virtual void 
+    void 
     decodeValidity (const Blob & blob);
 
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     encodeSubject ();
 
-    virtual void 
+    void 
     decodeSubject (const Blob & blob);
     
   private:

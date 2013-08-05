@@ -26,7 +26,7 @@ namespace security
     Publickey(const Blob & blob, bool pem =false);
 
     Ptr<Blob> 
-    getDigest();
+    getDigest() const;
 
     Ptr<Blob> 
     getKeyBlob()

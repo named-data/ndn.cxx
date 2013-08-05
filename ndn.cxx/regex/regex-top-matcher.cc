@@ -24,8 +24,9 @@ namespace ndn
 
 namespace regex
 {
-  RegexTopMatcher::RegexTopMatcher(const string & expr, Ptr<RegexBRManager> backRefManager)
-    : RegexMatcher(expr, EXPR_TOP, backRefManager),
+  RegexTopMatcher::RegexTopMatcher(const string & expr, const string & expand)
+    : RegexMatcher(expr, EXPR_TOP, NULL),
+      m_expand(expand),
       m_secondaryMatcher(NULL),
       m_secondaryUsed(false)
   {
@@ -103,7 +104,7 @@ namespace regex
   }
 
   Name 
-  RegexTopMatcher::expand (const string & expand)
+  RegexTopMatcher::expand (const string & expandStr)
   {
     _LOG_TRACE("Enter RegexTopMatcher::expand");
 
@@ -112,6 +113,13 @@ namespace regex
     Ptr<RegexBRManager> backRefManager = (m_secondaryUsed ? m_secondaryBackRefManager : m_primaryBackRefManager);
     
     int backRefNum = backRefManager->getNum();
+
+    string expand;
+    
+    if(expandStr != "")
+      expand = expandStr;
+    else
+      expand = m_expand;
 
     int offset = 0;
     while(offset < expand.size())
@@ -123,11 +131,19 @@ namespace regex
           }
         if(item[0] == '\\')
           {
-            int index = atoi(item.substr(1, item.size() - 1).c_str()) - 1;
-            if(index < backRefNum && index >= 0)
+
+            int index = atoi(item.substr(1, item.size() - 1).c_str());
+
+            if(0 == index){
+              vector<name::Component>::iterator it = m_matchResult.begin();
+              vector<name::Component>::iterator end = m_matchResult.end();
+              for(; it != end; it++)
+                    result.append (*it);
+            }
+            else if(index <= backRefNum)
               {
-                vector<name::Component>::const_iterator it = backRefManager->getBackRef (index)->getMatchResult ().begin();
-                vector<name::Component>::const_iterator end = backRefManager->getBackRef (index)->getMatchResult ().end();
+                vector<name::Component>::const_iterator it = backRefManager->getBackRef (index - 1)->getMatchResult ().begin();
+                vector<name::Component>::const_iterator end = backRefManager->getBackRef (index - 1)->getMatchResult ().end();
                 for(; it != end; it++)
                     result.append (*it);
               }

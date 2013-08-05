@@ -41,7 +41,7 @@ namespace security
     }
   }
 
-  Ptr<Blob> Publickey::getDigest()
+  Ptr<Blob> Publickey::getDigest() const
   {
     CryptoPP::SHA256 hash;
     byte digest[CryptoPP::SHA256::DIGESTSIZE];

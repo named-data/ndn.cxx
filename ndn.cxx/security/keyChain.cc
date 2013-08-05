@@ -9,12 +9,14 @@
  */
 
 
-
+#include "ndn.cxx/wire/ccnb.h"
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
+#include "wire-format-helper.h"
 #include "keychain.h"
 #include "policy/policy.h"
+
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cryptopp/rsa.h>
@@ -118,9 +120,9 @@ namespace security
     return true;
   }
 
-  Ptr<Certificate> Keychain::getCertificate(const Name & certName, const Name & certSigner, const string & certType)
+  Ptr<Certificate> Keychain::getCertificate(const Name & certName)
   {
-    return m_identityStorage->getCertificate(certName, certSigner, certType);
+    return m_identityStorage->getCertificate(certName);
   }
 
   Ptr<Blob> Keychain::revokeKey(const Name & keyName)
@@ -135,16 +137,27 @@ namespace security
     return NULL;
   }
 
-  bool Keychain::setSigningPolicy(const Policy & policy)
+  void 
+  Keychain::setSigningPolicy(const string & policy)
   {
-    //TODO: Implement
-    return m_policyManager->setSigningPolicy(policy);
+    m_policyManager->setSigningPolicy(policy);
   }
 
-  bool Keychain::setVerificationPolicy(const Policy & policy)
+  void 
+  Keychain::setVerificationPolicy(const string & policy)
   {
-    //TODO: Implement
-    return m_policyManager->setVerificationPolicy(policy);
+    m_policyManager->setVerificationPolicy(policy);
+  }
+  void 
+  Keychain::setSigningInference(const string & inference)
+  {
+    m_policyManager->setSigningInference(inference);
+  }
+
+  void 
+  Keychain::setTrustAnchor(const Certificate & certificate)
+  {
+    m_policyManager->setTrustAnchor(certificate);
   }
 
   void 
@@ -157,7 +170,7 @@ namespace security
 
     if(Name() == certName)
       {
-        Name signingCertName = m_policyManager->getSigningCertName (data.getName ());
+        Name signingCertName = m_policyManager->inferSigningCert (data.getName ());
         if(Name () == signingCertName)
           throw SecException("No qualified cert name found!");
       }
@@ -169,7 +182,28 @@ namespace security
           throw SecException("Signing cert name does not comply with signing policy");
       }
 
-    Ptr<Signature> signature = sign (*data.toUnsignedWire (), signingCertName);
+    Ptr<Certificate> certPtr = getCertificate(signingCertName);
+
+    sign(data, signingCertName, certPtr->getPublicKeyInfo());
+  }
+
+  void
+  Keychain::sign(Data & data, const Name & keyName, const Publickey & publickey)
+  {
+
+    Ptr<signature::Sha256WithRsa> sha256Sig = boost::dynamic_pointer_cast<signature::Sha256WithRsa> (data.getSignature());
+
+    KeyLocator keyLocator;    
+    keyLocator.setType (KeyLocator::KEYNAME);
+    keyLocator.setKeyName (keyName);
+
+    sha256Sig->setKeyLocator (keyLocator);
+    sha256Sig->setPublisherKeyDigest (*publickey.getDigest ());
+
+    data.setSignature(boost::static_pointer_cast<Signature>(sha256Sig));
+
+
+    Ptr<Signature> signature = sign (*Wire::toUnsignedWire (data), keyName);
     data.setSignature (signature);
 
     _LOG_TRACE("Exit Sign");
@@ -210,8 +244,13 @@ namespace security
   Keychain::verify(const Data & data)
   {
     _LOG_TRACE("Enter Verify");
-    
-    return stepVerify(data, m_maxStep);
+
+    if(m_policyManager->requireVerify(data))
+      return stepVerify(data, m_maxStep);
+    else if(m_policyManager->skipVerify(data))
+      return true;
+    else
+      return false;
   }
 
   bool Keychain::stepVerify(const Data & data, const int & stepCount)
@@ -223,22 +262,17 @@ namespace security
       return false;
     }
 
-    _LOG_DEBUG("Check if there is a policy for the data");
-    Ptr<Policy> policy = m_policyManager->getVerificationPolicy(data);
-    if(NULL != policy){
-      _LOG_DEBUG("No policy is found!");
-      return false;
-    }
-
-    _LOG_DEBUG("Check if data comply with the policy");
-    if(!policy->match(data)){
+    _LOG_DEBUG("Check if data comply with policies");
+    if(!m_policyManager->checkVerificationPolicy(data)){
       _LOG_DEBUG("data does not comply with the policy");
       return false;
     }
     
 
     _LOG_DEBUG("Check if keyLocator is trust anchor");
-    Ptr<Data> trustedCert = m_policyManager->getAnchor(data);
+    Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (data.getSignature());
+    
+    Ptr<const Certificate> trustedCert = m_policyManager->getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
 
     if(NULL != trustedCert){
       CertificateData certData(trustedCert->getContent().getContent());
@@ -246,7 +280,6 @@ namespace security
     }
     else{
       _LOG_DEBUG("KeyLocator is not trust anchor");
-      Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (data.getSignature());
       Ptr<Data> signCert = fetchData (sha256sig->getKeyLocator().getKeyName());
       return stepVerify(*signCert, stepCount -1);
     }
@@ -262,7 +295,7 @@ namespace security
   {
     using namespace CryptoPP;
 
-    Ptr<Blob> unsignedData = data.toUnsignedWire ();
+    Ptr<Blob> unsignedData = Wire::toUnsignedWire (data);
     bool result = false;
     
     DigestAlgorithm digestAlg = DIGEST_SHA256; //For temporary, should be assigned by Signature.getAlgorithm();
@@ -306,7 +339,6 @@ namespace security
   {
     return NULL;
   }
-
  
 }//security
 

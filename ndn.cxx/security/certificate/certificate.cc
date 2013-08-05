@@ -21,6 +21,11 @@ namespace security
     m_certData = Ptr<CertificateData>(new CertificateData(getContent().getContent()));
   }
 
+  Certificate::~Certificate()
+  {
+    //TODO:
+  }
+
   Name Certificate::getCertName()
   {
     //TODO:

@@ -26,7 +26,7 @@ namespace regex
   class RegexTopMatcher: public RegexMatcher
   {
   public:
-    RegexTopMatcher(const string & expr, Ptr<RegexBRManager> backRefManager = NULL);
+    RegexTopMatcher(const string & expr, const string & expand = "");
     
     virtual ~RegexTopMatcher();
 
@@ -37,7 +37,7 @@ namespace regex
     match (const Name & name, const int & offset, const int & len);
 
     virtual Name 
-    expand (const string & expand);
+    expand (const string & expand = "");
 
   protected:
     virtual void 
@@ -48,13 +48,14 @@ namespace regex
     getItemFromExpand(const string & expand, int & offset);
 
   private:
+    const string m_expand;
     Ptr<RegexPatternListMatcher> m_primaryMatcher;
     Ptr<RegexPatternListMatcher> m_secondaryMatcher;
     Ptr<RegexBRManager> m_primaryBackRefManager;
     Ptr<RegexBRManager> m_secondaryBackRefManager;
     bool m_secondaryUsed;
   };
-  typedef RegexTopMatcher Regex;
+  
 }
 
 }
