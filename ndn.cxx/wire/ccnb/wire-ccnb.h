@@ -89,7 +89,27 @@ public:
    */
   static size_t
   EstimateTimestampBlob (const TimeInterval &time);
+  
+   /**
+   * Append a binary timestamp as a BLOB using the ccn binary
+   * Timestamp representation (12-bit fraction).
+   *
+   * @param os output stream to write
+   * @param time reference to Time (posix_time::ptime) object.
+   *             This method automatically calculates duration between time and gregorian::date(1970,1,1)
+   *             and calls the other version of the method
+   */
+  inline static void
+  AppendTimestampBlob (std::ostream &os, const Time &time);
 
+  /**
+   * @brief Estimate size of a binary timestamp as a BLOB using CCNB enconding
+   * @param time - Time object
+   * @returns estimated length
+   */
+  static size_t
+  EstimateTimestampBlob (const Time &time);
+  
   /**
    * Append a tagged BLOB
    *
@@ -192,6 +212,19 @@ public:
   static size_t
   EstimateString (uint32_t dtag, const std::string &string);
 
+  /**
+   * Append a tagged BLOB
+   *
+   * This is a ccnb-encoded element with containing the BLOB as content
+   *
+   * @param os output stream to write
+   * @param dtag is the element's dtag
+   * @param data points to the binary data
+   * @param size is the size of the data, in bytes
+   */
+  static void
+  AppendTaggedNumber (OutputIterator &os, uint32_t dtag, uint32_t number);
+  
   ////////////////////////////////
   // General use wire formatters
   ////////////////////////////////

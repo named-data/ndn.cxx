@@ -15,6 +15,11 @@
 
 #include <vector>
 #include <cstddef>
+#include "ndn.cxx/common.h"
+
+#include <boost/iostreams/detail/ios.hpp>
+#include <boost/iostreams/categories.hpp>
+#include <boost/iostreams/stream.hpp>
 
 namespace ndn {
 
@@ -54,6 +59,54 @@ public:
     return &front ();
   }
 };
+
+namespace iostreams
+{
+
+class blob_append_device {
+public:
+  typedef char  char_type;
+  typedef boost::iostreams::sink_tag       category;
+  
+  blob_append_device (Blob& container)
+  : m_container (container)
+  {
+  }
+  
+  std::streamsize
+  write(const char_type* s, std::streamsize n)
+  {
+    std::copy (s, s+n, std::back_inserter(m_container));
+    return n;
+  }
+  
+protected:
+  Blob& m_container;
+};
+
+} // iostreams
+
+struct blob_stream : public boost::iostreams::stream<iostreams::blob_append_device>
+{
+  blob_stream ()
+    : m_buf (Create<Blob> ())
+    , m_device (*m_buf)
+  {
+    open (m_device);
+  }
+
+  Ptr<Blob>
+  buf ()
+  {
+    flush ();
+    return m_buf;
+  }
+
+private:
+  Ptr<Blob> m_buf;
+  iostreams::blob_append_device m_device;
+};
+
 
 } // ndn
 

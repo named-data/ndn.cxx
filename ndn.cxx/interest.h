@@ -275,6 +275,22 @@ public:
   bool
   operator== (const Interest &interest);
 
+  ///////////////////////////////////////////////////////////////////////
+  //                         Wire format                               //
+  ///////////////////////////////////////////////////////////////////////
+
+  Ptr<Blob>
+  encodeToWire ();
+
+  void
+  encodeToWire (std::ostream &os);
+  
+  static Ptr<ndn::Interest>
+  decodeFromWire (Ptr<const Blob> blob);
+  
+  static Ptr<ndn::Interest>
+  decodeFromWire (std::istream &is);
+  
 public:
   // Data Members (public):
   /// @brief Value indicating that number of components parameter is invalid

@@ -239,6 +239,16 @@ Ccnb::AppendString (OutputIterator &start, uint32_t dtag,
   return written;
 }
 
+void
+Ccnb::AppendTaggedNumber (OutputIterator &os, uint32_t dtag, uint32_t number)
+{
+  AppendBlockHeader (os, dtag, CcnbParser::CCN_DTAG);
+  {
+    AppendNumber (os, number);
+  }
+  AppendCloser (os);
+}
+
 size_t
 Ccnb::EstimateString (uint32_t dtag, const std::string &string)
 {

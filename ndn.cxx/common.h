@@ -55,7 +55,7 @@ template<class T>
 inline T*
 GetPointer (Ptr<T> p)
 {
-  p.get ();
+  return p.get ();
 }
 
 template<class T>

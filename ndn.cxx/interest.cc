@@ -12,6 +12,7 @@
 
 #include "interest.h"
 #include <boost/lexical_cast.hpp>
+#include "wire/ccnb/wire-ccnb-interest.h"
 
 using namespace std;
 
@@ -99,5 +100,43 @@ Interest::operator == (const Interest &other)
     && m_scope == other.m_scope
     && m_childSelector == other.m_childSelector;
 }
+
+Ptr<Blob>
+Interest::encodeToWire ()
+{
+  blob_stream blobStream;
+  
+  wire::ccnb::Interest::Serialize (*this, reinterpret_cast<OutputIterator &> (blobStream));
+
+  return blobStream.buf ();
+}
+
+void
+Interest::encodeToWire (std::ostream &os)
+{
+  wire::ccnb::Interest::Serialize (*this, reinterpret_cast<OutputIterator &> (os));  
+}
+
+Ptr<ndn::Interest>
+Interest::decodeFromWire (Ptr<const Blob> buffer)
+{
+  boost::iostreams::stream
+    <boost::iostreams::array_source> is (buffer->buf (), buffer->size ());
+
+  Ptr<ndn::Interest> interest = Create<ndn::Interest> ();
+  wire::ccnb::Interest::Deserialize (interest, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
+
+  return interest;
+}
+
+Ptr<ndn::Interest>
+Interest::decodeFromWire (std::istream &is)
+{
+  Ptr<ndn::Interest> interest = Create<ndn::Interest> ();
+  wire::ccnb::Interest::Deserialize (interest, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
+
+  return interest;
+}
+
 
 } // ndn
