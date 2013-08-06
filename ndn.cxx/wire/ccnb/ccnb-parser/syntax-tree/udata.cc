@@ -15,10 +15,10 @@ NDN_NAMESPACE_BEGIN
 namespace wire {
 namespace CcnbParser {
 
-Udata::Udata (Buffer::Iterator &start, uint32_t length)
+Udata::Udata (InputIterator &start, uint32_t length)
 {
   // Ideally, the code should look like this. Unfortunately, we don't have normal compatible iterators
-  // Buffer::Iterator realStart = start;
+  // InputIterator realStart = start;
   // start.Next (length); // advancing forward
   // m_udata.assign (realStart, start/*actually, it is the end*/);
 

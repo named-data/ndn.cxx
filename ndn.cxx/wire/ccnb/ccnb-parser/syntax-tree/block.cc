@@ -32,7 +32,7 @@ const uint8_t CCN_TT_HBIT = ((uint8_t)(1 << 7));
 
 // int Block::counter = 0;
 
-Ptr<Block> Block::ParseBlock (Buffer::Iterator &start, bool dontParseBlock)
+Ptr<Block> Block::ParseBlock (InputIterator &start, bool dontParseBlock)
 {
   // std::cout << "<< pos: " << counter << "\n";
   uint32_t value = 0;

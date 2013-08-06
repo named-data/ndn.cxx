@@ -34,7 +34,7 @@ public:
    *
    * \see http://www.ccnx.org/releases/latest/doc/technical/BinaryEncoding.html
    */
-  Udata (Buffer::Iterator &start, uint32_t length);
+  Udata (InputIterator &start, uint32_t length);
   
   virtual void accept( VoidNoArguVisitor &v )               { v.visit( *this ); }
   virtual void accept( VoidVisitor &v, boost::any param )   { v.visit( *this, param ); }

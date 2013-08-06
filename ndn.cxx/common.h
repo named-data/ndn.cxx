@@ -52,6 +52,13 @@ struct Ptr : public boost::shared_ptr<T>
 };
 
 template<class T>
+inline T*
+GetPointer (Ptr<T> p)
+{
+  p.get ();
+}
+
+template<class T>
 Ptr<T> Create() { return Ptr<T> (new T()); }
 
 template<class T, class P1>
@@ -73,17 +80,21 @@ Ptr<T> DynamicCast(Ptr<U> const & r) { return boost::dynamic_pointer_cast<T>(r);
 
 // typedef u_char uint8_t; // types.h defines  u_char
 
-class Buffer
+class InputIterator : public std::istream
 {
 public:
-  class Iterator : public std::istream
-  {
-  public:
-    uint8_t ReadU8 () { return static_cast<uint8_t> (get ()); }
-    uint8_t PeekU8 () { return static_cast<uint8_t> (peek ()); }
-    bool IsEnd () const { return eof(); }
-    void Prev () { seekg(-1, std::ios_base::cur); }
-  };
+  uint8_t ReadU8 () { return static_cast<uint8_t> (get ()); }
+  uint8_t PeekU8 () { return static_cast<uint8_t> (peek ()); }
+  bool IsEnd () const { return eof(); }
+  void Prev () { seekg(-1, std::ios_base::cur); }
+};
+
+class OutputIterator : public std::ostream
+{
+public:
+  void Write (const uint8_t * s, uint32_t n) { write (reinterpret_cast<const char*> (s),n); }
+  void WriteU8 (const uint8_t s) { put (s); }
+  void WriteU8 (const uint8_t s, uint32_t n) { for (uint32_t i = 0; i < n; i++) { put (s); } }
 };
 
 typedef boost::posix_time::ptime Time;

@@ -35,7 +35,7 @@ public:
    *
    * \see http://www.ccnx.org/releases/latest/doc/technical/BinaryEncoding.html
    */
-  Blob (Buffer::Iterator &start, uint32_t length);
+  Blob (InputIterator &start, uint32_t length);
   ~Blob ();
   
   virtual void accept( VoidNoArguVisitor &v )               { v.visit( *this ); }

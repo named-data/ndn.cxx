@@ -15,7 +15,7 @@ NDN_NAMESPACE_BEGIN
 namespace wire {
 namespace CcnbParser {
 
-Blob::Blob (Buffer::Iterator &start, uint32_t length)
+Blob::Blob (InputIterator &start, uint32_t length)
 {
   m_blobSize = length;
   m_blob = new char[length];

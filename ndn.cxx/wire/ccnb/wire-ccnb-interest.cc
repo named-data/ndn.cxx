@@ -100,7 +100,7 @@
 // }
 
 // void
-// Interest::Serialize (Buffer::Iterator start) const
+// Interest::Serialize (OutputIterator start) const
 // {
 //   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Interest, CcnbParser::CCN_DTAG); // <Interest>
   
@@ -376,11 +376,11 @@
 
 
 // uint32_t
-// Interest::Deserialize (Buffer::Iterator start)
+// Interest::Deserialize (InputIterator start)
 // {
 //   static InterestVisitor interestVisitor;
 
-//   Buffer::Iterator i = start;
+//   InputIterator i = start;
 //   Ptr<CcnbParser::Block> root = CcnbParser::Block::ParseBlock (i);
 //   root->accept (interestVisitor, GetPointer (m_interest));
   

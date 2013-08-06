@@ -40,7 +40,7 @@ public:
    *
    * \see http://www.ccnx.org/releases/latest/doc/technical/BinaryEncoding.html
    */
-  Dtag (Buffer::Iterator &start, uint32_t dtag);
+  Dtag (InputIterator &start, uint32_t dtag);
 
   virtual void accept( VoidNoArguVisitor &v )               { v.visit( *this ); }
   virtual void accept( VoidVisitor &v, boost::any param )   { v.visit( *this, param ); }

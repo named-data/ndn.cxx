@@ -17,7 +17,7 @@ NDN_NAMESPACE_BEGIN
 namespace wire {
 namespace CcnbParser {
 
-Tag::Tag (Buffer::Iterator &start, uint32_t length)
+Tag::Tag (InputIterator &start, uint32_t length)
 {
   m_tag.reserve (length+2); // extra byte for potential \0 at the end
   uint32_t i = 0;

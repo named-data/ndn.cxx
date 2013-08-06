@@ -15,7 +15,7 @@ NDN_NAMESPACE_BEGIN
 namespace wire {
 namespace CcnbParser {
 
-Ext::Ext (Buffer::Iterator &start, uint32_t extSubtype)
+Ext::Ext (InputIterator &start, uint32_t extSubtype)
 {
   m_extSubtype = extSubtype;
 }

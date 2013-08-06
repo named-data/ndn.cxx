@@ -68,18 +68,18 @@
 //     return 2;
 //   }
 
-//   virtual void Serialize (Buffer::Iterator end) const
+//   virtual void Serialize (OutputIterator end) const
 //   {
-//     Buffer::Iterator i = end;
+//     OutputIterator i = end;
 //     i.Prev (2); // Trailer interface requires us to go backwards
 
 //     i.WriteU8 (0x00); // </Content>
 //     i.WriteU8 (0x00); // </Data>
 //   }
 
-//   virtual uint32_t Deserialize (Buffer::Iterator end)
+//   virtual uint32_t Deserialize (InputIterator end)
 //   {
-//     Buffer::Iterator i = end;
+//     InputIterator i = end;
 //     i.Prev (2); // Trailer interface requires us to go backwards
 
 //     uint8_t closing_tag_content = i.ReadU8 ();
@@ -166,7 +166,7 @@
 // }
 
 // void
-// Data::Serialize (Buffer::Iterator start) const
+// Data::Serialize (OutputIterator start) const
 // {
 //   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Data, CcnbParser::CCN_DTAG); // <Data>
 
@@ -469,11 +469,11 @@
 // };
 
 // uint32_t
-// Data::Deserialize (Buffer::Iterator start)
+// Data::Deserialize (InputIterator start)
 // {
 //   static DataVisitor contentObjectVisitor;
 
-//   Buffer::Iterator i = start;
+//   InputIterator i = start;
 //   Ptr<CcnbParser::Block> root = CcnbParser::Block::ParseBlock (i);
 //   root->accept (contentObjectVisitor, GetPointer (m_data));
 

@@ -47,7 +47,7 @@ public:
    * \returns parsed ccnb-encoded block, that could contain more block inside
    */
   static Ptr<Block>
-  ParseBlock (Buffer::Iterator &start, bool dontParseBlock = false);
+  ParseBlock (InputIterator &start, bool dontParseBlock = false);
 
   virtual ~Block ();
   
@@ -58,13 +58,13 @@ public:
 };
 
 /**
- * @brief Necessary until Buffer::Iterator gets PeekU8 call
+ * @brief Necessary until InputIterator gets PeekU8 call
  * @param i buffer iterator
  * @return peeked uint8_t value
  */
 inline
 uint8_t
-BufferIteratorPeekU8 (Buffer::Iterator &i)
+BufferIteratorPeekU8 (InputIterator &i)
 {
   uint8_t ret = i.ReadU8 ();
   i.Prev ();

@@ -16,7 +16,7 @@ namespace wire {
 namespace CcnbParser {
 
 // dictionary attributes are not used (yet?) in CCNx 
-Dattr::Dattr (Buffer::Iterator &start, uint32_t dattr)
+Dattr::Dattr (InputIterator &start, uint32_t dattr)
 {
   m_dattr = dattr;
   m_value = DynamicCast<Udata> (Block::ParseBlock (start));

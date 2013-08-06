@@ -17,7 +17,7 @@ namespace wire {
 namespace CcnbParser {
 
 // length length in octets of UTF-8 encoding of tag name - 1 (minimum tag name length is 1) 
-Attr::Attr (Buffer::Iterator &start, uint32_t length)
+Attr::Attr (InputIterator &start, uint32_t length)
 {
   m_attr.reserve (length+2); // extra byte for potential \0 at the end
   uint32_t i = 0;

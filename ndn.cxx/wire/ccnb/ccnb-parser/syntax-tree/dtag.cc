@@ -18,7 +18,7 @@ NDN_NAMESPACE_BEGIN
 namespace wire {
 namespace CcnbParser {
 
-Dtag::Dtag (Buffer::Iterator &start, uint32_t dtag)
+Dtag::Dtag (InputIterator &start, uint32_t dtag)
 {
   m_dtag = dtag;
   // std::cout << m_dtag << ", position: " << Block::counter << "\n";  
