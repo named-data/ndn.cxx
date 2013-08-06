@@ -20,6 +20,7 @@
 #include <boost/filesystem.hpp>
 
 #include "ndn.cxx/common.h"
+#include "ndn.cxx/fields/blob.h"
 
 namespace ndn
 {
@@ -66,7 +67,7 @@ public:
   FromFileContent (const boost::filesystem::path &fileName);
 
   static HashPtr
-  FromBytes (const ndn::Bytes &bytes);
+  FromBytes (const ndn::Blob &bytes);
 
   ~Hash ()
   {

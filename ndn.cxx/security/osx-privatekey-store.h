@@ -11,17 +11,12 @@
 #ifndef NDN_OSX_PRIVATEKEY_STORE_H
 #define NDN_OSX_PRIVATEKEY_STORE_H
 
-#include <string>
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/security/privatekey-store.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
 #include <CoreServices/CoreServices.h>
-
-#include "ndn.cxx/security/privatekey-store.h"
-
-
-using namespace std;
-using namespace ndn;
 
 namespace ndn
 {

@@ -20,10 +20,6 @@
 
 #include "certificate/publickey.h"
 
-
-using namespace std;
-using namespace ndn;
-
 namespace ndn
 {
 

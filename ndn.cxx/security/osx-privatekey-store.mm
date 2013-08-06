@@ -8,7 +8,7 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#include <CoreFoundation/CoreFoundation.h>
+#include "logging.h"
 
 #include "ndn.cxx/security/osx-privatekey-store.h"
 #include "ndn.cxx/security/certificate/der.h"
@@ -17,10 +17,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "logging.h"
+#include <CoreFoundation/CoreFoundation.h>
 
 using namespace std;
-using namespace ndn;
 
 INIT_LOGGER ("OSXPrivatekeyStore");
 
@@ -115,7 +114,7 @@ namespace security
 
     OSStatus res = SecItemExport (publicKey,
                                   kSecFormatOpenSSL,
-                                  NULL,
+                                  0,
                                   NULL,
                                   &exportedKey);
     
@@ -418,7 +417,7 @@ namespace security
       return kSecFormatOpenSSL;
     default:
       _LOG_DEBUG("Unrecognized output format!");
-      return NULL;
+      return 0;
     }
   }
 

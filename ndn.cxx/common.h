@@ -15,7 +15,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/function.hpp>
 
 namespace ndn
 {
@@ -25,6 +26,7 @@ struct Ptr : public boost::shared_ptr<T>
   Ptr () { }
   Ptr (boost::shared_ptr<T> ptr) : boost::shared_ptr<T>(ptr) { }
   Ptr (T *ptr) :  boost::shared_ptr<T>(ptr) { }
+  Ptr (T *ptr,bool) :  boost::shared_ptr<T>(ptr) { }
 
   template<class Y>
   Ptr & operator = (boost::shared_ptr<Y> ptr)
@@ -41,6 +43,47 @@ struct Ptr : public boost::shared_ptr<T>
 
   static Ptr
   Create () { return boost::make_shared<T> (); }
+
+  template<class U>
+  operator Ptr<U> () { return boost::static_pointer_cast<U> (*this); }
+
+  template<class U>
+  operator Ptr<const U> () const { return boost::static_pointer_cast<const U> (*this); }
+};
+
+template<class T>
+Ptr<T> Create() { return Ptr<T> (new T()); }
+
+template<class T, class P1>
+Ptr<T> Create(P1 &p1) { return Ptr<T> (new T(p1)); }
+
+template<class T, class P1, class P2>
+Ptr<T> Create(P1 &p1, P2 p2) { return Ptr<T> (new T(p1, p2)); }
+
+template<class T, class P1, class P2, class P3>
+Ptr<T> Create(P1 &p1, P2 p2, P3 p3) { return Ptr<T> (new T(p1, p2, p3)); }
+
+//template<class To, class From>
+//boost::shared_ptr<T> StaticCast (From &
+template<class T, class U>
+Ptr<T> StaticCast(Ptr<U> const & r) { return boost::static_pointer_cast<T>(r); }
+
+template<class T, class U>
+Ptr<T> DynamicCast(Ptr<U> const & r) { return boost::dynamic_pointer_cast<T>(r); }
+
+// typedef u_char uint8_t; // types.h defines  u_char
+
+class Buffer
+{
+public:
+  class Iterator : public std::istream
+  {
+  public:
+    uint8_t ReadU8 () { return static_cast<uint8_t> (get ()); }
+    uint8_t PeekU8 () { return static_cast<uint8_t> (peek ()); }
+    bool IsEnd () const { return eof(); }
+    void Prev () { seekg(-1, std::ios_base::cur); }
+  };
 };
 
 typedef boost::posix_time::ptime Time;
@@ -71,154 +114,161 @@ inline TimeInterval NowUnixTimestamp ()
 } // time
 } // ndn
 
+#define NDN_NAMESPACE_BEGIN namespace ndn {
+#define NDN_NAMESPACE_END   }
 
-extern "C" {
-#include <ccn/ccn.h>
-#include <ccn/charbuf.h>
-#include <ccn/keystore.h>
-#include <ccn/uri.h>
-#include <ccn/bloom.h>
-#include <ccn/signing.h>
-}
-#include <vector>
-#include <boost/shared_ptr.hpp>
-#include <boost/exception/all.hpp>
-#include <boost/function.hpp>
-#include <string>
-#include <sstream>
-#include <map>
-#include <utility>
-#include <string.h>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/range/iterator_range.hpp>
-#include <boost/make_shared.hpp>
-
-namespace ndn {
-typedef std::vector<unsigned char> Bytes;
-typedef std::vector<std::string>Comps;
-
-typedef boost::shared_ptr<Bytes> BytesPtr;
-
-inline
-const unsigned char *
-head(const Bytes &bytes)
+template<class T>
+struct SimpleRefCount
 {
-  return &bytes[0];
-}
+};
 
-inline
-unsigned char *
-head (Bytes &bytes)
-{
-  return &bytes[0];
-}
+// extern "C" {
+// #include <ccn/ccn.h>
+// #include <ccn/charbuf.h>
+// #include <ccn/keystore.h>
+// #include <ccn/uri.h>
+// #include <ccn/bloom.h>
+// #include <ccn/signing.h>
+// }
+// #include <vector>
+// #include <boost/shared_ptr.hpp>
+// #include <boost/exception/all.hpp>
+// #include <string>
+// #include <sstream>
+// #include <map>
+// #include <utility>
+// #include <string.h>
+// #include <boost/iostreams/filter/gzip.hpp>
+// #include <boost/iostreams/filtering_stream.hpp>
+// #include <boost/iostreams/device/back_inserter.hpp>
+// #include <boost/range/iterator_range.hpp>
+// #include <boost/make_shared.hpp>
 
-// --- Bytes operations start ---
-inline void
-readRaw(Bytes &bytes, const unsigned char *src, size_t len)
-{
-  if (len > 0)
-  {
-    bytes.resize(len);
-    memcpy (head (bytes), src, len);
-  }
-}
+// namespace ndn {
+// typedef std::vector<unsigned char> Bytes;
+// typedef std::vector<std::string>Comps;
 
-inline BytesPtr
-readRawPtr (const unsigned char *src, size_t len)
-{
-  if (len > 0)
-    {
-      BytesPtr ret (new Bytes (len));
-      memcpy (head (*ret), src, len);
+// typedef boost::shared_ptr<Bytes> BytesPtr;
 
-      return ret;
-    }
-  else
-    return BytesPtr ();
-}
+// inline
+// const unsigned char *
+// head(const Bytes &bytes)
+// {
+//   return &bytes[0];
+// }
 
-template<class Msg>
-BytesPtr
-serializeMsg(const Msg &msg)
-{
-  int size = msg.ByteSize ();
-  BytesPtr bytes (new Bytes (size));
-  msg.SerializeToArray (head(*bytes), size);
-  return bytes;
-}
+// inline
+// unsigned char *
+// head (Bytes &bytes)
+// {
+//   return &bytes[0];
+// }
 
-template<class Msg>
-boost::shared_ptr<Msg>
-deserializeMsg (const Bytes &bytes)
-{
-  boost::shared_ptr<Msg> retval (new Msg ());
-  if (!retval->ParseFromArray (head (bytes), bytes.size ()))
-    {
-      // to indicate an error
-      return boost::shared_ptr<Msg> ();
-    }
-  return retval;
-}
+// // --- Bytes operations start ---
+// inline void
+// readRaw(Bytes &bytes, const unsigned char *src, size_t len)
+// {
+//   if (len > 0)
+//   {
+//     bytes.resize(len);
+//     memcpy (head (bytes), src, len);
+//   }
+// }
 
-template<class Msg>
-boost::shared_ptr<Msg>
-deserializeMsg (const void *buf, size_t length)
-{
-  boost::shared_ptr<Msg> retval (new Msg ());
-  if (!retval->ParseFromArray (buf, length))
-    {
-      // to indicate an error
-      return boost::shared_ptr<Msg> ();
-    }
-  return retval;
-}
+// inline BytesPtr
+// readRawPtr (const unsigned char *src, size_t len)
+// {
+//   if (len > 0)
+//     {
+//       BytesPtr ret (new Bytes (len));
+//       memcpy (head (*ret), src, len);
 
+//       return ret;
+//     }
+//   else
+//     return BytesPtr ();
+// }
 
-template<class Msg>
-BytesPtr
-serializeGZipMsg(const Msg &msg)
-{
-  std::vector<char> bytes;   // Bytes couldn't work
-  {
-    boost::iostreams::filtering_ostream out;
-    out.push(boost::iostreams::gzip_compressor()); // gzip filter
-    out.push(boost::iostreams::back_inserter(bytes)); // back_inserter sink
+// template<class Msg>
+// BytesPtr
+// serializeMsg(const Msg &msg)
+// {
+//   int size = msg.ByteSize ();
+//   BytesPtr bytes (new Bytes (size));
+//   msg.SerializeToArray (head(*bytes), size);
+//   return bytes;
+// }
 
-    msg.SerializeToOstream(&out);
-  }
-  BytesPtr uBytes = boost::make_shared<Bytes>(bytes.size());
-  memcpy(&(*uBytes)[0], &bytes[0], bytes.size());
-  return uBytes;
-}
+// template<class Msg>
+// boost::shared_ptr<Msg>
+// deserializeMsg (const Bytes &bytes)
+// {
+//   boost::shared_ptr<Msg> retval (new Msg ());
+//   if (!retval->ParseFromArray (head (bytes), bytes.size ()))
+//     {
+//       // to indicate an error
+//       return boost::shared_ptr<Msg> ();
+//     }
+//   return retval;
+// }
 
-template<class Msg>
-boost::shared_ptr<Msg>
-deserializeGZipMsg(const Bytes &bytes)
-{
-  std::vector<char> sBytes(bytes.size());
-  memcpy(&sBytes[0], &bytes[0], bytes.size());
-  boost::iostreams::filtering_istream in;
-  in.push(boost::iostreams::gzip_decompressor()); // gzip filter
-  in.push(boost::make_iterator_range(sBytes)); // source
-
-  boost::shared_ptr<Msg> retval = boost::make_shared<Msg>();
-  if (!retval->ParseFromIstream(&in))
-    {
-      // to indicate an error
-      return boost::shared_ptr<Msg> ();
-    }
-
-  return retval;
-}
+// template<class Msg>
+// boost::shared_ptr<Msg>
+// deserializeMsg (const void *buf, size_t length)
+// {
+//   boost::shared_ptr<Msg> retval (new Msg ());
+//   if (!retval->ParseFromArray (buf, length))
+//     {
+//       // to indicate an error
+//       return boost::shared_ptr<Msg> ();
+//     }
+//   return retval;
+// }
 
 
-// --- Bytes operations end ---
+// template<class Msg>
+// BytesPtr
+// serializeGZipMsg(const Msg &msg)
+// {
+//   std::vector<char> bytes;   // Bytes couldn't work
+//   {
+//     boost::iostreams::filtering_ostream out;
+//     out.push(boost::iostreams::gzip_compressor()); // gzip filter
+//     out.push(boost::iostreams::back_inserter(bytes)); // back_inserter sink
 
-// Exceptions
-typedef boost::error_info<struct tag_errmsg, std::string> error_info_str;
+//     msg.SerializeToOstream(&out);
+//   }
+//   BytesPtr uBytes = boost::make_shared<Bytes>(bytes.size());
+//   memcpy(&(*uBytes)[0], &bytes[0], bytes.size());
+//   return uBytes;
+// }
 
-} // ndn
+// template<class Msg>
+// boost::shared_ptr<Msg>
+// deserializeGZipMsg(const Bytes &bytes)
+// {
+//   std::vector<char> sBytes(bytes.size());
+//   memcpy(&sBytes[0], &bytes[0], bytes.size());
+//   boost::iostreams::filtering_istream in;
+//   in.push(boost::iostreams::gzip_decompressor()); // gzip filter
+//   in.push(boost::make_iterator_range(sBytes)); // source
+
+//   boost::shared_ptr<Msg> retval = boost::make_shared<Msg>();
+//   if (!retval->ParseFromIstream(&in))
+//     {
+//       // to indicate an error
+//       return boost::shared_ptr<Msg> ();
+//     }
+
+//   return retval;
+// }
+
+
+// // --- Bytes operations end ---
+
+// // Exceptions
+// typedef boost::error_info<struct tag_errmsg, std::string> error_info_str;
+
+// } // ndn
+
 #endif // NDN_COMMON_H

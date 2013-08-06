@@ -10,6 +10,13 @@
  *         Zhenkai Zhu <zhenkai@cs.ucla.edu>
  */
 
+#if __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreorder"
+#elif __GNUC__
+#pragma GCC diagnostic ignored "-Wreorder"
+#endif
+
 #include "hash.h"
 #include "ndn.cxx/helpers/uri.h"
 
@@ -116,7 +123,7 @@ Hash::FromFileContent (const fs::path &filename)
 }
 
 HashPtr
-Hash::FromBytes (const ndn::Bytes &bytes)
+Hash::FromBytes (const ndn::Blob &bytes)
 {
   HashPtr retval = make_shared<Hash> (reinterpret_cast<void*> (0), 0);
   retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
@@ -125,7 +132,7 @@ Hash::FromBytes (const ndn::Bytes &bytes)
   EVP_DigestInit_ex (hash_context, HASH_FUNCTION (), 0);
 
   // not sure whether it's bad to do so if bytes.size is huge
-  EVP_DigestUpdate(hash_context, ndn::head(bytes), bytes.size());
+  EVP_DigestUpdate(hash_context, bytes.buf (), bytes.size());
 
   retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
 

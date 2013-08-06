@@ -50,7 +50,7 @@ public:
    * This method will create an interest with empty name, since ccn_parsed_interest structure
    * has limited amount of information
    */
-  Interest (const ccn_parsed_interest *interest);
+  // Interest (const ccn_parsed_interest *interest);
 
   /**
    * @brief Set interest name
