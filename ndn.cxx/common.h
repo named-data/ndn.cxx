@@ -36,7 +36,7 @@ struct Ptr : public boost::shared_ptr<T>
     return *this;
   }
 
-  operator Ptr<const T> () const { return *this; }
+  operator Ptr<const T> () const { return boost::shared_ptr<const T> (*this); }
 
   // template<class B>
   // operator Ptr<B> () { return *this; }

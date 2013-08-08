@@ -125,6 +125,22 @@ public:
    */
   inline Blob &
   content ();
+
+  ///////////////////////////////////////////////////////////////////////
+  //                         Wire format                               //
+  ///////////////////////////////////////////////////////////////////////
+
+  Ptr<Blob>
+  encodeToWire ();
+
+  void
+  encodeToWire (std::ostream &os);
+  
+  static Ptr<ndn::Data>
+  decodeFromWire (Ptr<const Blob> blob);
+  
+  static Ptr<ndn::Data>
+  decodeFromWire (std::istream &is);
   
 private:
   Name m_name;

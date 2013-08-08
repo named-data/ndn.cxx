@@ -1,12 +1,306 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
 /*
  * Copyright (c) 2013, Regents of the University of California
- *                     Alexander Afanasyev
+ *                     Yingdi Yu
  *
  * BSD license, See the LICENSE file for more information
  *
- * Author: Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
+
+#include "wire-ccnb-data.h"
+#include "wire-ccnb.h"
+
+#include "ndn.cxx/fields/signature-sha256-with-rsa.h"
+#include "ndn.cxx/fields/key-locator.h"
+
+#include "ccnb-parser/syntax-tree/block.h"
+#include "ccnb-parser/syntax-tree/dtag.h"
+#include "ccnb-parser/syntax-tree/blob.h"
+
+#include "ccnb-parser/visitors/name-visitor.h"
+#include "ccnb-parser/visitors/timestamp-visitor.h"
+#include "ccnb-parser/visitors/content-type-visitor.h"
+
+
+#include <boost/foreach.hpp>
+#include <boost/iostreams/stream.hpp>
+
+#include "logging.h"
+
+INIT_LOGGER ("ndn.wire.Ccnb.Data");
+
+NDN_NAMESPACE_BEGIN
+
+namespace wire {
+namespace ccnb {
+
+  void 
+  Data::SerializeUnsigned (const ndn::Data &data, OutputIterator &start)
+  {
+    Ptr<const Signature> sig = data.getSignature();
+
+    _LOG_DEBUG("Convert Signature!");
+
+    Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(sig);
+
+    _LOG_DEBUG("Append Name!");
+    {
+      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG); // <Name>
+      Ccnb::SerializeName(start, data.getName());                // <Component>...</Component>...
+      Ccnb::AppendCloser(start);                               // </Name>
+    }
+
+    _LOG_DEBUG("Append SignedInfo!");
+    {
+      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_SignedInfo, CcnbParser::CCN_DTAG); // <SignedInfo>
+      {
+        Ccnb::AppendTaggedBlob(start, 
+                               CcnbParser::CCN_DTAG_PublisherPublicKeyDigest,
+                               reinterpret_cast<const uint8_t*>(sha256sig->getPublisherKeyDigest().buf()), 
+                               sha256sig->getPublisherKeyDigest().size()); //<PublisherPublicKeyDigest>
+      }
+      {
+        Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Timestamp, CcnbParser::CCN_DTAG);            // <Timestamp>...
+        TimeInterval ti = data.getContent().getTimestamp() - time::UNIX_EPOCH_TIME;
+        Ccnb::AppendTimestampBlob (start, ti);
+        Ccnb::AppendCloser (start); //</Timestamp>
+      }
+      {
+        Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyLocator, CcnbParser::CCN_DTAG); // <KeyLocator>
+        {
+          Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyName, CcnbParser::CCN_DTAG);    // <KeyName>
+          {
+            Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG);       // <Name>
+            Ccnb::SerializeName(start, sha256sig->getKeyLocator().getKeyName());         //   <Component>...</Component>...
+            Ccnb::AppendCloser(start);                                     // </Name>
+          }
+          Ccnb::AppendCloser(start);                                     // </KeyName>
+        }
+        Ccnb::AppendCloser(start);                                     // </KeyLocator>
+      }                           
+    Ccnb::AppendCloser(start); // </SignedInfo>
+    }
+
+    _LOG_DEBUG("Append Content!");
+    {
+      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Content, CcnbParser::CCN_DTAG); // <Content>
+      uint32_t payloadSize = data.content().size();
+      if (payloadSize > 0){
+        Ccnb::AppendBlockHeader (start, payloadSize, CcnbParser::CCN_BLOB);
+        start.Write(reinterpret_cast<const uint8_t*>(data.content().buf()), data.content().size());
+        _LOG_DEBUG("payLoadSize: " << payloadSize);
+      }
+
+      Ccnb::AppendCloser(start); // </Content>
+    }
+  }
+
+  void
+  Data::Serialize (const ndn::Data &data, OutputIterator &start)
+  {
+    _LOG_DEBUG("in Serialize");
+
+    Ptr<const Signature> sig = data.getSignature();
+
+    _LOG_DEBUG("convert signature");
+
+    Ptr<const signature::Sha256WithRsa> sha256sig = DynamicCast<const signature::Sha256WithRsa>(sig);
+
+    _LOG_DEBUG("Append Signature!");
+    Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Data, CcnbParser::CCN_DTAG); // <Data>
+    {
+      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Signature, CcnbParser::CCN_DTAG); //<Signature>
+      {
+        Ccnb::AppendString(start, CcnbParser::CCN_DTAG_DigestAlgorithm, sha256sig->getDigestAlgorithm()); //<DigestAlgorithm>
+        Ccnb::AppendTaggedBlobWithPadding(start, 
+                                          CcnbParser::CCN_DTAG_SignatureBits, 
+                                          16, 
+                                          reinterpret_cast<const uint8_t*>(sha256sig->getSignatureBits().buf()), 
+                                          sha256sig->getSignatureBits().size()); //<SignatureBits>
+      }
+      Ccnb::AppendCloser(start); //</Signature>
+    }
+    
+    SerializeUnsigned(data, start);
+    
+    Ccnb::AppendCloser(start);// </Data>
+  }
+
+  class DataVisitor : public CcnbParser::VoidDepthFirstVisitor
+  {
+  public:
+    virtual void visit (CcnbParser::Dtag &n, boost::any param);
+  };
+    
+  void
+  DataVisitor::visit (CcnbParser::Dtag &n, boost::any param)
+  {
+    static CcnbParser::NameVisitor nameVisitor;
+    static CcnbParser::TimestampVisitor timestampVisitor;
+    static CcnbParser::ContentTypeVisitor contentTypeVisitor;
+
+    ndn::Data *m_data = boost::any_cast<ndn::Data*> (param);
+
+    switch (n.m_dtag)
+    {
+    case CcnbParser::CCN_DTAG_Data:
+      _LOG_DEBUG ("Data");
+      BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
+        {
+          block->accept (*this, param);
+        }
+      break;
+    case CcnbParser::CCN_DTAG_Signature:
+      _LOG_DEBUG ("Signature");
+      BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
+        {
+          block->accept (*this, param);
+        }
+      break;
+    case CcnbParser::CCN_DTAG_DigestAlgorithm:
+      _LOG_DEBUG ("DigestAlgorithm");
+      break;
+    case CcnbParser::CCN_DTAG_Witness:
+      _LOG_DEBUG ("Witness");
+      break;
+    case CcnbParser::CCN_DTAG_SignatureBits:
+      {
+        _LOG_DEBUG ("SignatureBits");
+        if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
+           throw CcnbParser::CcnbDecodingException ();
+
+        Ptr<signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<signature::Sha256WithRsa>(m_data->getSignature ());
+        Ptr<CcnbParser::Blob> sigBitsPtr = boost::dynamic_pointer_cast<CcnbParser::Blob>(*n.m_nestedTags.begin());
+        sha256sig->setSignatureBits(Blob(sigBitsPtr->m_blob, sigBitsPtr->m_blobSize));
+
+        break;
+      }
+    case CcnbParser::CCN_DTAG_Name:
+      {
+        _LOG_DEBUG ("Name");
+
+        // process name components
+        Name name;
+        n.accept (nameVisitor, &name);
+        m_data->setName (name);
+        break;
+      }
+    case CcnbParser::CCN_DTAG_SignedInfo:
+      _LOG_DEBUG ("SignedInfo");
+      BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
+        {
+          block->accept (*this, param);
+        }
+      break;
+    case CcnbParser::CCN_DTAG_PublisherPublicKeyDigest:
+      {
+        _LOG_DEBUG ("PublisherPublicKeyDigest");
+        if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
+          throw CcnbParser::CcnbDecodingException ();
+        
+        Ptr<signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<signature::Sha256WithRsa>(m_data->getSignature ());
+        Ptr<CcnbParser::Blob> pubKeyDigest = boost::dynamic_pointer_cast<CcnbParser::Blob>(*n.m_nestedTags.begin());
+        sha256sig->setPublisherKeyDigest(Blob(pubKeyDigest->m_blob, pubKeyDigest->m_blobSize));
+        
+        break;
+      }
+    case CcnbParser::CCN_DTAG_Timestamp:
+      {
+        _LOG_DEBUG ("Timestamp");
+        if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
+          throw CcnbParser::CcnbDecodingException ();
+
+        TimeInterval tsOffset = boost::any_cast<TimeInterval> ((*n.m_nestedTags.begin())->accept(timestampVisitor));
+        m_data->getContent().setTimeStamp(time::UNIX_EPOCH_TIME + tsOffset);
+        break;
+      }
+    case CcnbParser::CCN_DTAG_Type:
+      {
+        _LOG_DEBUG ("Type");
+        if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
+          throw CcnbParser::CcnbDecodingException ();
+
+        uint32_t typeBytes = boost::any_cast<uint32_t> ((*n.m_nestedTags.begin())->accept(contentTypeVisitor));
+        m_data->getContent().setType(Data::toType(typeBytes));
+        break;
+      }
+    case CcnbParser::CCN_DTAG_FreshnessSeconds:
+      _LOG_DEBUG ("FreshnessSeconds");
+      m_data->getContent().setFreshness();
+      break;
+    case CcnbParser::CCN_DTAG_FinalBlockID:
+      _LOG_DEBUG ("CCN_DTAG_FinalBlockID");
+      break;
+    case CcnbParser::CCN_DTAG_KeyLocator:
+      _LOG_DEBUG ("KeyLocator");
+      BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
+        {
+          block->accept (*this, param);
+        }
+      break;
+    case CcnbParser::CCN_DTAG_KeyName:
+      {
+        _LOG_DEBUG ("KeyName");
+        
+        // process name components
+        Name name;
+        n.accept (nameVisitor, &name);
+        Ptr<signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<signature::Sha256WithRsa>(m_data->getSignature ());
+        sha256sig->getKeyLocator().setType(ndn::KeyLocator::KEYNAME);
+        sha256sig->getKeyLocator().setKeyName(name);
+        break;
+      }
+    case CcnbParser::CCN_DTAG_Content:
+      {
+        _LOG_DEBUG ("Content");
+
+        if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
+          throw CcnbParser::CcnbDecodingException ();
+        
+        Ptr<CcnbParser::Blob> contentBlob = boost::dynamic_pointer_cast<CcnbParser::Blob>(*n.m_nestedTags.begin());
+        m_data->getContent().setContent(Blob(contentBlob->m_blob, contentBlob->m_blobSize));
+        break;
+      }
+    }
+    
+  }
+
+  ndn::Content::Type
+  Data::toType(uint32_t typeBytes)
+  {
+    switch(typeBytes){
+    case 0x0C04C0:
+      return ndn::Content::DATA;
+    case 0x10D091:
+      return ndn::Content::ENCR;
+    case 0x18E344:
+      return ndn::Content::GONE;
+    case 0x28463F:
+      return ndn::Content::KEY;
+    case 0x2C834A:
+      return ndn::Content::LINK;
+    case 0x34008A:
+      return ndn::Content::NACK;
+    default:
+      throw CcnbParser::CcnbDecodingException ();
+    }
+  }
+
+
+  void
+  Data::Deserialize (Ptr<ndn::Data> data, InputIterator &start)
+  {
+    static DataVisitor dataVisitor;
+
+    Ptr<CcnbParser::Block> root = CcnbParser::Block::ParseBlock (start);
+    root->accept (dataVisitor, GetPointer (data));
+  }
+
+} //ccnb
+} //wire
+
+NDN_NAMESPACE_END
 
 // #include "../ccnb.h"
 
