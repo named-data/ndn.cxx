@@ -193,7 +193,7 @@ namespace security
 
     sqlite3_prepare_v2 (m_db, "INSERT INTO Identity (identity_name) values (?)", -1, &stmt, 0);
         
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
     
     int res = sqlite3_step (stmt);
     
@@ -240,8 +240,8 @@ namespace security
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, "SELECT count(*) FROM Key WHERE identity_name=? AND key_identifier=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -293,10 +293,10 @@ namespace security
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, "INSERT INTO Key (identity_name, key_identifier, key_type, public_key) values (?, ?, ?, ?)", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_TRANSIENT);
     sqlite3_bind_int(stmt, 3, (int)keyType);
-    sqlite3_bind_blob(stmt, 4, pubKeyBlob->buf(), pubKeyBlob->size(), SQLITE_STATIC);
+    sqlite3_bind_blob(stmt, 4, pubKeyBlob->buf(), pubKeyBlob->size(), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -318,8 +318,8 @@ namespace security
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, "SELECT public_key FROM Key WHERE identity_name=? AND key_identifier=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -356,8 +356,8 @@ namespace security
     sqlite3_prepare_v2 (m_db, "UPDATE Key SET active=? WHERE identity_name=? AND key_identifier=?", -1, &stmt, 0);
 
     sqlite3_bind_int(stmt, 1, (active ? 1 : 0));
-    sqlite3_bind_text(stmt, 2, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, keyId.c_str(),  keyId.size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, keyId.c_str(),  keyId.size (), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -371,7 +371,7 @@ namespace security
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, "SELECT count(*) FROM Certificate WHERE cert_name=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, certName.toUri().c_str(),  certName.toUri().size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, certName.toUri().c_str(),  certName.toUri().size (), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -418,21 +418,22 @@ namespace security
                          values (?, ?, ?, ?, datetime(?, 'unixepoch'), datetime(?, 'unixepoch'), ?)",
                         -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(),  SQLITE_STATIC);
+    _LOG_DEBUG("certName: " << certName.toUri().c_str());
+    sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(),  SQLITE_TRANSIENT);
 
     Ptr<const signature::Sha256WithRsa> signature = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(certificate.getSignature());
     const Name & signerName = signature->getKeyLocator().getKeyName();
-    sqlite3_bind_text(stmt, 2, signerName.toUri().c_str(),  signerName.toUri().size (),  SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, signerName.toUri().c_str(),  signerName.toUri().size (),  SQLITE_TRANSIENT);
 
-    sqlite3_bind_text(stmt, 3, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 4, keyId.c_str(),  keyId.size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, keyId.c_str(),  keyId.size (), SQLITE_TRANSIENT);
 
     sqlite3_bind_int64(stmt, 5, (sqlite3_int64)(certificate.getNotBefore() - time::UNIX_EPOCH_TIME).total_seconds());
     sqlite3_bind_int64(stmt, 6, (sqlite3_int64)(certificate.getNotAfter() - time::UNIX_EPOCH_TIME).total_seconds());
 
     Ptr<Blob> certBlob = certificate.encodeToWire();
 
-    sqlite3_bind_blob(stmt, 7, certBlob->buf(), certBlob->size(), SQLITE_STATIC);
+    sqlite3_bind_blob(stmt, 7, certBlob->buf(), certBlob->size(), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -452,7 +453,7 @@ namespace security
                                  WHERE cert_name=? AND not_before<datetime(?, 'unixepoch') AND not_after>datetime(?, 'unixepoch') and valid_flag=1",
                                 -1, &stmt, 0);
             
-            sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_TRANSIENT);
             sqlite3_bind_int64(stmt, 2, (sqlite3_int64)time::NowUnixTimestamp().total_seconds());
             sqlite3_bind_int64(stmt, 3, (sqlite3_int64)time::NowUnixTimestamp().total_seconds());
           }
@@ -461,7 +462,7 @@ namespace security
             sqlite3_prepare_v2 (m_db, 
                                 "SELECT certificate_data FROM Certificate WHERE cert_name=?", -1, &stmt, 0);
 
-            sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_TRANSIENT);
           }
         
         int res = sqlite3_step (stmt);
@@ -504,7 +505,7 @@ namespace security
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, "SELECT key_identifier FROM Key WHERE identity_name=? AND default_key=1", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
         
@@ -535,8 +536,8 @@ namespace security
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, "SELECT cert_name FROM Certificate WHERE identity_name=? AND key_identifier=? AND default_cert=1", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -566,7 +567,7 @@ namespace security
     //Set current default identity
     sqlite3_prepare_v2 (m_db, "UPDATE Identity SET default_identity=1 WHERE identity_name=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_TRANSIENT);
     
     sqlite3_step (stmt);
 
@@ -584,7 +585,7 @@ namespace security
     //Reset previous default Key
     sqlite3_prepare_v2 (m_db, "UPDATE Key SET default_key=0 WHERE default_key=1 and identity_name=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_TRANSIENT);
 
     while( sqlite3_step (stmt) == SQLITE_ROW)
       {}
@@ -594,8 +595,8 @@ namespace security
     //Set current default Key
     sqlite3_prepare_v2 (m_db, "UPDATE Key SET default_key=1 WHERE identity_name=? AND key_identifier=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_TRANSIENT);
     
     sqlite3_step (stmt);
 
@@ -613,8 +614,8 @@ namespace security
     //Reset previous default Key
     sqlite3_prepare_v2 (m_db, "UPDATE Certificate SET default_cert=0 WHERE default_cert=1 AND identity_name=? AND key_identifier=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_TRANSIENT);
 
     while( sqlite3_step (stmt) == SQLITE_ROW)
       {}
@@ -624,9 +625,9 @@ namespace security
     //Set current default Key
     sqlite3_prepare_v2 (m_db, "UPDATE Certificate SET default_cert=1 WHERE identity_name=? AND key_identifier=? AND cert_name=?", -1, &stmt, 0);
 
-    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, certName.toUri().c_str(), certName.toUri().size(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(), identity.toUri().size(), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(), keyId.size(), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, certName.toUri().c_str(), certName.toUri().size(), SQLITE_TRANSIENT);
     
     sqlite3_step (stmt);
 

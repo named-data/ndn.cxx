@@ -44,11 +44,8 @@ namespace security
 	Certificate selfCert(*selfSign(keyName)); 
 	
 	_LOG_DEBUG("Add self-signed certificate as default");
-	try{
+
 	addCertificateAsDefault(selfCert);
-	}catch(SecException & e){
-	  cout << e.Msg() << endl;
-	}
       }
     else
       throw SecException("Identity has already been created!");
@@ -208,7 +205,7 @@ namespace security
     current.tm_min  = 0;
     current.tm_sec  = 0;
     Time notBefore = boost::posix_time::ptime_from_tm(current);
-    current.tm_year += 100;
+    current.tm_year = current.tm_year + 20;
     Time notAfter = boost::posix_time::ptime_from_tm(current);
 
     _LOG_DEBUG("notBefore: " << boost::posix_time::to_iso_string(notBefore) << " notAfter: " << boost::posix_time::to_iso_string(notAfter)); 
