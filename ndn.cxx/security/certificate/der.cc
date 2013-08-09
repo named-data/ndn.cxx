@@ -18,7 +18,7 @@
 
 #include "logging.h"
 
-INIT_LOGGER ("OSXPrivateKeyStore");
+INIT_LOGGER ("ndn.security.DERendec");
 
 using namespace std;
 
@@ -337,7 +337,7 @@ namespace security
       tmpSize = decodeSize(blob, offset);
       
       Ptr<Blob> item = Ptr<Blob>::Create();      
-      item->insert(item->end(), blob.begin() + begin, blob.end() + offset + tmpSize);
+      item->insert(item->end(), blob.begin() + begin, blob.begin() + offset + tmpSize);
       blobList->push_back(item);
       
       offset += tmpSize;

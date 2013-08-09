@@ -16,7 +16,7 @@
 
 #include "logging.h"
 
-INIT_LOGGER ("Publickey");
+INIT_LOGGER ("ndn.security.Publickey");
 
 using namespace std;
 
@@ -29,6 +29,7 @@ namespace security
   Publickey::Publickey(const Blob & blob, bool pem)
   {
     bool res = false;
+
     m_key = Ptr<Blob>(new Blob(blob.buf(), blob.size()));
 
     if(pem)

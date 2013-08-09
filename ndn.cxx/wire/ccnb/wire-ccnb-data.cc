@@ -55,18 +55,21 @@ namespace ccnb {
     {
       Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_SignedInfo, CcnbParser::CCN_DTAG); // <SignedInfo>
       {
+        _LOG_DEBUG("Append PublisherPublicKeyDigest!");
         Ccnb::AppendTaggedBlob(start, 
                                CcnbParser::CCN_DTAG_PublisherPublicKeyDigest,
                                reinterpret_cast<const uint8_t*>(sha256sig->getPublisherKeyDigest().buf()), 
                                sha256sig->getPublisherKeyDigest().size()); //<PublisherPublicKeyDigest>
       }
       {
+        _LOG_DEBUG("Append Timestamp!");
         Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Timestamp, CcnbParser::CCN_DTAG);            // <Timestamp>...
         TimeInterval ti = data.getContent().getTimestamp() - time::UNIX_EPOCH_TIME;
         Ccnb::AppendTimestampBlob (start, ti);
         Ccnb::AppendCloser (start); //</Timestamp>
       }
       {
+        _LOG_DEBUG("Append KeyLocator!");
         Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyLocator, CcnbParser::CCN_DTAG); // <KeyLocator>
         {
           Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyName, CcnbParser::CCN_DTAG);    // <KeyName>

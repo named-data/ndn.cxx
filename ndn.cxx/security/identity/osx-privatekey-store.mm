@@ -22,7 +22,7 @@
 
 using namespace std;
 
-INIT_LOGGER ("OSXPrivatekeyStore");
+INIT_LOGGER ("ndn.security.OSXPrivatekeyStore");
 
 namespace ndn
 {
@@ -33,8 +33,6 @@ namespace security
   OSXPrivatekeyStore::OSXPrivatekeyStore (const string & keychainName)
     : m_keychainName("" == keychainName ?  "NDN.keychain" : keychainName)
   {
-    _LOG_TRACE ("Enter: OSXPrivatekeyStore Constructor");
-   
     OSStatus res = SecKeychainCreate (m_keychainName.c_str (), //Keychain path
                                       0,                       //Keychain password length
                                       NULL,                    //Keychain password
@@ -65,9 +63,7 @@ namespace security
   }
 
   bool OSXPrivatekeyStore::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
-  {
-    _LOG_TRACE("OSXPrivatekeyStore::GenerateKeyPair");
-    
+  { 
     if(doesNameExist(keyName, KEY_CLASS_PUBLIC)){
       _LOG_DEBUG("keyName has exists!")
       return false;

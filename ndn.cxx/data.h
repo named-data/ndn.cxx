@@ -131,6 +131,12 @@ public:
   ///////////////////////////////////////////////////////////////////////
 
   Ptr<Blob>
+  encodeToUnsignedWire () const;
+
+  void
+  encodeToUnsignedWire (std::ostream &os) const;
+
+  Ptr<Blob>
   encodeToWire () const;
 
   void

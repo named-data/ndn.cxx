@@ -88,6 +88,10 @@ BOOST_AUTO_TEST_CASE (Time)
   string str = to_iso_string(time);
   int index = str.find_first_of('T');
   cout << str.substr(0, index) + str.substr(index+1, str.size() - index -1) << endl;
+
+  ptime ts1(pos_infin);
+  ptime ts2(boost::gregorian::date (1970, boost::gregorian::Jan, 1));
+  cout << to_iso_string(ts2 + seconds(315360000)) << endl;
 }
 
 BOOST_AUTO_TEST_CASE (TinyXML)

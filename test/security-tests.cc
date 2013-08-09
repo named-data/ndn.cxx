@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
 
-  identityManager.createIdentity(Name("/ndn/ucla.edu/yingdi/);
+  identityManager.createIdentity(Name("/ndn/ucla.edu/yingdi/"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

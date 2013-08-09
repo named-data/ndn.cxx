@@ -307,7 +307,10 @@ namespace security
   BasicIdentityStorage::getKey (const Name & keyName)
   {
     if(!doesKeyExist(keyName))
-      return NULL;
+      {
+        _LOG_DEBUG("keyName does not exist");
+        return NULL;
+      }
 
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
@@ -320,9 +323,15 @@ namespace security
 
     int res = sqlite3_step (stmt);
 
+    Ptr<Blob> result = NULL;
+    if(res == SQLITE_ROW)
+      {
+        result = Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0)));
+      }
+
     sqlite3_finalize (stmt);
 
-    return Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0)));
+    return result;
   }
 
   void 
@@ -395,6 +404,9 @@ namespace security
     // Check if the public key of certificate is the same as the key record
    
     Ptr<Blob> keyBlob = getKey(keyName);
+
+    _LOG_DEBUG("keyBlob Size: " << keyBlob->size() );
+    _LOG_DEBUG("cert keyBlob Size: " << certificate.getPublicKeyInfo().getKeyBlob()->size() );
     
     if(keyBlob == NULL or (*keyBlob) != (*certificate.getPublicKeyInfo().getKeyBlob()))
       throw SecException("Certificate does not match public key!");

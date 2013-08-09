@@ -29,6 +29,22 @@ namespace ndn {
   }
 
   Ptr<Blob>
+  Data::encodeToUnsignedWire () const
+  {
+    blob_stream blobStream;
+  
+    wire::ccnb::Data::SerializeUnsigned (*this, reinterpret_cast<OutputIterator &> (blobStream));
+
+    return blobStream.buf ();
+  }
+
+    void
+  Data::encodeToUnsignedWire (std::ostream &os) const
+  {
+    wire::ccnb::Data::SerializeUnsigned (*this, reinterpret_cast<OutputIterator &> (os));  
+  }
+
+  Ptr<Blob>
   Data::encodeToWire () const
   {
     blob_stream blobStream;

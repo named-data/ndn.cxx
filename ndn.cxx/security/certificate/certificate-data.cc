@@ -11,6 +11,9 @@
 #include "der.h"
 #include "certificate-data.h"
 
+#include "logging.h"
+
+INIT_LOGGER("ndn.security.CertificateData");
 
 using namespace std;
 using namespace boost::posix_time;

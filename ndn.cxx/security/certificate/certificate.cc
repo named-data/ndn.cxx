@@ -12,6 +12,9 @@
 
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
+#include "logging.h"
+
+INIT_LOGGER("ndn.security.Certificate");
 
 namespace ndn
 {
@@ -23,14 +26,20 @@ namespace security
     //TODO: Copy data to local;
     Ptr<const signature::Sha256WithRsa> dataSig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(data.getSignature());
     Ptr<signature::Sha256WithRsa> newSig = Ptr<signature::Sha256WithRsa>::Create();
+
+    _LOG_DEBUG("Start copying signature");
     
     newSig->setKeyLocator(dataSig->getKeyLocator());
     newSig->setPublisherKeyDigest(dataSig->getPublisherKeyDigest());
     newSig->setSignatureBits(dataSig->getSignatureBits());
 
+    _LOG_DEBUG("Finish copying signature");
+
     setName(data.getName());
     setSignature(newSig);
     setContent(data.getContent());
+    
+    _LOG_DEBUG("Finish local copy: " << getContent().getContent().size());
 
     m_certData = Ptr<CertificateData>(new CertificateData(getContent().getContent()));
   }
