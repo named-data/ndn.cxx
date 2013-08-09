@@ -11,6 +11,7 @@
 #ifndef NDN_IDENTITY_STORAGE_H
 #define NDN_IDENTITY_STORAGE_H
 
+#include "ndn.cxx/security/security-common.h"
 #include "ndn.cxx/security/certificate/certificate.h"
 
 using namespace boost::posix_time;
@@ -29,39 +30,45 @@ namespace security
     virtual 
     ~IdentityStorage () {}
 
+
     virtual bool 
     doesIdentityExist (const Name & identity) = 0;
+
+    virtual void
+    addIdentity (const Name & identity) = 0;
 
     virtual bool 
     revokeIdentity () = 0;
 
-    virtual bool 
-    addCertificate () = 0;
+
 
     virtual Name 
-    getNewKeyName (const Name & identity) = 0;
+    getNewKeyName (const Name & identity, bool ksk) = 0;
 
     virtual bool 
     doesKeyExist (const Name & keyName) = 0;
 
-    virtual bool 
-    addKey (const Name & identity, const Name & keyName, Ptr<Blob> digest, Time ts) = 0;
+    virtual void 
+    addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob) = 0;
 
-    virtual bool 
-    activateKey (const string & identity, const string & keyID) = 0;
+    virtual void 
+    activateKey (const Name & keyName) = 0;
 
-    virtual bool 
-    deactivateKey (const string & identity, const string & keyID) = 0;
+    virtual void 
+    deactivateKey (const Name & keyName) = 0;
 
-    virtual bool 
+
+    virtual bool
+    doesCertificateExist (const Name & certName) = 0;
+
+    virtual void 
     addCertificate (const Certificate & certificate) = 0;
 
-    virtual Ptr<Certificate> 
+    virtual Ptr<Data> 
     getCertificate (const Name & certName) = 0;
 
-    virtual string 
-    getKeyNameForCert (const Name & certName, const int & certSeq = -1) = 0;
-    
+    virtual Ptr<Data> 
+    getAnyCertificate (const Name & certName) = 0;    
 
     /*****************************************
      *           Get/Set Default             *
@@ -83,7 +90,7 @@ namespace security
     setDefaultIdentity (const Name & identity) = 0;
 
     virtual void 
-    setDefaultKeyName (const Name & identity, const Name & keyName) = 0;
+    setDefaultKeyName (const Name & keyName) = 0;
 
     virtual void 
     setDefaultCertName (const Name & keyName, const Name & certName) = 0;

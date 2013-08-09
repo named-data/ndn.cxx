@@ -33,35 +33,42 @@ namespace security
     virtual bool 
     doesIdentityExist (const Name & identity);
 
+    virtual void
+    addIdentity (const Name & identity);
+
     virtual bool 
     revokeIdentity ();
 
-    virtual bool 
-    addCertificate ();
+
 
     virtual Name 
-    getNewKeyName (const Name & identity);
+    getNewKeyName (const Name & identity, bool ksk);
 
     virtual bool 
     doesKeyExist (const Name & keyName);
 
-    virtual bool 
-    addKey (const Name & identity, const Name & keyName, Ptr<Blob> digest, Time ts);
+    virtual void 
+    addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob);
+
+    virtual void 
+    activateKey (const Name & keyName);
+
+    virtual void 
+    deactivateKey (const Name & keyName);
+
+
 
     virtual bool 
-    activateKey (const string & identity, const string & keyID);
+    doesCertificateExist (const Name & certName);
 
-    virtual bool 
-    deactivateKey (const string & identity, const string & keyID);
-
-    virtual bool 
+    virtual void 
     addCertificate (const Certificate & certificate);
 
-    virtual Ptr<Certificate> 
+    virtual Ptr<Data> 
     getCertificate (const Name & certName);
 
-    virtual string 
-    getKeyNameForCert (const Name & certName, const int & certSeq = -1);
+    virtual Ptr<Data> 
+    getAnyCertificate (const Name & certName);
 
     virtual Name 
     getDefaultIdentity ();
@@ -79,10 +86,14 @@ namespace security
     setDefaultIdentity (const Name & identity);
 
     virtual void 
-    setDefaultKeyName (const Name & identity, const Name & keyName);
+    setDefaultKeyName (const Name & keyName);
 
     virtual void 
     setDefaultCertName (const Name & keyName, const Name & certName);
+
+  private:
+    virtual void
+    updateKeyStatus(const Name & keyName, bool active);
 
   private:
     sqlite3 *m_db;

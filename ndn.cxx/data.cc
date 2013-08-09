@@ -29,7 +29,7 @@ namespace ndn {
   }
 
   Ptr<Blob>
-  Data::encodeToWire ()
+  Data::encodeToWire () const
   {
     blob_stream blobStream;
   
@@ -39,7 +39,7 @@ namespace ndn {
   }
 
   void
-  Data::encodeToWire (std::ostream &os)
+  Data::encodeToWire (std::ostream &os) const
   {
     wire::ccnb::Data::Serialize (*this, reinterpret_cast<OutputIterator &> (os));  
   }

@@ -69,7 +69,7 @@ namespace security
      * @returns pointer to the keyName, NULL if key generation fails
      */
     virtual Name 
-    generateKeyPair(const Name & identity, const Name & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+    generateKeyPair(const Name & identity, bool ksk = false, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 
     /**
      * @brief Helper function to generate a pair of RSA keys
@@ -79,9 +79,9 @@ namespace security
      * @returns pointer to the keyName, NULL if key generation fails
      */
     virtual Name 
-    generateRSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
+    generateRSAKeyPair(const Name & identity, bool ksk = false, int keySize = 2048)
     {
-      return generateKeyPair(identity, keyName, KEY_TYPE_RSA, keySize); 
+      return generateKeyPair(identity, ksk, KEY_TYPE_RSA, keySize); 
     }
 
     /**
@@ -92,9 +92,9 @@ namespace security
      * @returns pointer to the keyName, NULL if key generation fails
      */
     virtual Name 
-    generateDSAKeyPair(const Name & identity, const Name & keyName, int keySize = 2048)
+    generateDSAKeyPair(const Name & identity, bool ksk = false, int keySize = 2048)
     {
-      return generateKeyPair(identity, keyName, KEY_TYPE_DSA, keySize); 
+      return generateKeyPair(identity, ksk, KEY_TYPE_DSA, keySize); 
     }
 
 

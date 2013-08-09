@@ -49,30 +49,20 @@ namespace security
         return false;
       }
 
-    generateKeyPair(identity, identity);
+    generateKeyPair(identity, true);
 
     _LOG_DEBUG("Successfully create identity!");
     _LOG_TRACE("Exit Keychain::CreateIdentity");
     return true;
   }
 
-  Name Keychain::generateKeyPair(const Name & identity, const Name & keyName, KeyType keyType, int keySize)
+  Name Keychain::generateKeyPair(const Name & identity, bool ksk, KeyType keyType, int keySize)
   {
     _LOG_TRACE("Enter Keychain::GenerateKeyPair");
     
-    _LOG_DEBUG("Determine keyName")
-    Name resultKeyName;
-    if(identity == keyName)
-      resultKeyName = m_identityStorage->getNewKeyName(identity);
-    else
-      {
-        if(m_identityStorage->doesKeyExist(keyName))
-          {
-            _LOG_DEBUG("Key name has already existed!");
-            throw SecException("Key name has already existed");
-          }
-        resultKeyName = keyName;
-      }
+    _LOG_DEBUG("Determine keyName");
+
+    Name resultKeyName = m_identityStorage->getNewKeyName(identity, ksk);
 
     _LOG_DEBUG("Create a key in private key store");
     if(!m_privatekeyStore->generateKeyPair(resultKeyName.toUri(), keyType, keySize))
@@ -82,9 +72,9 @@ namespace security
       }
 
     _LOG_DEBUG("Create a key record in identity storage");
-    Ptr<Blob> keyDigest = m_privatekeyStore->getPublickey(resultKeyName.toUri())->getDigest();
+    Ptr<Publickey> pubKey = m_privatekeyStore->getPublickey(resultKeyName.toUri());
     Time ts = second_clock::universal_time();
-    m_identityStorage->addKey(identity, resultKeyName, keyDigest, ts);
+    m_identityStorage->addKey(resultKeyName, keyType, pubKey->getKeyBlob());
     
     _LOG_DEBUG("Successfully create key pair!");
     _LOG_TRACE("Exit Keychain::GenerateKeyPair");
@@ -122,7 +112,7 @@ namespace security
 
   Ptr<Certificate> Keychain::getCertificate(const Name & certName)
   {
-    return m_identityStorage->getCertificate(certName);
+    return Ptr<Certificate>(new Certificate(*m_identityStorage->getCertificate(certName)));
   }
 
   Ptr<Blob> Keychain::revokeKey(const Name & keyName)
@@ -214,7 +204,8 @@ namespace security
   {
     _LOG_TRACE ("Enter Sign");
 
-    string keyName = m_identityStorage->getKeyNameForCert (certName);
+    // string keyName = m_identityStorage->getKeyNameForCert (certName);
+    string keyName = "";
 
     if(keyName == "")
       {

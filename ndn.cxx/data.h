@@ -131,10 +131,10 @@ public:
   ///////////////////////////////////////////////////////////////////////
 
   Ptr<Blob>
-  encodeToWire ();
+  encodeToWire () const;
 
   void
-  encodeToWire (std::ostream &os);
+  encodeToWire (std::ostream &os) const;
   
   static Ptr<ndn::Data>
   decodeFromWire (Ptr<const Blob> blob);

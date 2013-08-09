@@ -45,9 +45,15 @@ namespace security
 
     Time & 
     getNotBefore();
+    
+    const Time &
+    getNotBefore() const;
 
     Time & 
     getNotAfter();
+
+    const Time &
+    getNotAfter() const;
     
     Publickey & 
     getPublicKeyInfo();

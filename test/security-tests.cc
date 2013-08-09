@@ -127,6 +127,21 @@ BOOST_AUTO_TEST_CASE (IdentityStorage)
     security::BasicIdentityStorage idStore;
 
     cout << boolalpha << idStore.doesIdentityExist(Name("/ndn/ucla.edu/yingdi")) << endl;
+
+    Name keyName = idStore.getNewKeyName(Name("/ndn/ucla.edu/yingdi"), true);
+
+    string blobBits = "1234567890";
+    Ptr<Blob> blobPtr = Ptr<Blob>(new Blob(blobBits.c_str(), blobBits.size()));
+    
+    // idStore.addKey(keyName, security::KEY_TYPE_DSA, blobPtr);
+
+    idStore.activateKey(Name("/ndn/ucla.edu/yingdi/KSK-1375992917"));
+
+    idStore.deactivateKey(Name("/ndn/ucla.edu/yingdi/KSK-1375992917"));
+
+    // idStore.getAnyCertificate(Name("/ndn/edu/ucla/KSK-123456789/ID-CERT"));
+
+
   }catch(security::SecException & e){
     cerr << e.Msg();
   }

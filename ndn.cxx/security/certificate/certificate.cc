@@ -26,29 +26,46 @@ namespace security
     //TODO:
   }
 
-  Name Certificate::getCertName()
+  Name 
+  Certificate::getCertName()
   {
     //TODO:
     return Name();
   }
 
-  int Certificate::getSeqNumber()
+  int 
+  Certificate::getSeqNumber()
   {
     //TODO:
     return -1;
   }
 
-  Time & Certificate::getNotBefore()
+  Time & 
+  Certificate::getNotBefore()
   {
     return m_certData->getNotBefore();
   }
 
-  Time & Certificate::getNotAfter()
+  const Time & 
+  Certificate::getNotBefore() const
+  {
+    return m_certData->getNotBefore();
+  }
+
+  Time & 
+  Certificate::getNotAfter()
+  {
+    return m_certData->getNotAfter();
+  }
+  
+  const Time & 
+  Certificate::getNotAfter() const
   {
     return m_certData->getNotAfter();
   }
 
-  Publickey & Certificate::getPublicKeyInfo()
+  Publickey & 
+  Certificate::getPublicKeyInfo()
   {
     return m_certData->getKey();
   }
