@@ -83,8 +83,14 @@ namespace security
     virtual Ptr<Signature>
     signByIdentity (const Blob & blob, const Name & identity);
 
+    virtual void
+    signByIdentity (Data & data, const Name & certName);
+
     virtual Ptr<Signature>
     signByCert (const Blob & blob, const Name & certName);
+    
+    virtual void
+    signByCert (Data & data, const Name & certName);
 
   private:
     virtual Name
