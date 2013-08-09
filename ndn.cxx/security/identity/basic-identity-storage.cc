@@ -258,6 +258,25 @@ namespace security
     return keyIdExist;
   }
 
+  Name 
+  BasicIdentityStorage::getKeyNameForCertExist (const Name & certName)
+  {
+    int i = certName.size() - 1;
+
+    for (; i >= 0; i--)
+      {
+        if(certName.get(i).toUri() == string("ID-CERT"))
+          break; 
+      }
+    
+    Name keyName = certName.getSubName(0, i);
+
+    if(doesKeyExist(keyName))
+      return keyName;
+    else
+      throw SecException("No corresponding Key record for certificaite!");
+  }
+
   void
   BasicIdentityStorage::addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob)
   {
@@ -282,6 +301,28 @@ namespace security
     int res = sqlite3_step (stmt);
 
     sqlite3_finalize (stmt);
+  }
+
+  Ptr<Blob>
+  BasicIdentityStorage::getKey (const Name & keyName)
+  {
+    if(!doesKeyExist(keyName))
+      return NULL;
+
+    string keyId = keyName.get(-1).toUri();
+    Name identity = keyName.getSubName(0, keyName.size() - 1);
+    
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2 (m_db, "SELECT public_key FROM Key WHERE identity_name=? AND key_identifier=?", -1, &stmt, 0);
+
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_STATIC);
+
+    int res = sqlite3_step (stmt);
+
+    sqlite3_finalize (stmt);
+
+    return Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0)));
   }
 
   void 
@@ -342,26 +383,23 @@ namespace security
   BasicIdentityStorage::addCertificate (const Certificate & certificate)
   {
     const Name & certName = certificate.getName();
-    int i = certName.size() - 1;
-
-    for (; i >= 0; i--)
-      {
-        if(certName.get(i).toUri() == string("ID-CERT"))
-          break; 
-      }
+    Name keyName = getKeyNameForCertExist(certName);
     
-    Name keyName = certName.getSubName(0, i);
-
-    if(!doesKeyExist(keyName))
-      throw SecException("No corresponding Key record for certificaite!");
-    
+    // Check if certificate has already existed!
     if(doesCertificateExist(certName))
       throw SecException("Certificate has already been installed!");
 
-
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
+    
+    // Check if the public key of certificate is the same as the key record
+   
+    Ptr<Blob> keyBlob = getKey(keyName);
+    
+    if(keyBlob == NULL or (*keyBlob) != (*certificate.getPublicKeyInfo().getKeyBlob()))
+      throw SecException("Certificate does not match public key!");
 
+    // Insert the certificate
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, 
                         "INSERT INTO Certificate (cert_name, cert_issuer, identity_name, key_identifier, not_before, not_after, certificate_data)\
@@ -390,52 +428,36 @@ namespace security
   }
 
   Ptr<Data> 
-  BasicIdentityStorage::getCertificate (const Name & certName)
+  BasicIdentityStorage::getCertificate (const Name & certName, bool any)
   {
     if(doesCertificateExist(certName))
       {
         sqlite3_stmt *stmt;
-        sqlite3_prepare_v2 (m_db, 
-                            "SELECT certificate_data FROM Certificate \
-                            WHERE cert_name=? AND not_before<datetime(?, 'unixepoch') AND not_after>datetime(?, 'unixepoch') and valid_flag=1",
-                            -1, &stmt, 0);
+        if(false == any)
+          {
+            sqlite3_prepare_v2 (m_db, 
+                                "SELECT certificate_data FROM Certificate \
+                                 WHERE cert_name=? AND not_before<datetime(?, 'unixepoch') AND not_after>datetime(?, 'unixepoch') and valid_flag=1",
+                                -1, &stmt, 0);
+            
+            sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_STATIC);
+            sqlite3_bind_int64(stmt, 2, (sqlite3_int64)time::NowUnixTimestamp().total_seconds());
+            sqlite3_bind_int64(stmt, 3, (sqlite3_int64)time::NowUnixTimestamp().total_seconds());
+          }
+        else
+          {
+            sqlite3_prepare_v2 (m_db, 
+                                "SELECT certificate_data FROM Certificate WHERE cert_name=?", -1, &stmt, 0);
 
-        sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_STATIC);
-        sqlite3_bind_int64(stmt, 2, (sqlite3_int64)time::NowUnixTimestamp().total_seconds());
-        sqlite3_bind_int64(stmt, 3, (sqlite3_int64)time::NowUnixTimestamp().total_seconds());
-
+            sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_STATIC);
+          }
+        
         int res = sqlite3_step (stmt);
         
         Ptr<Data> data = NULL;
 
         if (res == SQLITE_ROW)
           // _LOG_DEBUG("" << string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
-          data = Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0))));            
- 
-        sqlite3_finalize (stmt);
-        
-        return data;
-      }
-    else
-      return NULL;
-  }
-
-  Ptr<Data>
-  BasicIdentityStorage::getAnyCertificate (const Name & certName)
-  {
-    if(doesCertificateExist(certName))
-      {
-        sqlite3_stmt *stmt;
-        sqlite3_prepare_v2 (m_db, 
-                            "SELECT certificate_data FROM Certificate WHERE cert_name=?", -1, &stmt, 0);
-
-        sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(), SQLITE_STATIC);
-
-        int res = sqlite3_step (stmt);
-        
-        Ptr<Data> data = NULL;
-
-        if (res == SQLITE_ROW)
           data = Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0))));            
  
         sqlite3_finalize (stmt);

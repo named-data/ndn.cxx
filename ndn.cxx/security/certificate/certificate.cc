@@ -10,6 +10,9 @@
 
 #include "certificate.h"
 
+#include "ndn.cxx/fields/signature-sha256-with-rsa.h"
+
+
 namespace ndn
 {
 
@@ -18,6 +21,17 @@ namespace security
   Certificate::Certificate(const Data & data)
   {
     //TODO: Copy data to local;
+    Ptr<const signature::Sha256WithRsa> dataSig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(data.getSignature());
+    Ptr<signature::Sha256WithRsa> newSig = Ptr<signature::Sha256WithRsa>::Create();
+    
+    newSig->setKeyLocator(dataSig->getKeyLocator());
+    newSig->setPublisherKeyDigest(dataSig->getPublisherKeyDigest());
+    newSig->setSignatureBits(dataSig->getSignatureBits());
+
+    setName(data.getName());
+    setSignature(newSig);
+    setContent(data.getContent());
+
     m_certData = Ptr<CertificateData>(new CertificateData(getContent().getContent()));
   }
 
@@ -66,6 +80,12 @@ namespace security
 
   Publickey & 
   Certificate::getPublicKeyInfo()
+  {
+    return m_certData->getKey();
+  }
+
+  const Publickey & 
+  Certificate::getPublicKeyInfo() const
   {
     return m_certData->getKey();
   }

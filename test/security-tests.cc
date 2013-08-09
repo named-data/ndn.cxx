@@ -14,11 +14,12 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
-#include "ndn.cxx/security/osx-privatekey-store.h"
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/security/certificate/der.h"
 #include "ndn.cxx/security/policy/identity-policy.h"
+#include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
+#include "ndn.cxx/security/identity/osx-privatekey-store.h"
 
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
@@ -145,6 +146,16 @@ BOOST_AUTO_TEST_CASE (IdentityStorage)
   }catch(security::SecException & e){
     cerr << e.Msg();
   }
+}
+
+BOOST_AUTO_TEST_CASE (IdentityManager)
+{
+  Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
+  Ptr<security::OSXPrivatekeyStore> privateStorage = Ptr<security::OSXPrivatekeyStore>::Create();
+
+  security::IdentityManager identityManager(publicStorage, privateStorage);
+
+  identityManager.createIdentity(Name("/ndn/ucla.edu/yingdi/);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

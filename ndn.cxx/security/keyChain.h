@@ -19,9 +19,9 @@
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/fields/signature.h"
 
-#include "privatekey-store.h"
 #include "cert-cache.h"
 
+#include "identity/privatekey-store.h"
 #include "identity/identity-storage.h"
 #include "policy/policy-manager.h"
 #include "policy/policy.h"

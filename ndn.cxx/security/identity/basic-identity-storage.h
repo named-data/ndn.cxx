@@ -47,8 +47,14 @@ namespace security
     virtual bool 
     doesKeyExist (const Name & keyName);
 
+    virtual Name 
+    getKeyNameForCertExist (const Name & certName);
+
     virtual void 
     addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob);
+
+    virtual Ptr<Blob>
+    getKey (const Name & keyName);
 
     virtual void 
     activateKey (const Name & keyName);
@@ -65,10 +71,7 @@ namespace security
     addCertificate (const Certificate & certificate);
 
     virtual Ptr<Data> 
-    getCertificate (const Name & certName);
-
-    virtual Ptr<Data> 
-    getAnyCertificate (const Name & certName);
+    getCertificate (const Name & certName, bool any = false);
 
     virtual Name 
     getDefaultIdentity ();

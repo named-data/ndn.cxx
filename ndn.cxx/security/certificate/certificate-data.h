@@ -74,6 +74,12 @@ namespace security
       return *m_key;
     }
 
+    const Publickey &
+    getKey () const
+    {
+      return *m_key;
+    }
+
   private:
     Ptr<Blob> 
     encodeExtn ();

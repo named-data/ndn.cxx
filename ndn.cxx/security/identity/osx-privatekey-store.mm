@@ -10,7 +10,8 @@
 
 #include "logging.h"
 
-#include "ndn.cxx/security/osx-privatekey-store.h"
+#include "osx-privatekey-store.h"
+
 #include "ndn.cxx/security/certificate/der.h"
 #include "ndn.cxx/wire/ccnb.h"
 

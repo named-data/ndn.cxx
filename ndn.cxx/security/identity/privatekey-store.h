@@ -18,7 +18,7 @@
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/data.h"
 
-#include "certificate/publickey.h"
+#include "ndn.cxx/security/certificate/publickey.h"
 
 namespace ndn
 {

@@ -17,7 +17,7 @@
 #include <boost/program_options/parsers.hpp>
 namespace po = boost::program_options;
 
-#include "ndn.cxx/security/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-store.h"
 #include "ndn.cxx/fields/name.h"
 
 using namespace std;

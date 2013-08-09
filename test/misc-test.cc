@@ -8,7 +8,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "ndn.cxx/security/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-store.h"
 #include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/der.h"
 #include "ndn.cxx/security/certificate/publickey.h"
@@ -217,6 +217,22 @@ BOOST_AUTO_TEST_CASE (Digest)
 
   security::DERendec endec;
   endec.printBlob(*digest, "");
+}
+
+BOOST_AUTO_TEST_CASE (BlobComparison)
+{
+  string str1("1234567");
+  string str2("abcdefg");
+
+  Blob blob1(str1.c_str(), str1.size());
+  Blob blob2(str2.c_str(), str2.size());
+  Blob blob3(str1.c_str(), str1.size());
+  
+  cout << boolalpha << (blob1 == blob2) << endl;
+  cout << boolalpha << (blob3 == blob2) << endl;
+  cout << boolalpha << (blob1 == blob3) << endl;
+
+
 }
 
 BOOST_AUTO_TEST_CASE (SignVerify)

@@ -58,7 +58,8 @@ namespace security
     Publickey & 
     getPublicKeyInfo();
 
-    
+    const Publickey & 
+    getPublicKeyInfo() const;
 
   private:
     Ptr<CertificateData> m_certData;

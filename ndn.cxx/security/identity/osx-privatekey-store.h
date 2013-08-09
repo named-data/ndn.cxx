@@ -12,7 +12,8 @@
 #define NDN_OSX_PRIVATEKEY_STORE_H
 
 #include "ndn.cxx/common.h"
-#include "ndn.cxx/security/privatekey-store.h"
+
+#include "privatekey-store.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
