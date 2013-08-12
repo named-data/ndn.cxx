@@ -16,6 +16,8 @@
 
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/security/certificate/der.h"
+#include "ndn.cxx/security/certificate/publickey.h"
+#include "ndn.cxx/security/certificate/certificate-subdescrpt.h"
 #include "ndn.cxx/security/policy/identity-policy.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
@@ -32,6 +34,33 @@ using namespace ndn;
 
 
 BOOST_AUTO_TEST_SUITE(SecurityTests)
+
+Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
+{
+  Ptr<Data> data = Create<Data>();
+  
+  Name certName;
+  certName.append(keyName).append("ID-CERT").append("0");
+  data->setName(certName);
+
+  vector< Ptr<security::CertificateSubDescrypt> > subject;
+  subject.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.41", keyName.toUri())));
+  tm current = boost::posix_time::to_tm(time::Now());
+  current.tm_hour = 0;
+  current.tm_min  = 0;
+  current.tm_sec  = 0;
+  Time notBefore = boost::posix_time::ptime_from_tm(current);
+  current.tm_year = current.tm_year + 20;
+  Time notAfter = boost::posix_time::ptime_from_tm(current);
+  security::CertificateData certData(notBefore, notAfter, subject, pubKey);
+
+  Ptr<Blob> certBlob = certData.toDER();
+
+  Content content(certBlob->buf(), certBlob->size());
+  data->setContent(content);
+  
+  return data;
+}
 
 BOOST_AUTO_TEST_CASE (Basic)
 {
@@ -155,7 +184,70 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
 
-  identityManager.createIdentity(Name("/ndn/ucla.edu/yingdi/"));
+  Ptr<security::Publickey> signingRequest = NULL;
+  identityManager.createIdentity(Name("/ndn"));
+
+
+  Name ndn_DSK_Name = identityManager.generateRSAKeyPair(Name("/ndn"));
+  signingRequest = identityManager.getPublickey(ndn_DSK_Name);
+  Ptr<Data> ndn_DSK_unsign_cert = generateCertificate(ndn_DSK_Name, signingRequest);
+
+  identityManager.signByIdentity(*ndn_DSK_unsign_cert, Name("/ndn"));
+  security::Certificate ndn_DSK_cert(*ndn_DSK_unsign_cert);
+
+  identityManager.addCertificateAsIdentityDefault(ndn_DSK_cert);
+
+
+
+  identityManager.createIdentity(Name("/ndn/ucla.edu"));
+  Name ndn_UCLA_KSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu"), true);
+
+
+  signingRequest = identityManager.getPublickey(ndn_UCLA_KSK_name);
+  Ptr<Data> ndn_UCLA_KSK_unsign_cert = generateCertificate(ndn_UCLA_KSK_name, signingRequest);
+
+
+  identityManager.signByIdentity(*ndn_UCLA_KSK_unsign_cert, Name("/ndn"));
+  security::Certificate ndn_UCLA_KSK_cert(*ndn_UCLA_KSK_unsign_cert);
+
+
+  identityManager.addCertificateAsDefault(ndn_UCLA_KSK_cert);
+
+  Name ndn_UCLA_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu"));
+  signingRequest = identityManager.getPublickey(ndn_UCLA_DSK_name);
+  Ptr<Data> ndn_UCLA_DSK_unsign_cert = generateCertificate(ndn_UCLA_DSK_name, signingRequest);
+  
+  identityManager.signByIdentity(*ndn_UCLA_DSK_unsign_cert, Name("/ndn/ucla.edu"));
+  security::Certificate ndn_UCLA_DSK_cert(*ndn_UCLA_DSK_unsign_cert);
+
+  identityManager.addCertificateAsIdentityDefault(ndn_UCLA_DSK_cert);
+
+
+
+  identityManager.createIdentity(Name("/ndn/ucla.edu/yingdi"));
+  Name ndn_Yingdi_KSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi"), true);
+
+
+  signingRequest = identityManager.getPublickey(ndn_Yingdi_KSK_name);
+  Ptr<Data> ndn_Yingdi_KSK_unsign_cert = generateCertificate(ndn_Yingdi_KSK_name, signingRequest);
+
+
+  identityManager.signByIdentity(*ndn_Yingdi_KSK_unsign_cert, Name("/ndn/ucla.edu"));
+  security::Certificate ndn_Yingdi_KSK_cert(*ndn_Yingdi_KSK_unsign_cert);
+
+  identityManager.addCertificateAsDefault(ndn_Yingdi_KSK_cert);
+
+
+  Name ndn_Yingdi_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi"));
+  signingRequest = identityManager.getPublickey(ndn_Yingdi_DSK_name);
+  Ptr<Data> ndn_Yingdi_DSK_unsign_cert = generateCertificate(ndn_Yingdi_DSK_name, signingRequest);
+  
+  identityManager.signByIdentity(*ndn_Yingdi_DSK_unsign_cert, Name("/ndn/ucla.edu/yingdi"));
+  security::Certificate ndn_Yingdi_DSK_cert(*ndn_Yingdi_DSK_unsign_cert);
+
+  identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_DSK_cert);
+
+  
 }
 
 BOOST_AUTO_TEST_SUITE_END()

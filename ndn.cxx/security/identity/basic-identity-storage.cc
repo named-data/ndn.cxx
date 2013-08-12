@@ -222,8 +222,7 @@ namespace security
       keyIdStr = ("DSK-" + oss.str());
 
 
-    Name keyName;
-    keyName.append(identity).append(keyIdStr);
+    Name keyName = Name(identity).append(keyIdStr);
 
     if(doesKeyExist(keyName))
       throw SecException("Key name has already existed");
@@ -259,7 +258,7 @@ namespace security
   }
 
   Name 
-  BasicIdentityStorage::getKeyNameForCertExist (const Name & certName)
+  BasicIdentityStorage::getKeyNameForCert (const Name & certName)
   {
     int i = certName.size() - 1;
 
@@ -269,12 +268,7 @@ namespace security
           break; 
       }
     
-    Name keyName = certName.getSubName(0, i);
-
-    if(doesKeyExist(keyName))
-      return keyName;
-    else
-      throw SecException("No corresponding Key record for certificaite!");
+    return certName.getSubName(0, i);
   }
 
   void
@@ -392,7 +386,10 @@ namespace security
   BasicIdentityStorage::addCertificate (const Certificate & certificate)
   {
     const Name & certName = certificate.getName();
-    Name keyName = getKeyNameForCertExist(certName);
+    Name keyName = getKeyNameForCert(certName);
+
+    if(!doesKeyExist(keyName))
+      throw SecException("No corresponding Key record for certificaite!");
     
     // Check if certificate has already existed!
     if(doesCertificateExist(certName))
@@ -404,9 +401,6 @@ namespace security
     // Check if the public key of certificate is the same as the key record
    
     Ptr<Blob> keyBlob = getKey(keyName);
-
-    _LOG_DEBUG("keyBlob Size: " << keyBlob->size() );
-    _LOG_DEBUG("cert keyBlob Size: " << certificate.getPublicKeyInfo().getKeyBlob()->size() );
     
     if(keyBlob == NULL or (*keyBlob) != (*certificate.getPublicKeyInfo().getKeyBlob()))
       throw SecException("Certificate does not match public key!");
@@ -492,7 +486,7 @@ namespace security
     Name identity;
 
     if (res == SQLITE_ROW)
-      identity.append(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
+      identity = Name(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
  
     sqlite3_finalize (stmt);
         
@@ -512,7 +506,7 @@ namespace security
     Name keyName;
 
     if (res == SQLITE_ROW)
-      keyName.append(identity).append(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
+      keyName = Name(identity).append(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
  
     sqlite3_finalize (stmt);
         
@@ -544,7 +538,7 @@ namespace security
     Name certName;
 
     if (res == SQLITE_ROW)
-      certName.append(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
+      certName = Name(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
  
     sqlite3_finalize (stmt);
         

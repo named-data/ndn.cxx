@@ -34,7 +34,7 @@ namespace security
     virtual 
     ~IdentityManager() {};
 
-    virtual void
+    virtual Name
     createIdentity (const Name & identity);
 
     /* Defualt identity is the default idenity for the user, it should not be configured by application.
@@ -57,12 +57,18 @@ namespace security
     virtual Name
     generateRSAKeyPairAsDefault (const Name & identity, bool ksk = false, int keySize = 2048);
 
+    virtual Ptr<Publickey>
+    getPublickey(const Name & keyName);
+
 
     virtual void
     addCertificate (const Certificate & certificate);
 
     virtual void
     setDefaultCertForKey (const Name & certName);
+
+    virtual void
+    addCertificateAsIdentityDefault (const Certificate & certificate);
 
     virtual void
     addCertificateAsDefault (const Certificate & certificate);
@@ -84,7 +90,7 @@ namespace security
     signByIdentity (const Blob & blob, const Name & identity);
 
     virtual void
-    signByIdentity (Data & data, const Name & certName);
+    signByIdentity (Data & data, const Name & identity);
 
     virtual Ptr<Signature>
     signByCert (const Blob & blob, const Name & certName);

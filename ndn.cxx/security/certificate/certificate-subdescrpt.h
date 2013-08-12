@@ -8,6 +8,9 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
+#ifndef NDN_CERTIFICATE_SUB_DESCRYPT_H
+#define NDN_CERTIFICATE_SUB_DESCRYPT_H
+
 #include <vector>
 
 #include "ndn.cxx/common.h"
@@ -51,3 +54,5 @@ namespace security
 }//security
 
 }//ndn
+
+#endif

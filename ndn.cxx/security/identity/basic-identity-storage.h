@@ -48,7 +48,7 @@ namespace security
     doesKeyExist (const Name & keyName);
 
     virtual Name 
-    getKeyNameForCertExist (const Name & certName);
+    getKeyNameForCert (const Name & certName);
 
     virtual void 
     addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob);

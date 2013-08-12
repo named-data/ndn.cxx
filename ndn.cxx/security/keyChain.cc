@@ -17,7 +17,6 @@
 #include "keychain.h"
 #include "policy/policy.h"
 
-
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cryptopp/rsa.h>
 
@@ -33,95 +32,76 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain(int maxStep)
-    : m_maxStep(maxStep)
+  Keychain::Keychain(Ptr<IdentityManager> identityManager, int maxStep)
+    :m_identityManager(identityManager), 
+     m_maxStep(maxStep)
   {
-    //TODO:
   }
 
-  bool Keychain::createIdentity(const Name & identity)
+  Name
+  Keychain::createIdentity(const Name & identity)
   {
-    _LOG_TRACE("Enter Keychain::CreateIdentity");
-
-    if(m_identityStorage->doesIdentityExist(identity))
-      {
-        _LOG_DEBUG("Identity has already Exist!");
-        return false;
-      }
-
-    generateKeyPair(identity, true);
-
-    _LOG_DEBUG("Successfully create identity!");
-    _LOG_TRACE("Exit Keychain::CreateIdentity");
-    return true;
+    return m_identityManager->createIdentity(identity);
   }
 
-  Name Keychain::generateKeyPair(const Name & identity, bool ksk, KeyType keyType, int keySize)
+  Name
+  Keychain::getDefaultIdentity()
   {
-    _LOG_TRACE("Enter Keychain::GenerateKeyPair");
-    
-    _LOG_DEBUG("Determine keyName");
-
-    Name resultKeyName = m_identityStorage->getNewKeyName(identity, ksk);
-
-    _LOG_DEBUG("Create a key in private key store");
-    if(!m_privatekeyStore->generateKeyPair(resultKeyName.toUri(), keyType, keySize))
-      {
-        _LOG_DEBUG("Fail to create a pair of keys!");
-        throw SecException("Fail to create a pair of keys!");
-      }
-
-    _LOG_DEBUG("Create a key record in identity storage");
-    Ptr<Publickey> pubKey = m_privatekeyStore->getPublickey(resultKeyName.toUri());
-    Time ts = second_clock::universal_time();
-    m_identityStorage->addKey(resultKeyName, keyType, pubKey->getKeyBlob());
-    
-    _LOG_DEBUG("Successfully create key pair!");
-    _LOG_TRACE("Exit Keychain::GenerateKeyPair");
-    return resultKeyName;
+    return m_identityManager->getDefaultIdentity();
   }
 
-  Ptr<Blob> Keychain::createSigningRequest(const Name & keyName)
+  Name
+  Keychain::generateRSAKeyPair (const Name & identity, bool ksk, int keySize)
   {
-    _LOG_TRACE("Enter Keychain::CreateSigningRequest");
+    return m_identityManager->generateRSAKeyPair(identity, ksk, keySize);
+  }
 
+  void
+  Keychain::setDefaultKeyForIdentity (const Name & keyName)
+  {
+    return m_identityManager->setDefaultKeyForIdentity(keyName);
+  }
+
+  Name
+  Keychain::generateRSAKeyPairAsDefault (const Name & identity, bool ksk, int keySize)
+  {
+    return m_identityManager->generateRSAKeyPairAsDefault(identity, ksk, keySize);
+  }
+
+  Ptr<Blob> 
+  Keychain::createSigningRequest(const Name & keyName)
+  {
     Ptr<Blob> req;
 
-    _LOG_DEBUG("Try to create a public key in OPENSSL format");
-
-    return m_privatekeyStore->getPublickey(keyName.toUri())->getKeyBlob();    
+    return m_identityManager->getPublickey(keyName)->getKeyBlob();    
   }
   
-  bool Keychain::installCertificate(const Certificate & certificate)
+  void
+  Keychain::installCertificate(const Certificate & certificate)
   {
-    _LOG_TRACE("Enter Keychain::InstallCertificate");
-
-    _LOG_DEBUG("Verify Certificate First");
     if(!verify(certificate)){
       _LOG_DEBUG("certificate cannot be validated!");
-      return false;
+      throw SecException("certificate cannot be validated!");
     }
-
-    _LOG_DEBUG("Create a certificate record in identity storage")
     
-    m_identityStorage->addCertificate(certificate);
-
-    _LOG_TRACE("Exit Keychain::InstallCertificate");
-    return true;
+    m_identityManager->addCertificate(certificate);
   }
 
-  Ptr<Certificate> Keychain::getCertificate(const Name & certName)
+  Ptr<Certificate> 
+  Keychain::getCertificate(const Name & certName)
   {
-    return Ptr<Certificate>(new Certificate(*m_identityStorage->getCertificate(certName)));
+    return Ptr<Certificate>(new Certificate(*m_identityManager->getCertificate(certName)));
   }
 
-  Ptr<Blob> Keychain::revokeKey(const Name & keyName)
+  Ptr<Blob> 
+  Keychain::revokeKey(const Name & keyName)
   {
     //TODO: Implement
     return NULL;
   }
 
-  Ptr<Blob> Keychain::revokeCertificate(const Name & certName)
+  Ptr<Blob> 
+  Keychain::revokeCertificate(const Name & certName)
   {
     //TODO: Implement
     return NULL;
@@ -151,84 +131,57 @@ namespace security
   }
 
   void 
-  Keychain::sign(Data & data, const Name & certName)
+  Keychain::sign(Data & data, const Name & signerName, bool byID)
   {
-    _LOG_TRACE("Enter Sign");
-    
-    _LOG_DEBUG("Check Signing certificate comply with policy");    
-    Name signingCertName;
-
-    if(Name() == certName)
+    if(byID)
       {
-        Name signingCertName = m_policyManager->inferSigningCert (data.getName ());
-        if(Name () == signingCertName)
-          throw SecException("No qualified cert name found!");
+        Name signingID;
+
+        if(Name() == signerName)
+          {
+            signingID = m_policyManager->inferSigningCert (data.getName ());
+            if(Name () == signingID)
+              throw SecException("No qualified identity name found!");
+          }
+        else
+          {
+            if(m_policyManager->checkSigningPolicy (data.getName (), signerName))
+              signingID = signerName;
+            else
+              throw SecException("Signing Identity name does not comply with signing policy");
+          }
+
+        m_identityManager->signByIdentity(data, signingID);
       }
     else
       {
-        if(m_policyManager->checkSigningPolicy (data.getName (), certName))
-          signingCertName = certName;
+        Name signingCertName;
+
+        if(Name() == signerName)
+          {
+            signingCertName = m_policyManager->inferSigningCert (data.getName ());
+            if(Name () == signingCertName)
+              throw SecException("No qualified cert name found!");
+          }
         else
-          throw SecException("Signing cert name does not comply with signing policy");
+          {
+            if(m_policyManager->checkSigningPolicy (data.getName (), signerName))
+              signingCertName = signerName;
+            else
+              throw SecException("Signing cert name does not comply with signing policy");
+          }
+
+        m_identityManager->signByCert(data, signingCertName);
       }
-
-    Ptr<Certificate> certPtr = getCertificate(signingCertName);
-
-    sign(data, signingCertName, certPtr->getPublicKeyInfo());
-  }
-
-  void
-  Keychain::sign(Data & data, const Name & keyName, const Publickey & publickey)
-  {
-
-    Ptr<signature::Sha256WithRsa> sha256Sig = boost::dynamic_pointer_cast<signature::Sha256WithRsa> (data.getSignature());
-
-    KeyLocator keyLocator;    
-    keyLocator.setType (KeyLocator::KEYNAME);
-    keyLocator.setKeyName (keyName);
-
-    sha256Sig->setKeyLocator (keyLocator);
-    sha256Sig->setPublisherKeyDigest (*publickey.getDigest ());
-
-    data.setSignature(boost::static_pointer_cast<Signature>(sha256Sig));
-
-
-    Ptr<Signature> signature = sign (*Wire::toUnsignedWire (data), keyName);
-    data.setSignature (signature);
-
-    _LOG_TRACE("Exit Sign");
   }
 
   Ptr<Signature> 
-  Keychain::sign (const Blob & blob, const Name & certName)
+  Keychain::sign (const Blob & blob, const Name & signerName, bool byID)
   {
-    _LOG_TRACE ("Enter Sign");
-
-    // string keyName = m_identityStorage->getKeyNameForCert (certName);
-    string keyName = "";
-
-    if(keyName == "")
-      {
-        _LOG_DEBUG ("No qualified key is found!");
-        throw SecException ("Corresponding key does not exist in identity storage");
-      }
-
-    Ptr<Publickey> publickey = m_privatekeyStore->getPublickey (keyName);
-
-    Ptr<Blob> sigBits = m_privatekeyStore->sign (blob, keyName);
-
-    //For temporary usage, we support RSA + SHA256 only, but will support more.
-    Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
-    
-    KeyLocator keyLocator;    
-    keyLocator.setType (KeyLocator::KEYNAME);
-    keyLocator.setKeyName (certName);
-    
-    sha256Sig->setKeyLocator (keyLocator);
-    sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
-    sha256Sig->setSignatureBits(*sigBits);
-
-    return boost::dynamic_pointer_cast<Signature>(sha256Sig);
+    if(byID)
+      return m_identityManager->signByIdentity(blob, signerName);
+    else
+      return m_identityManager->signByCert(blob, signerName);
   }
 
   bool 

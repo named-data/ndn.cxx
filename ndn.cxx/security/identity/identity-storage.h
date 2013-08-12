@@ -49,7 +49,7 @@ namespace security
     doesKeyExist (const Name & keyName) = 0;
 
     virtual Name 
-    getKeyNameForCertExist (const Name & certName) = 0;
+    getKeyNameForCert (const Name & certName) = 0;
 
     virtual void 
     addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob) = 0;

@@ -29,7 +29,7 @@ namespace security
      m_privateStorage(privateStorage)
   {}
 
-  void
+  Name
   IdentityManager::createIdentity (const Name & identity)
   {
     if(!m_publicStorage->doesIdentityExist(identity))
@@ -46,6 +46,8 @@ namespace security
 	_LOG_DEBUG("Add self-signed certificate as default");
 
 	addCertificateAsDefault(selfCert);
+
+        return keyName;
       }
     else
       throw SecException("Identity has already been created!");
@@ -99,6 +101,12 @@ namespace security
     m_publicStorage->setDefaultKeyName(keyName);
   }
 
+  Ptr<Publickey>
+  IdentityManager::getPublickey(const Name & keyName)
+  {
+    return Ptr<Publickey>(new Publickey(*m_publicStorage->getKey(keyName)));
+  }
+
   Name
   IdentityManager::getDefaultIdentity ()
   {
@@ -119,6 +127,18 @@ namespace security
     setDefaultCertForKey(certificate.getName());
   }
 
+  void
+  IdentityManager::addCertificateAsIdentityDefault (const Certificate & certificate)
+  {
+    m_publicStorage->addCertificate(certificate);
+
+    Name keyName = m_publicStorage->getKeyNameForCert(certificate.getName());
+    
+    setDefaultKeyForIdentity(keyName);
+
+    setDefaultCertForKey(certificate.getName());
+  }
+
   Ptr<Data>
   IdentityManager::getCertificate (const Name & certName)
   {
@@ -134,7 +154,10 @@ namespace security
   void
   IdentityManager::setDefaultCertForKey (const Name & certName)
   {
-    Name keyName = m_publicStorage->getKeyNameForCertExist(certName);
+    Name keyName = m_publicStorage->getKeyNameForCert(certName);
+    
+    if(!m_publicStorage->doesKeyExist(keyName))
+      throw SecException("No corresponding Key record for certificaite!");
 
     m_publicStorage->setDefaultCertName (keyName, certName);
   }
@@ -166,7 +189,7 @@ namespace security
   Ptr<Signature>
   IdentityManager::signByCert (const Blob & blob, const Name & certName)
   {    
-    Name keyName = m_publicStorage->getKeyNameForCertExist(certName);
+    Name keyName = m_publicStorage->getKeyNameForCert(certName);
     
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
 
@@ -174,7 +197,7 @@ namespace security
 
     //For temporary usage, we support RSA + SHA256 only, but will support more.
     Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
-    
+
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
     keyLocator.setKeyName (certName);
@@ -188,8 +211,8 @@ namespace security
 
   void
   IdentityManager::signByCert (Data & data, const Name & certName)
-  {    
-    Name keyName = m_publicStorage->getKeyNameForCertExist(certName);
+  { 
+    Name keyName = m_publicStorage->getKeyNameForCert(certName);
     
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
 
@@ -202,6 +225,8 @@ namespace security
     
     sha256Sig->setKeyLocator (keyLocator);
     sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
+    
+    data.setSignature(sha256Sig);
 
     Ptr<Blob> unsignedData = data.encodeToUnsignedWire();
 
@@ -227,7 +252,7 @@ namespace security
 
     // _LOG_DEBUG("Generate CertificateData");
     vector< Ptr<CertificateSubDescrypt> > subject;
-    subject.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.41", keyName.toUri())));
+    subject.push_back(Ptr<CertificateSubDescrypt>(new CertificateSubDescrypt("2.5.4.41", keyName.toUri())));
     tm current = boost::posix_time::to_tm(time::Now());
     current.tm_hour = 0;
     current.tm_min  = 0;

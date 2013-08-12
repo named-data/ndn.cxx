@@ -21,8 +21,7 @@
 
 #include "cert-cache.h"
 
-#include "identity/privatekey-store.h"
-#include "identity/identity-storage.h"
+#include "identity/identity-manager.h"
 #include "policy/policy-manager.h"
 #include "policy/policy.h"
 #include "certificate/certificate.h"
@@ -46,7 +45,7 @@ namespace security
    */
   class Keychain{
   public:    
-    Keychain(int maxStep = 100);
+    Keychain(Ptr<IdentityManager> identityManager, int maxStep = 100);
 
     /*****************************************
      *          Identity Management          *
@@ -55,49 +54,28 @@ namespace security
     /**
      * @brief Create identity, by default it will create a pair of key for this identity
      * @param identity the name of the identity
-     * @returns True if succeeds, False otherwise
      */
-    virtual bool 
+    virtual Name 
     createIdentity(const Name & identity);
 
-    /**
-     * @brief Generate a pair of asymmetric keys
-     * @param identity the name of the identity
-     * @param keyName on return the identifier of the key 
-     * @param keyType the type of the key
-     * @param keySize the size of the key
-     * @returns pointer to the keyName, NULL if key generation fails
-     */
-    virtual Name 
-    generateKeyPair(const Name & identity, bool ksk = false, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+    virtual Name
+    getDefaultIdentity ();
 
     /**
-     * @brief Helper function to generate a pair of RSA keys
+     * @brief Generate a pair of RSA keys
      * @param identity the name of the identity
      * @param keyName on return the identifier of the key 
      * @param keySize the size of the key
      * @returns pointer to the keyName, NULL if key generation fails
      */
-    virtual Name 
-    generateRSAKeyPair(const Name & identity, bool ksk = false, int keySize = 2048)
-    {
-      return generateKeyPair(identity, ksk, KEY_TYPE_RSA, keySize); 
-    }
+    virtual Name
+    generateRSAKeyPair (const Name & identity, bool ksk = false, int keySize = 2048);
 
-    /**
-     * @brief Helper function to generate a pair of DSA keys
-     * @param identity the name of the identity
-     * @param keyName on return the identifier of the key 
-     * @param keySize the size of the key
-     * @returns pointer to the keyName, NULL if key generation fails
-     */
-    virtual Name 
-    generateDSAKeyPair(const Name & identity, bool ksk = false, int keySize = 2048)
-    {
-      return generateKeyPair(identity, ksk, KEY_TYPE_DSA, keySize); 
-    }
+    virtual void
+    setDefaultKeyForIdentity (const Name & keyName);
 
-
+    virtual Name
+    generateRSAKeyPairAsDefault (const Name & identity, bool ksk = false, int keySize = 2048);
 
     /**
      * @brief Create a public key signing request
@@ -113,9 +91,8 @@ namespace security
     /**
      * @brief Install a certificate into identity
      * @param certificate the certificate in terms of Data packet
-     * @returns True if succeeds, False otherwise
      */
-    virtual bool 
+    virtual void 
     installCertificate(const Certificate & certificate);
 
 
@@ -156,10 +133,10 @@ namespace security
      *****************************************/
 
     virtual void 
-    sign(Data & data, const Name & certName = Name());
+    sign(Data & data, const Name & signerName = Name(), bool byID = true);
     
     virtual Ptr<Signature> 
-    sign(const Blob & buf, const Name & certName);
+    sign(const Blob & buf, const Name & signerName, bool byID = true);
 
     virtual bool 
     verify(const Data & data);
@@ -181,10 +158,7 @@ namespace security
     decrypt();
     
 
-  private:
-    void
-    sign(Data & data, const Name & keyName, const Publickey & publickey);
-    
+  private:    
     Ptr<Data> 
     fetchData(const Name & name);
 
@@ -192,9 +166,9 @@ namespace security
     stepVerify(const Data & data, const int & stepCount);
 
   private:
-    Ptr<IdentityStorage> m_identityStorage;
-    Ptr<PrivatekeyStore> m_privatekeyStore;
+    Ptr<IdentityManager> m_identityManager;
     Ptr<PolicyManager> m_policyManager;
+    Ptr<EncryptionManager> m_encryptionManager;
     Ptr<CertificateCache> m_certCache;
     const int m_maxStep;
   };
