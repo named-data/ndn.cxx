@@ -13,7 +13,6 @@
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
-#include "wire-format-helper.h"
 #include "keychain.h"
 #include "policy/policy.h"
 
@@ -239,7 +238,7 @@ namespace security
   {
     using namespace CryptoPP;
 
-    Ptr<Blob> unsignedData = Wire::toUnsignedWire (data);
+    Ptr<Blob> unsignedData = data.encodeToUnsignedWire();
     bool result = false;
     
     DigestAlgorithm digestAlg = DIGEST_SHA256; //For temporary, should be assigned by Signature.getAlgorithm();

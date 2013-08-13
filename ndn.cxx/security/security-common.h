@@ -21,7 +21,11 @@ namespace security
 {
   enum KeyType{
     KEY_TYPE_RSA,
-    KEY_TYPE_DSA
+    KEY_TYPE_DSA,
+    KEY_TYPE_AES,
+    KEY_TYPE_DES,
+    KEY_TYPE_RC4,
+    KEY_TYPE_RC2
   };
 
   enum KeyClass{

@@ -23,6 +23,7 @@
 
 #include "identity/identity-manager.h"
 #include "policy/policy-manager.h"
+#include "encryption/encryption-manager.h"
 #include "policy/policy.h"
 #include "certificate/certificate.h"
 
