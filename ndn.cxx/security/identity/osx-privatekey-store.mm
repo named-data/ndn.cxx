@@ -65,7 +65,7 @@ namespace security
   bool OSXPrivatekeyStore::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
   { 
     if(doesNameExist(keyName, KEY_CLASS_PUBLIC)){
-      _LOG_DEBUG("keyName has exists!")
+      _LOG_DEBUG("keyName has existed");
       return false;
     }
 
@@ -80,7 +80,7 @@ namespace security
                                                              &kCFTypeDictionaryKeyCallBacks,
                                                              NULL);
 
-    CFDictionaryAddValue(attrDict, kSecAttrKeyType, getKeyType(keyType));
+    CFDictionaryAddValue(attrDict, kSecAttrKeyType, getAsymKeyType(keyType));
     CFDictionaryAddValue(attrDict, kSecAttrKeySizeInBits, CFNumberCreate (NULL, kCFNumberIntType, &keySize));
     CFDictionaryAddValue(attrDict, kSecAttrLabel, keyLabel);
 
@@ -96,9 +96,40 @@ namespace security
     return true;
   }
 
-  bool OSXPrivatekeyStore::generateKey(const string & keyName, KeyType keyType, int keySize)
+  bool OSXPrivatekeyStore::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
   {
-    return false;
+    string keyName = prependSymKeyName(externalKeyName);
+
+    if(doesNameExist(keyName, KEY_CLASS_SYMMETRIC))
+        throw SecException("keyName has existed!");
+
+    CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(kCFAllocatorDefault,
+                                                                0,
+                                                                &kCFTypeDictionaryKeyCallBacks,
+                                                                &kCFTypeDictionaryValueCallBacks);
+
+    CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
+                                                      keyName.c_str (), 
+                                                      keyName.size ());
+
+    CFDictionaryAddValue(attrDict, kSecAttrKeyType, getSymKeyType(keyType));
+    CFDictionaryAddValue(attrDict, kSecAttrKeySizeInBits, CFNumberCreate (kCFAllocatorDefault, kCFNumberSInt32Type, &keySize));
+    CFDictionaryAddValue(attrDict, kSecAttrIsPermanent, kCFBooleanTrue);
+    CFDictionaryAddValue(attrDict, kSecAttrLabel, keyLabel);
+
+    CFErrorRef error = NULL;
+
+    SecKeyRef symmetricKey = SecKeyGenerateSymmetric(attrDict, &error);
+
+    if (error) 
+        throw SecException("Fail to create a symmetric key");
+
+    return true;
+  }
+
+  string OSXPrivatekeyStore::prependSymKeyName(const string & keyName)
+  {
+    return string("SYMMETRIC")+keyName;
   }
 
   Ptr<Publickey> OSXPrivatekeyStore::getPublickey(const string & keyName)
@@ -168,19 +199,32 @@ namespace security
     return sigPtr;
   }
 
-  Ptr<Blob> OSXPrivatekeyStore::decrypt(const string & keyName, const Blob & pData)
+  Ptr<Blob> OSXPrivatekeyStore::decrypt(const string & externalKeyName, const Blob & pData, bool sym)
   {
     _LOG_TRACE("OSXPrivatekeyStore::Decrypt");
-    
+
+    string keyName;
+    KeyClass keyClass;
+    if(sym)
+      {
+        keyName = prependSymKeyName(externalKeyName);
+        keyClass = KEY_CLASS_SYMMETRIC;
+      }
+    else
+      {
+        keyName = externalKeyName;
+        keyClass = KEY_CLASS_PRIVATE;
+      }
+
     CFDataRef dataRef = CFDataCreate (NULL,
                                       reinterpret_cast<const unsigned char*>(pData.buf()),
                                       pData.size()
                                       );
     
-    SecKeyRef privateKey = (SecKeyRef)getKey(keyName, KEY_CLASS_PRIVATE);
+    SecKeyRef decryptKey = (SecKeyRef)getKey(keyName, keyClass);
 
     CFErrorRef error;
-    SecTransformRef decrypt = SecDecryptTransformCreate((SecKeyRef)privateKey, &error);
+    SecTransformRef decrypt = SecDecryptTransformCreate(decryptKey, &error);
     if (error) throw SecException("Fail to create decrypt");
 
     Boolean set_res = SecTransformSetAttribute(decrypt,
@@ -190,8 +234,11 @@ namespace security
     if (error) throw SecException("Fail to configure decrypt");
 
     CFDataRef output = (CFDataRef) SecTransformExecute(decrypt, &error);
-    if (error) throw SecException("Fail to decrypt data");
-
+    if (error)
+      {
+        CFShow(error);
+        throw SecException("Fail to decrypt data");
+      }
     if (!output) throw SecException("Output is NULL!\n");
 
     Ptr<Blob> outputPtr = Ptr<Blob>(new Blob(CFDataGetBytePtr(output), CFDataGetLength(output)));
@@ -295,19 +342,32 @@ namespace security
       return false;
   }
 
-  Ptr<Blob> OSXPrivatekeyStore::encrypt(const string & keyName, const Blob & pData)
+  Ptr<Blob> OSXPrivatekeyStore::encrypt(const string & externalKeyName, const Blob & pData, bool sym)
   {
     _LOG_TRACE("OSXPrivatekeyStore::Encrypt");
+
+    string keyName;
+    KeyClass keyClass;
+    if(sym)
+      {
+        keyName = prependSymKeyName(externalKeyName);
+        keyClass = KEY_CLASS_SYMMETRIC;
+      }
+    else
+      {
+        keyName = externalKeyName;
+        keyClass = KEY_CLASS_PUBLIC;
+      }
     
     CFDataRef dataRef = CFDataCreate (NULL,
                                       reinterpret_cast<const unsigned char*>(pData.buf()),
                                       pData.size()
                                       );
     
-    SecKeyRef publicKey = (SecKeyRef)getKey(keyName, KEY_CLASS_PUBLIC);
+    SecKeyRef encryptKey = (SecKeyRef)getKey(keyName, keyClass);
 
     CFErrorRef error;
-    SecTransformRef encrypt = SecEncryptTransformCreate(publicKey, &error);
+    SecTransformRef encrypt = SecEncryptTransformCreate(encryptKey, &error);
     if (error) throw SecException("Fail to create encrypt");
 
     Boolean set_res = SecTransformSetAttribute(encrypt,
@@ -381,11 +441,22 @@ namespace security
       return keyItem;
   }
 
-  const CFTypeRef OSXPrivatekeyStore::getKeyType(KeyType keyType)
+  const CFTypeRef OSXPrivatekeyStore::getAsymKeyType(KeyType keyType)
   {
     switch(keyType){
     case KEY_TYPE_RSA:
       return kSecAttrKeyTypeRSA;
+    default:
+      _LOG_DEBUG("Unrecognized key type!")
+      return NULL;
+    }
+  }
+
+  const CFTypeRef OSXPrivatekeyStore::getSymKeyType(KeyType keyType)
+  {
+    switch(keyType){
+    case KEY_TYPE_AES:
+      return kSecAttrKeyTypeAES;
     default:
       _LOG_DEBUG("Unrecognized key type!")
       return NULL;

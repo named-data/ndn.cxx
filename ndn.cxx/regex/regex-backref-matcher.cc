@@ -35,11 +35,11 @@ namespace regex
   void 
   RegexBackRefMatcher::compile()
   {
-    _LOG_TRACE ("Enter RegexBackRefMatcher::compile()");
+    // _LOG_TRACE ("Enter RegexBackRefMatcher::compile()");
 
     string errMsg = "Error: RegexBackRefMatcher.Compile(): ";
     
-    _LOG_DEBUG ("m_backRefManager: " << m_backRefManager);
+    // _LOG_DEBUG ("m_backRefManager: " << m_backRefManager);
 
     int lastIndex = m_expr.size() - 1;
     if('(' == m_expr[0] && ')' == m_expr[lastIndex]){
@@ -52,7 +52,7 @@ namespace regex
     else
       throw RegexException(errMsg + " Unrecognoized format " + m_expr);
     
-    _LOG_TRACE ("Exit RegexBackRefMatcher::compile");
+    // _LOG_TRACE ("Exit RegexBackRefMatcher::compile");
   }
 
 }//regex

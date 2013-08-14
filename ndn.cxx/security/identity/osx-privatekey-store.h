@@ -70,7 +70,9 @@ namespace security
      * @param pData the pointer to encrypted data
      * @returns decrypted data
      */
-    virtual Ptr<Blob> decrypt(const string & keyName, const Blob & pData);
+    virtual Ptr<Blob> decrypt (const string & keyName, const Blob & pData, bool sym = false);
+
+    virtual Ptr<Blob> encrypt (const string & keyName, const Blob & pData, bool sym = false);
 
     //TODO Symmetrical key stuff.
     /**
@@ -80,7 +82,7 @@ namespace security
      * @param keySize the size of the key
      * @returns true if key have been successfully generated
      */
-    virtual bool generateKey(const string & keyName, KeyType keyType, int keySize);
+    virtual bool generateKey(const string & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256);
 
     /**
      * @brief configure ACL of a particular key
@@ -94,7 +96,7 @@ namespace security
 
     bool verifyData (const string & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo = DIGEST_SHA256);
 
-    Ptr<Blob> encrypt (const string & keyName, const Blob & pData);
+    
 
   private:
     /**
@@ -118,7 +120,9 @@ namespace security
      * @param keyType
      * @returns MAC OS key type
      */
-    const CFTypeRef getKeyType(KeyType keyType);
+    const CFTypeRef getSymKeyType(KeyType keyType);
+
+    const CFTypeRef getAsymKeyType(KeyType keyType);
 
     /**
      * @brief convert keyClass to MAC OS key class
@@ -140,6 +144,8 @@ namespace security
      * @returns MAC OS keyformat
      */
     SecExternalFormat getFormat(KeyFormat format);
+
+    string prependSymKeyName(const string & externalKeyName);
 
     long getDigestSize(DigestAlgorithm digestAlgo);
 

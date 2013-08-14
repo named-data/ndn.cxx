@@ -25,9 +25,9 @@ namespace regex
     : RegexMatcher(expr, EXPR_COMPONENT_SET, backRefManager),
       m_include(true)
   {
-    _LOG_TRACE ("Enter RegexComponentSetMatcher Constructor");
+    // _LOG_TRACE ("Enter RegexComponentSetMatcher Constructor");
     compile();
-    _LOG_TRACE ("Exit RegexComponentSetMatcher Constructor");
+    // _LOG_TRACE ("Exit RegexComponentSetMatcher Constructor");
   }
 
   RegexComponentSetMatcher::~RegexComponentSetMatcher()
@@ -41,7 +41,7 @@ namespace regex
   void 
   RegexComponentSetMatcher::compile()
   {
-    _LOG_TRACE ("Enter RegexComponentSetMatcher::compile");
+    // _LOG_TRACE ("Enter RegexComponentSetMatcher::compile");
 
     string errMsg = "Error: RegexComponentSetMatcher.compile(): ";
     int index = 0;
@@ -68,13 +68,13 @@ namespace regex
         throw RegexException(errMsg + "Parsing error in expr " + m_expr);
     }
 
-    _LOG_TRACE ("Exit RegexComponentSetMatcher::compile");
+    // _LOG_TRACE ("Exit RegexComponentSetMatcher::compile");
   }
 
   void 
   RegexComponentSetMatcher::compileSingleComponent()
   {
-    _LOG_TRACE ("Enter RegexComponentSetMatcher::compileSingleComponent");
+    // _LOG_TRACE ("Enter RegexComponentSetMatcher::compileSingleComponent");
 
     string errMsg = "Error: RegexComponentSetMatcher.compileSingleComponent: ";
 
@@ -83,19 +83,19 @@ namespace regex
     if(m_expr.size() != end)
       throw RegexException(errMsg + m_expr);
     else{
-      _LOG_DEBUG ("RegexComponentSetMatcher::compileSingleComponent expr: " << m_expr.substr(1, end - 2));
+      // _LOG_DEBUG ("RegexComponentSetMatcher::compileSingleComponent expr: " << m_expr.substr(1, end - 2));
       Ptr<RegexComponent> component = Ptr<RegexComponent>(new RegexComponent(m_expr.substr(1, end - 2), m_backRefManager));
       m_components.insert(component);
       
     }
 
-    _LOG_TRACE ("Exit RegexComponentSetMatcher::compileSingleComponent");
+    // _LOG_TRACE ("Exit RegexComponentSetMatcher::compileSingleComponent");
   }
 
   void 
   RegexComponentSetMatcher::compileMultipleComponents(const int start, const int lastIndex)
   {
-    _LOG_TRACE ("Enter RegexComponentSetMatcher::compileMultipleComponents");
+    // _LOG_TRACE ("Enter RegexComponentSetMatcher::compileMultipleComponents");
 
     string errMsg = "Error: RegexComponentSetMatcher.compileMultipleComponents: ";
 
@@ -116,19 +116,19 @@ namespace regex
     if(index != lastIndex)
       throw RegexException(errMsg + "Not sufficient expr to parse " + m_expr);        
 
-    _LOG_TRACE ("Exit RegexComponentSetMatcher::compileMultipleComponents");
+    // _LOG_TRACE ("Exit RegexComponentSetMatcher::compileMultipleComponents");
   }
 
   bool 
   RegexComponentSetMatcher::match(const Name & name, const int & offset, const int & len)
   {
-    _LOG_TRACE ("Enter RegexComponentSetMatcher::match");
+    // _LOG_TRACE ("Enter RegexComponentSetMatcher::match");
 
     bool matched = false;
 
     /* componentset only matches one component */
     if(len != 1){
-      _LOG_DEBUG ("Match Fail: ComponentSet matches only one component");
+      // _LOG_DEBUG ("Match Fail: ComponentSet matches only one component");
       return false;
     }
 
@@ -186,7 +186,7 @@ namespace regex
   int 
   RegexComponentSetMatcher::extractComponent(int index)
   {
-    _LOG_TRACE ("Enter RegexComponentSetMatcher::extractComponent");
+    // _LOG_TRACE ("Enter RegexComponentSetMatcher::extractComponent");
 
     int lcount = 1;
     int rcount = 0;
@@ -209,7 +209,7 @@ namespace regex
 
     }
 
-    _LOG_TRACE ("Exit RegexComponentSetMatcher::extractComponent");
+    // _LOG_TRACE ("Exit RegexComponentSetMatcher::extractComponent");
     return index;
 
   }

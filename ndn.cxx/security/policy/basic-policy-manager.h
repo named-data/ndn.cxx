@@ -12,12 +12,14 @@
 #define NDN_BASIC_POLICY_MANAGER_H
 
 #include <map>
+#include <tinyxml.h>
 
 #include "ndn.cxx/common.h"
 
 #include "policy-manager.h"
 
 #include "ndn.cxx/regex/regex.h"
+#include "ndn.cxx/security/identity/privatekey-store.h"
 
 namespace ndn
 {
@@ -27,16 +29,40 @@ namespace security
   class BasicPolicyManager : public PolicyManager
   {
   public:
-    BasicPolicyManager ();
+    BasicPolicyManager (const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore, const string & defaultKeyName, bool defaultSym);
+
+    virtual
+    ~BasicPolicyManager();
+    
+    virtual void
+    loadPolicy(const string & keyName = "", bool sym = true);
+
+    void 
+    loadPolicySet(TiXmlElement * element);
+
+    void 
+    loadTrustAnchor(TiXmlElement * element);
+
+    virtual void
+    savePolicy(const string & keyName = "", bool sym = true);
 
     virtual void 
     setSigningPolicy (const string & policy);
 
     virtual void 
+    setSigningPolicy (Ptr<Policy> policy);
+
+    virtual void 
     setSigningInference(const string & inference);
 
     virtual void 
+    setSigningInference(Ptr<Regex> inference);
+
+    virtual void 
     setVerificationPolicy (const string & policy);
+
+    virtual void
+    setVerificationPolicy (Ptr<Policy> policy);
 
     virtual void 
     setTrustAnchor(const Certificate & certificate);
@@ -72,7 +98,14 @@ namespace security
     string
     replaceWS (const string & policy);
 
+    TiXmlDocument * toXML ();
+    
+
   private:
+    const string m_policyPath;
+    bool m_policyChanged;
+    bool m_policyLoaded;
+    Ptr<PrivatekeyStore> m_privatekeyStore;
     vector< Ptr<Policy> > m_verifyPolicies;
     vector< Ptr<Policy> > m_notVerifyPolicies;
     vector< Ptr<Policy> > m_signPolicies;

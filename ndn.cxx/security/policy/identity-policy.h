@@ -50,14 +50,25 @@ namespace security
     virtual bool
     satisfy(const Name & dataName, const Name & signerName);
 
+    virtual TiXmlElement *
+    toXmlElement();
+
+    static Ptr<IdentityPolicy>
+    fromXmlElement(TiXmlElement * element);
+
   private:
     bool 
     compare(const Name & dataName, const Name & signerName);
 
   private:
+    const string m_dataRegex;
+    const string m_signerRegex;
+    const string m_op;
+    const string m_dataExpand;
+    const string m_signerExpand;
+
     Regex m_dataNameRegex;
     Regex m_signerNameRegex;
-    const string m_op;
   };
 
 }//security

@@ -40,36 +40,36 @@ namespace ccnb {
   {
     Ptr<const Signature> sig = data.getSignature();
 
-    _LOG_DEBUG("Convert Signature!");
+    // _LOG_DEBUG("Convert Signature!");
 
     Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(sig);
 
-    _LOG_DEBUG("Append Name!");
+    // _LOG_DEBUG("Append Name!");
     {
       Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG); // <Name>
       Ccnb::SerializeName(start, data.getName());                // <Component>...</Component>...
       Ccnb::AppendCloser(start);                               // </Name>
     }
 
-    _LOG_DEBUG("Append SignedInfo!");
+    // _LOG_DEBUG("Append SignedInfo!");
     {
       Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_SignedInfo, CcnbParser::CCN_DTAG); // <SignedInfo>
       {
-        _LOG_DEBUG("Append PublisherPublicKeyDigest!");
+        // _LOG_DEBUG("Append PublisherPublicKeyDigest!");
         Ccnb::AppendTaggedBlob(start, 
                                CcnbParser::CCN_DTAG_PublisherPublicKeyDigest,
                                reinterpret_cast<const uint8_t*>(sha256sig->getPublisherKeyDigest().buf()), 
                                sha256sig->getPublisherKeyDigest().size()); //<PublisherPublicKeyDigest>
       }
       {
-        _LOG_DEBUG("Append Timestamp!");
+        // _LOG_DEBUG("Append Timestamp!");
         Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Timestamp, CcnbParser::CCN_DTAG);            // <Timestamp>...
         TimeInterval ti = data.getContent().getTimestamp() - time::UNIX_EPOCH_TIME;
         Ccnb::AppendTimestampBlob (start, ti);
         Ccnb::AppendCloser (start); //</Timestamp>
       }
       {
-        _LOG_DEBUG("Append KeyLocator!");
+        // _LOG_DEBUG("Append KeyLocator!");
         Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyLocator, CcnbParser::CCN_DTAG); // <KeyLocator>
         {
           Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyName, CcnbParser::CCN_DTAG);    // <KeyName>
@@ -85,14 +85,14 @@ namespace ccnb {
     Ccnb::AppendCloser(start); // </SignedInfo>
     }
 
-    _LOG_DEBUG("Append Content!");
+    // _LOG_DEBUG("Append Content!");
     {
       Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Content, CcnbParser::CCN_DTAG); // <Content>
       uint32_t payloadSize = data.content().size();
       if (payloadSize > 0){
         Ccnb::AppendBlockHeader (start, payloadSize, CcnbParser::CCN_BLOB);
         start.Write(reinterpret_cast<const uint8_t*>(data.content().buf()), data.content().size());
-        _LOG_DEBUG("payLoadSize: " << payloadSize);
+        // _LOG_DEBUG("payLoadSize: " << payloadSize);
       }
 
       Ccnb::AppendCloser(start); // </Content>
@@ -102,15 +102,15 @@ namespace ccnb {
   void
   Data::Serialize (const ndn::Data &data, OutputIterator &start)
   {
-    _LOG_DEBUG("in Serialize");
+    // _LOG_DEBUG("in Serialize");
 
     Ptr<const Signature> sig = data.getSignature();
 
-    _LOG_DEBUG("convert signature");
+    // _LOG_DEBUG("convert signature");
 
     Ptr<const signature::Sha256WithRsa> sha256sig = DynamicCast<const signature::Sha256WithRsa>(sig);
 
-    _LOG_DEBUG("Append Signature!");
+    // _LOG_DEBUG("Append Signature!");
     Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Data, CcnbParser::CCN_DTAG); // <Data>
     {
       Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Signature, CcnbParser::CCN_DTAG); //<Signature>
@@ -148,28 +148,28 @@ namespace ccnb {
     switch (n.m_dtag)
     {
     case CcnbParser::CCN_DTAG_Data:
-      _LOG_DEBUG ("Data");
+      // _LOG_DEBUG ("Data");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
         }
       break;
     case CcnbParser::CCN_DTAG_Signature:
-      _LOG_DEBUG ("Signature");
+      // _LOG_DEBUG ("Signature");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
         }
       break;
     case CcnbParser::CCN_DTAG_DigestAlgorithm:
-      _LOG_DEBUG ("DigestAlgorithm");
+      // _LOG_DEBUG ("DigestAlgorithm");
       break;
     case CcnbParser::CCN_DTAG_Witness:
-      _LOG_DEBUG ("Witness");
+      // _LOG_DEBUG ("Witness");
       break;
     case CcnbParser::CCN_DTAG_SignatureBits:
       {
-        _LOG_DEBUG ("SignatureBits");
+        // _LOG_DEBUG ("SignatureBits");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
            throw CcnbParser::CcnbDecodingException ();
 
@@ -181,7 +181,7 @@ namespace ccnb {
       }
     case CcnbParser::CCN_DTAG_Name:
       {
-        _LOG_DEBUG ("Name");
+        // _LOG_DEBUG ("Name");
 
         // process name components
         Name name;
@@ -190,7 +190,7 @@ namespace ccnb {
         break;
       }
     case CcnbParser::CCN_DTAG_SignedInfo:
-      _LOG_DEBUG ("SignedInfo");
+      // _LOG_DEBUG ("SignedInfo");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
@@ -198,7 +198,7 @@ namespace ccnb {
       break;
     case CcnbParser::CCN_DTAG_PublisherPublicKeyDigest:
       {
-        _LOG_DEBUG ("PublisherPublicKeyDigest");
+        // _LOG_DEBUG ("PublisherPublicKeyDigest");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
           throw CcnbParser::CcnbDecodingException ();
         
@@ -210,7 +210,7 @@ namespace ccnb {
       }
     case CcnbParser::CCN_DTAG_Timestamp:
       {
-        _LOG_DEBUG ("Timestamp");
+        // _LOG_DEBUG ("Timestamp");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
           throw CcnbParser::CcnbDecodingException ();
 
@@ -220,7 +220,7 @@ namespace ccnb {
       }
     case CcnbParser::CCN_DTAG_Type:
       {
-        _LOG_DEBUG ("Type");
+        // _LOG_DEBUG ("Type");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
           throw CcnbParser::CcnbDecodingException ();
 
@@ -229,14 +229,14 @@ namespace ccnb {
         break;
       }
     case CcnbParser::CCN_DTAG_FreshnessSeconds:
-      _LOG_DEBUG ("FreshnessSeconds");
+      // _LOG_DEBUG ("FreshnessSeconds");
       m_data->getContent().setFreshness();
       break;
     case CcnbParser::CCN_DTAG_FinalBlockID:
-      _LOG_DEBUG ("CCN_DTAG_FinalBlockID");
+      // _LOG_DEBUG ("CCN_DTAG_FinalBlockID");
       break;
     case CcnbParser::CCN_DTAG_KeyLocator:
-      _LOG_DEBUG ("KeyLocator");
+      // _LOG_DEBUG ("KeyLocator");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
@@ -244,7 +244,7 @@ namespace ccnb {
       break;
     case CcnbParser::CCN_DTAG_KeyName:
       {
-        _LOG_DEBUG ("KeyName");
+        // _LOG_DEBUG ("KeyName");
         
         // process name components
         Name name;
@@ -256,7 +256,7 @@ namespace ccnb {
       }
     case CcnbParser::CCN_DTAG_Content:
       {
-        _LOG_DEBUG ("Content");
+        // _LOG_DEBUG ("Content");
 
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
           throw CcnbParser::CcnbDecodingException ();

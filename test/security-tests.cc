@@ -13,12 +13,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "ndn.cxx/regex/regex.h"
 
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/security/certificate/der.h"
 #include "ndn.cxx/security/certificate/publickey.h"
 #include "ndn.cxx/security/certificate/certificate-subdescrpt.h"
 #include "ndn.cxx/security/policy/identity-policy.h"
+#include "ndn.cxx/security/policy/basic-policy-manager.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
 #include "ndn.cxx/security/identity/osx-privatekey-store.h"
@@ -28,6 +30,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 using namespace ndn;
@@ -128,7 +131,15 @@ BOOST_AUTO_TEST_CASE (Digest)
 
 BOOST_AUTO_TEST_CASE (IdentityPolicy)
 {
+  security::IdentityPolicy policy("^(<>*)<DNS>(<>*)$", "^(<>*)<DNS>(<>*)<><NDNCERT>", ">=", "\\1\\2", "\\1\\2", true);
+  ostringstream oss;
+  oss << *policy.toXmlElement();
 
+  cout << oss.str() << endl;
+
+  security::IdentityPolicy::fromXmlElement(policy.toXmlElement());
+
+  
 }
 
 BOOST_AUTO_TEST_CASE (WireFormat)
@@ -248,6 +259,79 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_DSK_cert);
 
   
+
+  identityManager.createIdentity(Name("/ndn/ucla.edu/yingdi/app"));
+  Name ndn_APP_KSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi/app"), true);
+
+
+  signingRequest = identityManager.getPublickey(ndn_APP_KSK_name);
+  Ptr<Data> ndn_APP_KSK_unsign_cert = generateCertificate(ndn_APP_KSK_name, signingRequest);
+
+
+  identityManager.signByIdentity(*ndn_APP_KSK_unsign_cert, Name("/ndn/ucla.edu/yingdi"));
+  security::Certificate ndn_APP_KSK_cert(*ndn_APP_KSK_unsign_cert);
+
+  identityManager.addCertificateAsDefault(ndn_APP_KSK_cert);
+
+
+  Name ndn_APP_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi/app"));
+  signingRequest = identityManager.getPublickey(ndn_APP_DSK_name);
+  Ptr<Data> ndn_APP_DSK_unsign_cert = generateCertificate(ndn_APP_DSK_name, signingRequest);
+  
+  identityManager.signByIdentity(*ndn_APP_DSK_unsign_cert, Name("/ndn/ucla.edu/yingdi/app"));
+  security::Certificate ndn_APP_DSK_cert(*ndn_APP_DSK_unsign_cert);
+
+  identityManager.addCertificateAsIdentityDefault(ndn_APP_DSK_cert);
+}
+
+BOOST_AUTO_TEST_CASE(PrivateStore)
+{
+  security::OSXPrivatekeyStore privateStorage;
+  try{
+  string keyName = "/ndn/ucla.edu/yingdi/app/0";
+  // privateStorage.generateKey(keyName);
+  
+  string data = "12345678901234567890123456789012345678901234567890";
+  Blob blob = Blob(data.c_str(), data.size());
+
+  Ptr<Blob> encrypted = privateStorage.encrypt(keyName, blob, true);
+  Ptr<Blob> decrypted = privateStorage.decrypt(keyName, *encrypted, true);
+  
+  string output(decrypted->buf(), decrypted->size());
+  cout << output << endl;
+  }catch(security::SecException & e){
+    cerr << e.Msg() << endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PolicyManager)
+{
+  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  security::BasicIdentityStorage identityStorage;
+
+  security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr, "/ndn/ucla.edu/yingdi/app/0", true);
+  
+  Ptr<security::IdentityPolicy> vPolicy = Ptr<security::IdentityPolicy>(new security::IdentityPolicy("^(<>*)<DNS>(<>*)$", "^(<>*)<DNS>(<>*)<><NDNCERT>", ">=", "\\1\\2", "\\1\\2", true));
+  policyManager.setVerificationPolicy(vPolicy);
+
+  Ptr<Data> dataPtr = identityStorage.getCertificate(Name("/ndn/DSK-1376411829/ID-CERT/0"), true);
+  security::Certificate cert(*dataPtr);
+  
+  policyManager.setTrustAnchor(cert);
+
+  cerr << "SavePolicy" << endl;
+  
+  policyManager.savePolicy();
+  
+}
+
+BOOST_AUTO_TEST_CASE(PolicyManagerLoad)
+{
+  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+
+  security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr, "/ndn/ucla.edu/yingdi/app/0", true);
+  
+  cerr << policyManager.getTrustAnchor(Name("/ndn/DSK-1376411829/ID-CERT/0"))->get << endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

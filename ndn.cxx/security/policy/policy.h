@@ -14,6 +14,8 @@
 
 #include "ndn.cxx/data.h"
 
+#include <tinyxml.h>
+
 namespace ndn
 {
 
@@ -49,6 +51,9 @@ namespace security
     virtual bool
     satisfy(const Name & dataName, const Name & signerName) = 0;
 
+    virtual TiXmlElement *
+    toXmlElement() = 0;
+
     PolicyType 
     policyType()
     {
@@ -62,8 +67,8 @@ namespace security
     }
     
   private:
-    PolicyType m_type;
-    bool m_mustVerify;
+    const PolicyType m_type;
+    const bool m_mustVerify;
   };
 
 }//security

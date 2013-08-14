@@ -32,7 +32,7 @@ namespace regex
   bool 
   RegexMatcher::match (const Name & name, const int & offset, const int & len)
   {
-    _LOG_TRACE ("Enter RegexMatcher::match");
+    // _LOG_TRACE ("Enter RegexMatcher::match");
     bool result = false;
 
     m_matchResult.clear();
@@ -48,14 +48,14 @@ namespace regex
         result = false;
       }
 
-    _LOG_TRACE ("Exit RegexMatcher::match");
+    // _LOG_TRACE ("Exit RegexMatcher::match");
     return result;
   }
   
   bool 
   RegexMatcher::recursiveMatch(int mId, Name name, const int & offset, const int & len)
   {
-    _LOG_TRACE ("Enter RegexMatcher::recursiveMatch");
+    // _LOG_TRACE ("Enter RegexMatcher::recursiveMatch");
 
     int tried = len;
 

@@ -15,6 +15,7 @@
 
 #include "ndn.cxx/data.h"
 #include "ndn.cxx/fields/name.h"
+#include "ndn.cxx/regex/regex.h"
 
 #include "ndn.cxx/security/certificate/certificate.h"
 
@@ -33,16 +34,37 @@ namespace security
   class PolicyManager
   {
   public:
-    PolicyManager();
+    PolicyManager(const string & keyName, bool sym)
+      :m_defaultKeyName(keyName),
+       m_sym(sym)
+    {}
+    
+    virtual
+    ~PolicyManager(){}
+
+    virtual void
+    loadPolicy(const string & keyName = "", bool sym = true) = 0;
+
+    virtual void
+    savePolicy(const string & keyName = "", bool sym = true) = 0;
 
     virtual void 
     setSigningPolicy(const string & policy) = 0;
 
     virtual void 
+    setSigningPolicy(Ptr<Policy> policy) = 0;
+
+    virtual void 
     setSigningInference(const string & inference) = 0;
 
     virtual void 
+    setSigningInference(Ptr<Regex> inference) = 0;
+
+    virtual void 
     setVerificationPolicy(const string & policy) = 0;
+
+    virtual void 
+    setVerificationPolicy(Ptr<Policy> policy) = 0;
 
     virtual void 
     setTrustAnchor(const Certificate & certificate) = 0;
@@ -65,8 +87,9 @@ namespace security
     virtual Name 
     inferSigningCert(const Name & dataName) = 0;
 
-
-  private:
+  protected:
+    const string m_defaultKeyName;
+    const bool m_sym;
   };
 
 }//security

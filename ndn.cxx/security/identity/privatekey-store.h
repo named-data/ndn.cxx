@@ -37,7 +37,8 @@ namespace security
     /**
      * @brief destructor of PrivateKeyStore
      */    
-    virtual ~PrivatekeyStore() {};
+    virtual 
+    ~PrivatekeyStore() {};
 
     /**
      * @brief generate a pair of asymmetric keys
@@ -46,12 +47,14 @@ namespace security
      * @param keySize the size of the key pair
      * @returns true if keys have been successfully generated
      */
-    virtual bool generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048) = 0;
+    virtual bool 
+    generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048) = 0;
 
     /**
      *
      */
-    virtual Ptr<Publickey> getPublickey(const string & keyName) = 0;
+    virtual Ptr<Publickey> 
+    getPublickey(const string & keyName) = 0;
 
     /**
      * @brief sign data
@@ -60,7 +63,8 @@ namespace security
      * @param pData the pointer to data
      * @returns signature, NULL if signing fails
      */
-    virtual Ptr<Blob> sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256) = 0;
+    virtual Ptr<Blob> 
+    sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256) = 0;
     
     /**
      * @brief decrypt data
@@ -68,7 +72,11 @@ namespace security
      * @param pData the pointer to encrypted data
      * @returns decrypted data
      */
-    virtual Ptr<Blob> decrypt(const string & keyName, const Blob & pData) = 0;
+    virtual Ptr<Blob> 
+    decrypt(const string & keyName, const Blob & pData, bool sym = false) = 0;
+
+    virtual Ptr<Blob> 
+    encrypt(const string & keyName, const Blob & pData, bool sym = false) = 0;
 
 
     //TODO Symmetrical key stuff.
@@ -79,7 +87,8 @@ namespace security
      * @param keySize the size of the key
      * @returns true if key have been successfully generated
      */
-    virtual bool generateKey(const string & keyName, KeyType keyType, int keySize) = 0;
+    virtual bool 
+    generateKey(const string & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256) = 0;
 
 
 

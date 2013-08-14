@@ -26,15 +26,15 @@ namespace regex
   RegexPatternListMatcher::RegexPatternListMatcher(const string expr, Ptr<RegexBRManager> backRefManager)
     :RegexMatcher(expr, EXPR_PATTERNLIST, backRefManager)
   {
-    _LOG_TRACE ("Enter RegexPatternListMatcher Constructor");
+    // _LOG_TRACE ("Enter RegexPatternListMatcher Constructor");
     compile();
-    _LOG_TRACE ("Exit RegexPatternListMatcher Constructor");
+    // _LOG_TRACE ("Exit RegexPatternListMatcher Constructor");
   }
   
   void 
   RegexPatternListMatcher::compile()
   {
-    _LOG_TRACE ("Enter RegexPatternListMatcher::compile");
+    // _LOG_TRACE ("Enter RegexPatternListMatcher::compile");
 
     const int len = m_expr.size();
     int index = 0;
@@ -46,13 +46,13 @@ namespace regex
       if(!extractPattern(subHead, &index))
 	throw RegexException("RegexPatternListMatcher compile: cannot compile");
     }
-    _LOG_TRACE ("Exit RegexPatternListMatcher::compile");
+    // _LOG_TRACE ("Exit RegexPatternListMatcher::compile");
   }
 
   bool 
   RegexPatternListMatcher::extractPattern(int index, int* next)
   {
-    _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractPattern()");
+    // _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractPattern()");
 
     string errMsg = "Error: RegexPatternListMatcher.ExtractSubPattern(): ";
     
@@ -61,7 +61,7 @@ namespace regex
     int indicator = index;
     
 
-    _LOG_DEBUG ("m_expr: " << m_expr << " index: " << index);
+    // _LOG_DEBUG ("m_expr: " << m_expr << " index: " << index);
 
     switch(m_expr[index]){
     case '(':
@@ -108,7 +108,7 @@ namespace regex
   int 
   RegexPatternListMatcher::extractSubPattern(const char left, const char right, int index)
   {
-    _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractSubPattern()");
+    // _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractSubPattern()");
 
     int lcount = 1;
     int rcount = 0;
@@ -132,11 +132,11 @@ namespace regex
   int 
   RegexPatternListMatcher::extractRepetition(int index)
   {
-    _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractRepetition()");
+    // _LOG_DEBUG ("Enter RegexPatternListMatcher::ExtractRepetition()");
 
     int exprSize = m_expr.size();
 
-    _LOG_DEBUG ("expr: " << m_expr << " index: " << index << " char: " << (index == exprSize ? 0 : m_expr[index]));
+    // _LOG_DEBUG ("expr: " << m_expr << " index: " << index << " char: " << (index == exprSize ? 0 : m_expr[index]));
 
     string errMsg = "Error: RegexPatternListMatcher.ExtractRepetition(): ";
     
@@ -160,7 +160,7 @@ namespace regex
         return ++index;
     }
     else{
-      _LOG_DEBUG ("return index: " << index);
+      // _LOG_DEBUG ("return index: " << index);
       return index;
     }
   }

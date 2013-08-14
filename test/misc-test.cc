@@ -1,10 +1,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <tinyxml.h>
 #include <cryptopp/rsa.h>
 #include <cryptopp/files.h>
+#include <cryptopp/base64.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -119,7 +121,34 @@ BOOST_AUTO_TEST_CASE (TinyXML)
   msg->LinkEndChild( new TiXmlText( "Thank you for using MyApp" ));  
   msgs->LinkEndChild( msg );  
   
-  cout << doc <<endl;
+  ostringstream oss;
+  oss << doc;
+  cout << oss.str() << endl;
+  
+  TiXmlDocument newDoc;
+  newDoc.Parse(oss.str().c_str());
+  cout << newDoc << endl;
+}
+
+BOOST_AUTO_TEST_CASE (Base64)
+{
+  string str = "abcdefg";
+  
+  string encoded;
+  CryptoPP::StringSource ss(reinterpret_cast<const unsigned char *>(str.c_str()), str.size(), true,
+			    new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
+
+  cout << encoded << endl;
+
+  string decoded;
+  CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(encoded.c_str()), encoded.size(), true,
+			    new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
+
+  cout << decoded << endl;
+}
+
+BOOST_AUTO_TEST_CASE (IO)
+{
 }
 
 BOOST_AUTO_TEST_CASE (Crypto)

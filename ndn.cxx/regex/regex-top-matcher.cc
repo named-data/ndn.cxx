@@ -30,13 +30,13 @@ namespace regex
       m_secondaryMatcher(NULL),
       m_secondaryUsed(false)
   {
-    _LOG_TRACE ("Enter RegexTopMatcher Constructor");
+    // _LOG_TRACE ("Enter RegexTopMatcher Constructor");
 
     m_primaryBackRefManager = Ptr<RegexBRManager>(new RegexBRManager());
     m_secondaryBackRefManager = Ptr<RegexBRManager>(new RegexBRManager());
     compile();
 
-    _LOG_TRACE ("Exit RegexTopMatcher Constructor");
+    // _LOG_TRACE ("Exit RegexTopMatcher Constructor");
   }
 
   RegexTopMatcher::~RegexTopMatcher()
@@ -47,7 +47,7 @@ namespace regex
   void 
   RegexTopMatcher::compile()
   {
-    _LOG_TRACE ("Enter RegexTopMatcher::compile");
+    // _LOG_TRACE ("Enter RegexTopMatcher::compile");
 
     string errMsg = "Error: RegexTopMatcher.Compile(): ";
 
@@ -63,18 +63,18 @@ namespace regex
     else
       expr = expr.substr(1, expr.size()-1);
 
-    _LOG_DEBUG ("reconstructed expr: " << expr);
+    // _LOG_DEBUG ("reconstructed expr: " << expr);
                                                         
                                                         
     m_primaryMatcher = Ptr<RegexPatternListMatcher>(new RegexPatternListMatcher(expr, m_primaryBackRefManager));
 
-    _LOG_TRACE ("Exit RegexTopMatcher::compile");
+    // _LOG_TRACE ("Exit RegexTopMatcher::compile");
   }
 
   bool 
   RegexTopMatcher::match(const Name & name)
   {
-    _LOG_DEBUG("Enter RegexTopMatcher::match");
+    // _LOG_DEBUG("Enter RegexTopMatcher::match");
 
     m_secondaryUsed = false;
 
@@ -106,7 +106,7 @@ namespace regex
   Name 
   RegexTopMatcher::expand (const string & expandStr)
   {
-    _LOG_TRACE("Enter RegexTopMatcher::expand");
+    // _LOG_TRACE("Enter RegexTopMatcher::expand");
 
     Name result;
     
@@ -157,7 +157,7 @@ namespace regex
   string
   RegexTopMatcher::getItemFromExpand(const string & expand, int & offset)
   {
-    _LOG_TRACE("Enter RegexTopMatcher::getItemFromExpand ");
+    // _LOG_TRACE("Enter RegexTopMatcher::getItemFromExpand ");
     int begin = offset;
 
     if(expand[offset] == '\\')
@@ -198,6 +198,43 @@ namespace regex
       }
     else
       throw RegexException("wrong format of expand string!");
+  }
+
+  TiXmlElement *
+  RegexTopMatcher::toXmlElement()
+  {
+    TiXmlElement * regex = new TiXmlElement("Regex");
+    
+    TiXmlElement * expr = new TiXmlElement("Expression");
+    expr->LinkEndChild(new TiXmlText(m_expr));
+    regex->LinkEndChild(expr);
+
+    TiXmlElement * expand = new TiXmlElement("Expand");
+    expand->LinkEndChild(new TiXmlText(m_expand));
+    regex->LinkEndChild(expand);
+    
+    return regex;
+  }
+  
+  Ptr<RegexTopMatcher>
+  RegexTopMatcher::fromXmlElement(TiXmlElement * element)
+  {
+    TiXmlNode * it = element->FirstChild();
+
+    string expr;
+    string expand;
+
+    while(it != NULL)
+      {
+        if(it->ValueStr() == string("Expression"))
+          expr = it->FirstChild()->ValueStr();
+        else if(it->ValueStr() == string("Expand"))
+          expand = it->FirstChild()->ValueStr();
+
+        it = it->NextSibling();
+      }
+
+    return Ptr<RegexTopMatcher>(new RegexTopMatcher (expr, expand));
   }
 
 }//regex

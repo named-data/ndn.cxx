@@ -9,7 +9,20 @@
  */
 
 #include "basic-policy-manager.h"
+
 #include "identity-policy.h"
+
+#include <boost/filesystem.hpp>
+#include <tinyxml.h>
+#include <sstream>
+#include <fstream>
+#include <cryptopp/base64.h>
+
+#include "logging.h"
+
+INIT_LOGGER("ndn.security.BasicPolicyManager");
+
+namespace fs = boost::filesystem;
 
 using namespace std;
 
@@ -18,11 +31,264 @@ namespace ndn
 
 namespace security
 {
+  BasicPolicyManager::BasicPolicyManager(const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore, const string & defaultKeyName, bool defaultSym)
+    :PolicyManager(defaultKeyName, defaultSym),
+     m_policyPath(policyPath),
+     m_policyChanged(false),
+     m_policyLoaded(false),
+     m_privatekeyStore(privatekeyStore)
+  {
+    loadPolicy();
+  }
+
+  BasicPolicyManager::~BasicPolicyManager()
+  {
+    savePolicy();
+  }
+
+  void 
+  BasicPolicyManager::loadPolicy(const string & keyName, bool sym)
+  {
+    if(m_policyLoaded)
+      return;
+
+    fs::path policyPath(m_policyPath);
+    if(!fs::exists(policyPath))
+      return;
+    
+    string encryptKeyName;
+    bool encryptSym;
+    if(keyName == string(""))
+      {
+        encryptKeyName = m_defaultKeyName;
+        encryptSym = m_sym;
+      }
+    else
+      {
+        encryptKeyName = keyName;
+        encryptSym = sym;
+      }
+    
+    
+    ifstream fs(policyPath.c_str(), ifstream::binary);
+    fs.seekg (0, ios::end);
+    ifstream::pos_type size = fs.tellg();
+    char * memblock = new char [size];
+    
+    fs.seekg (0, ios::beg);
+    fs.read (memblock, size);
+    fs.close();
+
+    Blob readData(memblock, size);
+
+    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, readData, encryptSym);
+    
+    string decryptedStr(decrypted->buf(), decrypted->size());
+    
+    TiXmlDocument xmlDoc;
+
+    xmlDoc.Parse(decrypted->buf());
+
+    delete[] memblock;    
+
+    TiXmlNode * it = xmlDoc.FirstChild();
+    
+    while(it != NULL)
+      {
+        _LOG_DEBUG(" " << it->ValueStr());
+        if(it->ValueStr() == string("PolicySet"))
+          loadPolicySet(dynamic_cast<TiXmlElement *>(it));
+        else if(it->ValueStr() == string("TrustAnchors"))
+          loadTrustAnchor(dynamic_cast<TiXmlElement *>(it));
+        it = it->NextSibling();
+      }
+
+    m_policyLoaded = true;
+  }
+
+  void 
+  BasicPolicyManager::loadPolicySet(TiXmlElement * policySet)
+  {
+    TiXmlNode * it = policySet->FirstChild();
+    while(it != NULL)
+      {
+        if(it->ValueStr() == string("VerifyPolicies"))
+          {
+            TiXmlNode * vPolicy = it->FirstChild();
+            while(vPolicy != NULL)
+              {
+                if(vPolicy->ValueStr() == string("IdentityPolicy"))
+                  {
+                    Ptr<IdentityPolicy> p = IdentityPolicy::fromXmlElement(dynamic_cast<TiXmlElement *>(vPolicy));
+                    if(p->mustVerify())
+                      m_verifyPolicies.push_back(p);
+                    else
+                      m_notVerifyPolicies.push_back(p);
+                  }
+                vPolicy = vPolicy->NextSibling();
+              }
+          }
+        else if(it->ValueStr() == string("SignPolicies"))
+          {
+            TiXmlNode * sPolicy = it->FirstChild();
+            while(sPolicy != NULL)
+              {
+                if(sPolicy->ValueStr() == string("IdentityPolicy"))
+                  {
+                    Ptr<IdentityPolicy> p = IdentityPolicy::fromXmlElement(dynamic_cast<TiXmlElement *>(sPolicy));                    
+                    m_signPolicies.push_back(p);
+                  }
+                sPolicy = sPolicy->NextSibling();
+              }
+          }
+        else if(it->ValueStr() == string("SignInferences"))
+          {
+            TiXmlNode * rInfer = it->FirstChild();
+            while(rInfer != NULL)
+              {
+                if(rInfer->ValueStr() == string("Regex"))
+                  {
+                    Ptr<Regex> r = Regex::fromXmlElement(dynamic_cast<TiXmlElement *>(rInfer));
+                    m_signInference.push_back(r);
+                  }
+                rInfer = rInfer->NextSibling();
+              }
+          }
+        it = it->NextSibling();
+      }
+  }
+
+  void
+  BasicPolicyManager::loadTrustAnchor(TiXmlElement * trustAnchors)
+  {
+    TiXmlNode * it = trustAnchors->FirstChild();
+    while(it != NULL)
+      {
+        Blob base64RawCert(it->FirstChild()->ValueStr().c_str(), it->FirstChild()->ValueStr().size());
+        _LOG_DEBUG("cert: " << it->FirstChild()->ValueStr());
+        string decoded;
+        CryptoPP::StringSource ss(reinterpret_cast<const unsigned char *>(base64RawCert.buf()), base64RawCert.size(), true,
+                                  new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
+
+        Ptr<Blob> rawCertPtr = Ptr<Blob>(new Blob(decoded.c_str(), decoded.size()));
+        Certificate cert(*Data::decodeFromWire(rawCertPtr));
+        _LOG_DEBUG("cert is ready!");
+        setTrustAnchor(cert);
+
+        it = it->NextSibling();
+      }
+  }
+
+  void 
+  BasicPolicyManager::savePolicy(const string & keyName, bool sym)
+  {
+    if(m_policyChanged)
+      {
+        string encryptKeyName;
+        bool encryptSym;
+        if(keyName == string(""))
+          {
+            encryptKeyName = m_defaultKeyName;
+            encryptSym = m_sym;
+          }
+        else
+          {
+            encryptKeyName = keyName;
+            encryptSym = sym;
+          }
+
+        ostringstream oss;
+        TiXmlDocument * xmlDoc = toXML();
+        oss << *xmlDoc;
+
+        Blob preparedData(oss.str().c_str(), oss.str().size());
+
+        Ptr<Blob> encrypted = m_privatekeyStore->encrypt(encryptKeyName, preparedData, encryptSym);
+        fs::path policyPath(m_policyPath);
+        
+        ofstream fs(policyPath.c_str(), ofstream::binary | ofstream::trunc);
+        fs.write(encrypted->buf(), encrypted->size());
+
+        fs.close();
+        delete xmlDoc;
+
+        m_policyChanged = false;
+      }
+  }
+
+  TiXmlDocument * 
+  BasicPolicyManager::toXML()
+  {
+    TiXmlDocument * doc = new TiXmlDocument();
+
+    TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "", "");  
+    doc->LinkEndChild(decl);  
+
+    TiXmlElement * policySet = new TiXmlElement("PolicySet");
+    doc->LinkEndChild(policySet);
+
+
+    TiXmlElement * verifyPolicies = new TiXmlElement("VerifyPolicies");
+    policySet->LinkEndChild(verifyPolicies);
+
+    vector< Ptr<Policy> >::iterator vIt = m_verifyPolicies.begin();
+    for(; vIt != m_verifyPolicies.end(); vIt++)
+      verifyPolicies->LinkEndChild((*vIt)->toXmlElement());
+
+    vector< Ptr<Policy> >::iterator vnIt = m_notVerifyPolicies.begin();
+    for(; vnIt != m_notVerifyPolicies.end(); vnIt++)
+      verifyPolicies->LinkEndChild((*vnIt)->toXmlElement());
+
+
+    TiXmlElement * signPolicies = new TiXmlElement("SignPolicies");
+    policySet->LinkEndChild(signPolicies);
+
+    vector< Ptr<Policy> >::iterator sIt = m_signPolicies.begin();
+    for(; sIt != m_signPolicies.end(); sIt++)
+      signPolicies->LinkEndChild((*sIt)->toXmlElement());
+    
+
+    TiXmlElement * signInferences = new TiXmlElement("SignInferences");
+    policySet->LinkEndChild(signInferences);
+    
+    vector< Ptr<Regex> >::iterator rIt = m_signInference.begin();
+    for(; rIt != m_signInference.end(); rIt++)
+      signInferences->LinkEndChild((*rIt)->toXmlElement());
+    
+    
+    TiXmlElement * trustAnchors = new TiXmlElement("TrustAnchors");
+    doc->LinkEndChild(trustAnchors);
+
+    map<Name, Certificate>::iterator tIt = m_trustAnchors.begin();
+    for(; tIt != m_trustAnchors.end(); tIt++)
+      {
+        Ptr<Blob> rawData = tIt->second.encodeToWire();
+        string encoded;
+        CryptoPP::StringSource ss(reinterpret_cast<const unsigned char *>(rawData->buf()), rawData->size(), true,
+                                  new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
+        TiXmlElement * trustAnchor = new TiXmlElement("TrustAnchor");
+        trustAnchor->LinkEndChild(new TiXmlText(encoded));
+        trustAnchors->LinkEndChild(trustAnchor);
+      }
+    return doc;
+  }
+  
+
   void 
   BasicPolicyManager::setSigningPolicy (const string & policyStr)
   {
     Ptr<Policy> policy = parsePolicy(policyStr);
     m_signPolicies.push_back(policy);
+    
+    m_policyChanged = true;
+  }
+
+  void 
+  BasicPolicyManager::setSigningPolicy (Ptr<Policy> policy)
+  {
+    m_signPolicies.push_back(policy);
+    
+    m_policyChanged = true;
   }
 
   void 
@@ -30,6 +296,16 @@ namespace security
   {
     Ptr<Regex> inference = parseInference(inferenceStr);
     m_signInference.push_back(inference);
+    
+    m_policyChanged = true;
+  }
+
+  void 
+  BasicPolicyManager::setSigningInference(Ptr<Regex> inference)
+  {
+    m_signInference.push_back(inference);
+    
+    m_policyChanged = true;
   }
 
   void 
@@ -40,6 +316,19 @@ namespace security
       m_verifyPolicies.push_back(policy);
     else
       m_notVerifyPolicies.push_back(policy);
+
+    m_policyChanged = true;
+  }
+
+  void 
+  BasicPolicyManager::setVerificationPolicy (Ptr<Policy> policy)
+  {
+    if(policy->mustVerify())
+      m_verifyPolicies.push_back(policy);
+    else
+      m_notVerifyPolicies.push_back(policy);
+
+    m_policyChanged = true;
   }
 
   bool
@@ -72,6 +361,8 @@ namespace security
   BasicPolicyManager::setTrustAnchor(const Certificate & certificate)
   {
     m_trustAnchors.insert(pair<const Name, const Certificate>(certificate.getName(), certificate));
+
+    m_policyChanged = true;
   }
 
   Ptr<const Certificate>

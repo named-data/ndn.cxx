@@ -12,6 +12,7 @@
 #define NDN_REGEX_TOP_MATCHER_H
 
 #include <string>
+#include <tinyxml.h>
 
 #include "regex-matcher.h"
 #include "regex-patternlist-matcher.h"
@@ -38,6 +39,12 @@ namespace regex
 
     virtual Name 
     expand (const string & expand = "");
+
+    TiXmlElement *
+    toXmlElement();
+
+    static Ptr<RegexTopMatcher>
+    fromXmlElement(TiXmlElement * element);
 
   protected:
     virtual void 

@@ -27,15 +27,15 @@ namespace regex
     : RegexMatcher (expr, EXPR_COMPONENT, backRefManager),
       m_exact(exact)
   {
-    _LOG_TRACE ("Enter RegexComponent Constructor: ");
+    // _LOG_TRACE ("Enter RegexComponent Constructor: ");
     compile();
-    _LOG_TRACE ("Exit RegexComponent Constructor: ");
+    // _LOG_TRACE ("Exit RegexComponent Constructor: ");
   }
 
   void 
   RegexComponent::compile ()
   {
-    _LOG_TRACE ("Enter RegexComponent::compile");
+    // _LOG_TRACE ("Enter RegexComponent::compile");
 
     m_componentRegex = boost::regex (m_expr);
 
@@ -50,13 +50,13 @@ namespace regex
       }
     
 
-    _LOG_TRACE ("Exit RegexComponent::compile");
+    // _LOG_TRACE ("Exit RegexComponent::compile");
   }
 
   bool
   RegexComponent::match (const Name & name, const int & offset, const int & len)
   {
-    _LOG_TRACE ("Enter RegexComponent::match ");
+    // _LOG_TRACE ("Enter RegexComponent::match ");
 
     m_matchResult.clear();
 

@@ -14,7 +14,7 @@
 
 #include "logging.h"
 
-INIT_LOGGER ("IdentityPolicy");
+INIT_LOGGER ("ndn.security.IdentityPolicy");
 
 using namespace std;
 
@@ -27,9 +27,13 @@ namespace security
   IdentityPolicy::IdentityPolicy (const string & dataRegex, const string & signerRegex, const string & op, 
 				  const string & dataExpand, const string & signerExpand, bool mustVerify)
     :Policy(Policy::IDENTITY_POLICY, mustVerify),
+     m_dataRegex(dataRegex),
+     m_signerRegex(signerRegex),
+     m_op(op),
+     m_dataExpand(dataExpand),
+     m_signerExpand(signerExpand),
      m_dataNameRegex(dataRegex, dataExpand),
-     m_signerNameRegex(signerRegex, signerExpand),
-     m_op(op)
+     m_signerNameRegex(signerRegex, signerExpand)
   {
     if(op != ">" && op != ">=" && op != "==")
       throw SecException("op is wrong!");
@@ -68,6 +72,75 @@ namespace security
     Name expandSignerName =  m_signerNameRegex.expand();
 
     return compare(expandDataName, expandSignerName);
+  }
+
+  TiXmlElement *
+  IdentityPolicy::toXmlElement()
+  {
+    TiXmlElement * policy = new TiXmlElement("IdentityPolicy");
+    
+    TiXmlElement * dataRegex = new TiXmlElement("DataRegex");
+    dataRegex->LinkEndChild(new TiXmlText(m_dataRegex));
+    policy->LinkEndChild(dataRegex);
+
+    TiXmlElement * signerRegex = new TiXmlElement("SignerRegex");
+    signerRegex->LinkEndChild(new TiXmlText(m_signerRegex));
+    policy->LinkEndChild(signerRegex);
+
+    TiXmlElement * op = new TiXmlElement("Op");
+    op->LinkEndChild(new TiXmlText(m_op));
+    policy->LinkEndChild(op);
+
+    TiXmlElement * dataExpand = new TiXmlElement("DataExpand");
+    dataExpand->LinkEndChild(new TiXmlText(m_dataExpand));
+    policy->LinkEndChild(dataExpand);
+
+    TiXmlElement * signerExpand = new TiXmlElement("SignerExpand");
+    signerExpand->LinkEndChild(new TiXmlText(m_signerExpand));
+    policy->LinkEndChild(signerExpand);
+
+    TiXmlElement * mustVerify = new TiXmlElement("MustVerify");
+    mustVerify->LinkEndChild(new TiXmlText( (this->mustVerify()? "1" : "0")));
+    policy->LinkEndChild(mustVerify);
+    
+    return policy;
+  }
+
+  Ptr<IdentityPolicy>
+  IdentityPolicy::fromXmlElement(TiXmlElement * element)
+  {
+    TiXmlNode * it = element->FirstChild();
+
+    string dataRegex;
+    string signerRegex;
+    string op;
+    string dataExpand;
+    string signerExpand;
+    bool mustVerify = true;
+    while(it != NULL)
+      {
+        if(it->ValueStr() == string("DataRegex"))
+          dataRegex = it->FirstChild()->ValueStr();
+        else if(it->ValueStr() == string("SignerRegex"))
+          signerRegex = it->FirstChild()->ValueStr();
+        else if(it->ValueStr() == string("Op"))
+          op = it->FirstChild()->ValueStr();
+        else if(it->ValueStr() == string("DataExpand"))
+          dataExpand = it->FirstChild()->ValueStr();
+        else if(it->ValueStr() == string("SignerExpand"))
+          signerExpand = it->FirstChild()->ValueStr();
+        else if(it->ValueStr() == string("MustVerify"))
+          {
+            string mv = it->FirstChild()->ValueStr();
+            if(mv == string("0"))
+              mustVerify = false;
+          }
+        it = it->NextSibling();
+      }
+    
+    // _LOG_DEBUG(" " << dataRegex << " " << signerRegex << " " << op << " " << dataExpand << " " << signerExpand << " " << boolalpha << mustVerify );
+
+    return Ptr<IdentityPolicy>(new IdentityPolicy (dataRegex, signerRegex, op, dataExpand, signerExpand, mustVerify));
   }
 
 
