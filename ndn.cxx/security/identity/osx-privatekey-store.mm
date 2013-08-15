@@ -64,7 +64,7 @@ namespace security
 
   bool OSXPrivatekeyStore::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
   { 
-    if(doesNameExist(keyName, KEY_CLASS_PUBLIC)){
+    if(doesKeyExist(keyName, KEY_CLASS_PUBLIC)){
       _LOG_DEBUG("keyName has existed");
       return false;
     }
@@ -96,11 +96,11 @@ namespace security
     return true;
   }
 
-  bool OSXPrivatekeyStore::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
+  void OSXPrivatekeyStore::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
   {
     string keyName = prependSymKeyName(externalKeyName);
 
-    if(doesNameExist(keyName, KEY_CLASS_SYMMETRIC))
+    if(doesKeyExist(keyName, KEY_CLASS_SYMMETRIC))
         throw SecException("keyName has existed!");
 
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(kCFAllocatorDefault,
@@ -123,13 +123,11 @@ namespace security
 
     if (error) 
         throw SecException("Fail to create a symmetric key");
-
-    return true;
   }
 
   string OSXPrivatekeyStore::prependSymKeyName(const string & keyName)
   {
-    return string("SYMMETRIC")+keyName;
+    return string("SYMMETRIC-")+keyName;
   }
 
   Ptr<Publickey> OSXPrivatekeyStore::getPublickey(const string & keyName)
@@ -386,7 +384,7 @@ namespace security
     return outputPtr;
   }
 
-  bool OSXPrivatekeyStore::doesNameExist(string keyName, KeyClass keyClass)
+  bool OSXPrivatekeyStore::doesKeyExist(const string & keyName, KeyClass keyClass)
   {
     _LOG_TRACE("OSXPrivatekeyStore::NameUsed");
 

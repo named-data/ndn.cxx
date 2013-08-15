@@ -87,9 +87,11 @@ namespace security
      * @param keySize the size of the key
      * @returns true if key have been successfully generated
      */
-    virtual bool 
+    virtual void 
     generateKey(const string & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256) = 0;
 
+    virtual bool
+    doesKeyExist(const string & keyName, KeyClass keyClass) = 0;
 
 
   private:

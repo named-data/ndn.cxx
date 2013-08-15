@@ -169,18 +169,19 @@ BOOST_AUTO_TEST_CASE (IdentityStorage)
   try{
     security::BasicIdentityStorage idStore;
 
-    cout << boolalpha << idStore.doesIdentityExist(Name("/ndn/ucla.edu/yingdi")) << endl;
 
-    Name keyName = idStore.getNewKeyName(Name("/ndn/ucla.edu/yingdi"), true);
+    // cout << boolalpha << idStore.doesIdentityExist(Name("/ndn/ucla.edu/yingdi")) << endl;
 
-    string blobBits = "1234567890";
-    Ptr<Blob> blobPtr = Ptr<Blob>(new Blob(blobBits.c_str(), blobBits.size()));
+    // Name keyName = idStore.getNewKeyName(Name("/ndn/ucla.edu/yingdi"), true);
+
+    // string blobBits = "1234567890";
+    // Ptr<Blob> blobPtr = Ptr<Blob>(new Blob(blobBits.c_str(), blobBits.size()));
     
-    // idStore.addKey(keyName, security::KEY_TYPE_DSA, blobPtr);
+    // // idStore.addKey(keyName, security::KEY_TYPE_DSA, blobPtr);
 
-    idStore.activateKey(Name("/ndn/ucla.edu/yingdi/KSK-1375992917"));
+    // idStore.activateKey(Name("/ndn/ucla.edu/yingdi/KSK-1375992917"));
 
-    idStore.deactivateKey(Name("/ndn/ucla.edu/yingdi/KSK-1375992917"));
+    // idStore.deactivateKey(Name("/ndn/ucla.edu/yingdi/KSK-1375992917"));
 
     // idStore.getAnyCertificate(Name("/ndn/edu/ucla/KSK-123456789/ID-CERT"));
 
@@ -286,6 +287,16 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   identityManager.addCertificateAsIdentityDefault(ndn_APP_DSK_cert);
 }
 
+BOOST_AUTO_TEST_CASE (IdentityManagerSetDefault)
+{
+  Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
+  Ptr<security::OSXPrivatekeyStore> privateStorage = Ptr<security::OSXPrivatekeyStore>::Create();
+
+  security::IdentityManager identityManager(publicStorage, privateStorage);
+  
+  identityManager.loadDefaultIdentity();
+}
+
 BOOST_AUTO_TEST_CASE(PrivateStore)
 {
   security::OSXPrivatekeyStore privateStorage;
@@ -359,9 +370,11 @@ BOOST_AUTO_TEST_CASE(AES_CIPHER)
 BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
 {
   Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
-  security::BasicEncryptionManager encryptionManager(privateStoragePtr, string("/ndn/ucla.edu/yingdi/app/0"), true);
+  security::BasicEncryptionManager encryptionManager(privateStoragePtr, "/Users/yuyingdi/Test/encryption.db");
 
-  //  encryptionManager.createSymKey(Name("/ndn/ucla.edu/yingdi/test/symkey"), security::KEY_TYPE_AES);
+  cerr << "create encryptionManager" << endl;
+
+  // encryptionManager.createSymKey(Name("/ndn/ucla.edu/yingdi/test/symkey"), security::KEY_TYPE_AES);
   string plainData = "abcdefg";
   Blob blob(plainData.c_str(), plainData.size());
 

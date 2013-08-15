@@ -26,7 +26,7 @@ namespace security
   class BasicEncryptionManager : public EncryptionManager
   {
   public:
-    BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage, const string & defaultKeyName, bool defaultSym);
+    BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage, const string & encryptionPath);
     
     virtual ~BasicEncryptionManager() {}
 

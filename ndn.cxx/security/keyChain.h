@@ -47,7 +47,7 @@ namespace security
    */
   class Keychain{
   public:    
-    Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & emKeyName);
+    Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & encryptionPath);
 
     /*****************************************
      *          Identity Management          *
@@ -166,6 +166,9 @@ namespace security
 
     virtual bool 
     stepVerify(const Data & data, const int & stepCount);
+
+    Ptr<Data>
+    fakeFecthData(const Name & name);
 
   private:
     Ptr<IdentityManager> m_identityManager;

@@ -34,13 +34,12 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & emKeyName)
+  Keychain::Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & encryptionPath)
     :m_maxStep(100)
   {
     m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
     m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
-    privateStorage->generateKey(emKeyName);
-    m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, emKeyName, true));
+    m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, encryptionPath));
   }
 
   Name
@@ -202,7 +201,8 @@ namespace security
       return false;
   }
 
-  bool Keychain::stepVerify(const Data & data, const int & stepCount)
+  bool 
+  Keychain::stepVerify(const Data & data, const int & stepCount)
   {
     _LOG_TRACE("Enter StepVerify");
 
@@ -240,8 +240,29 @@ namespace security
     }
   }
 
-  Ptr<Data> Keychain::fetchData(const Name & name)
+  Ptr<Data> 
+  Keychain::fetchData(const Name & name)
   {
+    return fakeFecthData(name);
+  }
+
+  Ptr<Data>
+  Keychain::fakeFecthData(const Name & name)
+  {
+    sqlite3 * fakeDB;
+    sqlite3_open("/Users/yuyingdi/Test/fake-data.db", &fakeDB);
+    
+
+    sqlite3_stmt *stmt;
+    int res = sqlite3_prepare_v2 (fakeDB, "SELECT data_blob FROM data WHERE data_name=?", -1, &stmt, 0);
+    
+    sqlite3_bind_text(stmt, 0, name.toUri().c_str(), name.toUri().size(), SQLITE_TRANSIENT);
+
+    if(res == SQLITE_ROW)
+      {
+        return Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0))));    
+      }
+
     return NULL;
   }
 

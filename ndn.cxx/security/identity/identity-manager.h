@@ -37,13 +37,6 @@ namespace security
     virtual Name
     createIdentity (const Name & identity);
 
-    /* Defualt identity is the default idenity for the user, it should not be configured by application.
-     * We should provide a separate tool to configure user default identity.
-     * Application should maintain its own default identity.
-     */
-    // virtual void
-    // setDefaultIdentity (const Name & identity);
-
     virtual Name
     getDefaultIdentity ();
 
@@ -98,7 +91,13 @@ namespace security
     virtual void
     signByCert (Data & data, const Name & certName);
 
+    void
+    loadDefaultIdentity();
+
   private:
+    virtual void
+    setDefaultIdentity (const Name & identity);
+
     virtual Name
     generateKeyPair (const Name & identity, bool ksk = false, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 

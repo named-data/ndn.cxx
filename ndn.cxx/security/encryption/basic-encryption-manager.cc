@@ -26,6 +26,17 @@ namespace ndn
 
 namespace security
 {
+  const string INIT_MKEY_TABLE = "\
+  CREATE TABLE IF NOT EXISTS                                           \n \
+    MasterKey(                                                         \n \
+        key_name  BLOB NOT NULL,                                       \n \
+        key_type  INTEGER NOT NULL,                                    \n \
+        active    BLOB NOT NULL,                                       \n \
+                                                                       \
+        PRIMARY KEY (key_name)                                 \n \
+    );                                                                 \n \
+  ";
+
   const string INIT_BC_TABLE = "\
   CREATE TABLE IF NOT EXISTS                                           \n \
     BlockCipher(                                                       \n \
@@ -41,15 +52,11 @@ namespace security
   CREATE INDEX blockcipher_index ON BlockCipher(key_name);             \n \
   ";
 
-  BasicEncryptionManager::BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage, const string & defaultKeyName, bool defaultSym)
-    :m_privateStorage(privateStorage),
-     m_defaultKeyName(defaultKeyName),
-     m_defaultSym(defaultSym)
+  BasicEncryptionManager::BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage, const string & encryptionPath)
+    :m_privateStorage(privateStorage)
   {
-    fs::path identityDir = fs::path(getenv("HOME")) / ".ndn-identity";
-    fs::create_directories (identityDir);
     
-    int res = sqlite3_open((identityDir / "encryption.db").c_str (), &m_db);
+    int res = sqlite3_open(encryptionPath.c_str (), &m_db);
 
     if (res != SQLITE_OK)
       {
@@ -78,7 +85,55 @@ namespace security
             sqlite3_free (errmsg);
           }
       }
+
+    //Check if MasterKey table exists;
+    sqlite3_prepare_v2 (m_db, "SELECT name FROM sqlite_master WHERE type='table' And name='MasterKey'", -1, &stmt, 0);
+    res = sqlite3_step (stmt);
+
+    bool mkTableExist = false;
+    if (res == SQLITE_ROW)
+      mkTableExist = true;
+
+    sqlite3_finalize (stmt);
+
+    if(!mkTableExist)
+      {
+        char *errmsg = 0;
+        res = sqlite3_exec (m_db, INIT_MKEY_TABLE.c_str (), NULL, NULL, &errmsg);
+        
+        if (res != SQLITE_OK && errmsg != 0)
+          {
+            _LOG_TRACE ("Init \"error\" in MasterKey: " << errmsg);
+            sqlite3_free (errmsg);
+          }
+        
+        ostringstream oss;
+        oss << time::NowUnixTimestamp().total_seconds();
+        string masterKeyName = "local-" + oss.str();
+        m_defaultKeyName = masterKeyName;
+        m_defaultSym = true;
+          
+        m_privateStorage->generateKey(masterKeyName);
+        sqlite3_prepare_v2 (m_db, "INSERT INTO MasterKey (key_name, key_type, active) VALUES (?, ?, ?)", -1, &stmt, 0);
+        sqlite3_bind_text (stmt, 1, masterKeyName.c_str(), masterKeyName.size(), SQLITE_TRANSIENT);
+        sqlite3_bind_int (stmt, 2, 1);
+        sqlite3_bind_int (stmt, 3, 1);
+        sqlite3_step (stmt);
+        sqlite3_finalize (stmt);    
+      }
+    else
+      {
+        sqlite3_prepare_v2 (m_db, "SELECT key_name, key_type FROM MasterKey WHERE active=1", -1, &stmt, 0);
+        res = sqlite3_step (stmt);
+        
+        if (res == SQLITE_ROW)
+          {
+            m_defaultKeyName = string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes(stmt, 0));
+            m_defaultSym = (sqlite3_column_int(stmt, 1) == 1) ? true : false;
+          }
+      }    
   }
+
   void 
   BasicEncryptionManager::createSymKey(const Name & keyName, KeyType keyType, const string & signkeyName, bool sym)
   {

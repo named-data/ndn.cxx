@@ -95,6 +95,7 @@ namespace security
     setDefaultCertName (const Name & keyName, const Name & certName);
 
   private:
+
     virtual void
     updateKeyStatus(const Name & keyName, bool active);
 

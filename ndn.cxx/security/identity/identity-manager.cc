@@ -14,10 +14,17 @@
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
 #include <ctime>
+#include <boost/filesystem.hpp>
+#include <fstream>
+
+
 
 #include "logging.h"
 
+namespace fs = boost::filesystem;
+
 INIT_LOGGER("ndn.security.IdentityManager")
+
 
 namespace ndn
 {
@@ -53,11 +60,34 @@ namespace security
       throw SecException("Identity has already been created!");
   }
 
-  // void
-  // IdentityManager::setDefaultIdentity (const Name & identity)
-  // {
-  //   m_publicStorage->setDefaultIdentity (identity); 
-  // }
+  void
+  IdentityManager::loadDefaultIdentity()
+  {
+    fs::path identityDir = fs::path(getenv("HOME")) / ".ndn-identity";
+    ifstream ifs( (identityDir / "default-identity").c_str());
+    
+    ifs.seekg (0, ios::end);
+    ifstream::pos_type size = ifs.tellg();
+    // _LOG_DEBUG("Size: " << size);
+    char * memblock = new char [size];
+
+    ifs.seekg (0, ios::beg);
+    ifs.getline(memblock, size);
+    
+    Name defaultIdName(memblock);
+
+    if(!m_publicStorage->doesIdentityExist(defaultIdName))
+      throw SecException("Identity does not exist!");
+    setDefaultIdentity(defaultIdName);
+
+    // _LOG_DEBUG("Default ID: " << default_identity);
+  }
+
+  void
+  IdentityManager::setDefaultIdentity (const Name & identity)
+  {
+    m_publicStorage->setDefaultIdentity (identity); 
+  }
   
   Name
   IdentityManager::generateKeyPair (const Name & identity, bool ksk, KeyType keyType, int keySize)

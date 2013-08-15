@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <sstream>
+#include <fstream>
 
 
 #include "logging.h"
@@ -161,7 +162,6 @@ namespace security
           }
       }
   }
-
 
   bool 
   BasicIdentityStorage::doesIdentityExist (const Name & identity)
