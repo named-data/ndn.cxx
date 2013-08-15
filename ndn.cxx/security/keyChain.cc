@@ -14,7 +14,10 @@
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
 #include "keychain.h"
+#include "identity/basic-identity-storage.h"
 #include "policy/policy.h"
+#include "policy/basic-policy-manager.h"
+#include "encryption/basic-encryption-manager.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cryptopp/rsa.h>
@@ -31,10 +34,13 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain()
+  Keychain::Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & emKeyName)
     :m_maxStep(100)
   {
-
+    m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
+    m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
+    privateStorage->generateKey(emKeyName);
+    m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, emKeyName, true));
   }
 
   Name

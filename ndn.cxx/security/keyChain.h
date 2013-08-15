@@ -47,7 +47,7 @@ namespace security
    */
   class Keychain{
   public:    
-    Keychain();
+    Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & emKeyName);
 
     /*****************************************
      *          Identity Management          *
