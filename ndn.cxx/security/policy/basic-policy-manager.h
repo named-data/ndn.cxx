@@ -29,13 +29,13 @@ namespace security
   class BasicPolicyManager : public PolicyManager
   {
   public:
-    BasicPolicyManager (const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore, const string & defaultKeyName, bool defaultSym);
+    BasicPolicyManager (const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore);
 
     virtual
     ~BasicPolicyManager();
     
     virtual void
-    loadPolicy(const string & keyName = "", bool sym = true);
+    loadPolicy();
 
     void 
     loadPolicySet(TiXmlElement * element);
@@ -43,6 +43,9 @@ namespace security
     void 
     loadTrustAnchor(TiXmlElement * element);
 
+    virtual void 
+    setDefaultEncryptionKey(const string & keyName, bool sym);
+    
     virtual void
     savePolicy(const string & keyName = "", bool sym = true);
 

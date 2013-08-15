@@ -34,16 +34,16 @@ namespace security
   class PolicyManager
   {
   public:
-    PolicyManager(const string & keyName, bool sym)
-      :m_defaultKeyName(keyName),
-       m_sym(sym)
-    {}
+    PolicyManager() {}
     
     virtual
-    ~PolicyManager(){}
+    ~PolicyManager() {}
 
     virtual void
-    loadPolicy(const string & keyName = "", bool sym = true) = 0;
+    loadPolicy() = 0;
+
+    virtual void 
+    setDefaultEncryptionKey(const string & keyName, bool sym) = 0;
 
     virtual void
     savePolicy(const string & keyName = "", bool sym = true) = 0;
@@ -88,8 +88,8 @@ namespace security
     inferSigningCert(const Name & dataName) = 0;
 
   protected:
-    const string m_defaultKeyName;
-    const bool m_sym;
+    string m_defaultKeyName;
+    bool m_sym;
   };
 
 }//security

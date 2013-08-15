@@ -11,6 +11,7 @@
 #include "basic-policy-manager.h"
 
 #include "identity-policy.h"
+#include "ndn.cxx/security/encoding/der.h"
 
 #include <boost/filesystem.hpp>
 #include <tinyxml.h>
@@ -31,9 +32,8 @@ namespace ndn
 
 namespace security
 {
-  BasicPolicyManager::BasicPolicyManager(const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore, const string & defaultKeyName, bool defaultSym)
-    :PolicyManager(defaultKeyName, defaultSym),
-     m_policyPath(policyPath),
+  BasicPolicyManager::BasicPolicyManager(const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore)
+    :m_policyPath(policyPath),
      m_policyChanged(false),
      m_policyLoaded(false),
      m_privatekeyStore(privatekeyStore)
@@ -47,7 +47,7 @@ namespace security
   }
 
   void 
-  BasicPolicyManager::loadPolicy(const string & keyName, bool sym)
+  BasicPolicyManager::loadPolicy()
   {
     if(m_policyLoaded)
       return;
@@ -55,21 +55,7 @@ namespace security
     fs::path policyPath(m_policyPath);
     if(!fs::exists(policyPath))
       return;
-    
-    string encryptKeyName;
-    bool encryptSym;
-    if(keyName == string(""))
-      {
-        encryptKeyName = m_defaultKeyName;
-        encryptSym = m_sym;
-      }
-    else
-      {
-        encryptKeyName = keyName;
-        encryptSym = sym;
-      }
-    
-    
+
     ifstream fs(policyPath.c_str(), ifstream::binary);
     fs.seekg (0, ios::end);
     ifstream::pos_type size = fs.tellg();
@@ -80,8 +66,20 @@ namespace security
     fs.close();
 
     Blob readData(memblock, size);
+    _LOG_DEBUG("Size: " << size);
+    _LOG_DEBUG("READ Data");
 
-    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, readData, encryptSym);
+    DERendec decoder;
+
+    Ptr<vector<Ptr<Blob> > > derItemListPtr = decoder.decodeSequenceDER(readData);
+    string encryptKeyName = *decoder.decodePrintableStringDER(*derItemListPtr->at(0));
+    bool encryptSym = decoder.decodeBoolDER(*derItemListPtr->at(1));
+    Ptr<Blob> encryptedPolicy = decoder.decodeStringDER(*derItemListPtr->at(2));
+
+    m_defaultKeyName = encryptKeyName;
+    m_sym = encryptSym;
+
+    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, *encryptedPolicy, encryptSym);
     
     string decryptedStr(decrypted->buf(), decrypted->size());
     
@@ -104,6 +102,7 @@ namespace security
       }
 
     m_policyLoaded = true;
+    m_policyChanged = false;
   }
 
   void 
@@ -180,14 +179,24 @@ namespace security
   }
 
   void 
+  BasicPolicyManager::setDefaultEncryptionKey(const string & keyName, bool sym)
+  {
+    m_defaultKeyName = keyName;
+    m_sym = sym;
+  }
+
+  void 
   BasicPolicyManager::savePolicy(const string & keyName, bool sym)
   {
     if(m_policyChanged)
       {
+        _LOG_DEBUG("I was here!");
         string encryptKeyName;
         bool encryptSym;
         if(keyName == string(""))
           {
+            if(m_defaultKeyName.empty())
+              throw SecException("No key for encryption");
             encryptKeyName = m_defaultKeyName;
             encryptSym = m_sym;
           }
@@ -203,11 +212,20 @@ namespace security
 
         Blob preparedData(oss.str().c_str(), oss.str().size());
 
-        Ptr<Blob> encrypted = m_privatekeyStore->encrypt(encryptKeyName, preparedData, encryptSym);
+        Ptr<Blob> encryptedPtr = m_privatekeyStore->encrypt(encryptKeyName, preparedData, encryptSym);
         fs::path policyPath(m_policyPath);
         
         ofstream fs(policyPath.c_str(), ofstream::binary | ofstream::trunc);
-        fs.write(encrypted->buf(), encrypted->size());
+
+        DERendec encoder;
+        
+        vector<Ptr<Blob> > derItemList;
+        derItemList.push_back(encoder.encodePrintableStringDER(encryptKeyName));
+        derItemList.push_back(encoder.encodeBoolDER(encryptSym));
+        derItemList.push_back(encoder.encodeStringDER(*encryptedPtr));
+        Ptr<Blob> derBlobPtr = encoder.encodeSequenceDER(derItemList);
+        
+        fs.write(derBlobPtr->buf(), derBlobPtr->size());
 
         fs.close();
         delete xmlDoc;
