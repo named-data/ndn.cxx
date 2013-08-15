@@ -277,22 +277,22 @@ namespace security
 
   
 
-  Ptr<Blob> 
-  Keychain::generateSymmetricKey()
+  void 
+  Keychain::generateSymmetricKey(const Name & keyName, KeyType keyType)
   {
-    return NULL;
+    m_encryptionManager->createSymKey(keyName, keyType);
   }
 
   Ptr<Blob> 
-  Keychain::encrypt()
+  Keychain::encrypt(const Name & keyName, const Blob & blob, bool sym, EncryptMode em)
   {
-    return NULL;
+    return m_encryptionManager->encrypt(keyName, blob, sym, em);
   }
 
   Ptr<Blob> 
-  Keychain::decrypt()
+  Keychain::decrypt(const Name & keyName, const Blob & blob, bool sym, EncryptMode em)
   {
-    return NULL;
+    return m_encryptionManager->decrypt(keyName, blob, sym, em);
   }
  
 }//security

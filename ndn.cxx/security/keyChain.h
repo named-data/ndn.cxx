@@ -150,14 +150,14 @@ namespace security
      *           Encrypt/Decrypt             *
      *****************************************/
 
-    virtual Ptr<Blob> 
-    generateSymmetricKey();
+    virtual void 
+    generateSymmetricKey(const Name & keyName, KeyType keyType);
 
     virtual Ptr<Blob> 
-    encrypt();
+    encrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
 
     virtual Ptr<Blob> 
-    decrypt();
+    decrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
     
 
   private:    
