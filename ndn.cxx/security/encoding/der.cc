@@ -114,11 +114,11 @@ namespace security
       return len;
     }
     else{
-      int len = 0;
-      int numLen = (uint8_t) blob[offset] - flagMask;
+      unsigned int len = 0;
+      unsigned int numLen = (uint8_t) blob[offset] - flagMask;
       int i = 0;
       for(; i < numLen; i++){
-	len = len * 256 + blob[offset + 1 + i];
+	len = len * 256 + (uint8_t)blob[offset + 1 + i];
       }
       offset = offset + 1 + numLen;
       return len;
@@ -390,7 +390,7 @@ namespace security
     Ptr<Blob> result = Ptr<Blob>::Create();
     result->push_back(1);
     result->push_back(1);
-    if(b)
+    if(!b)
       result->push_back(0);
     else
       result->push_back(0xFF);
