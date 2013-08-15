@@ -31,10 +31,10 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain(Ptr<IdentityManager> identityManager, int maxStep)
-    :m_identityManager(identityManager), 
-     m_maxStep(maxStep)
+  Keychain::Keychain()
+    :m_maxStep(100)
   {
+
   }
 
   Name
@@ -224,7 +224,13 @@ namespace security
     else{
       _LOG_DEBUG("KeyLocator is not trust anchor");
       Ptr<Data> signCert = fetchData (sha256sig->getKeyLocator().getKeyName());
-      return stepVerify(*signCert, stepCount -1);
+      if(stepVerify(*signCert, stepCount -1))
+        {
+          m_certCache.insert(pair<const Name, const Certificate>(signCert->getName(), Certificate(*signCert)));
+          return true;
+        }
+      else
+        return false;
     }
   }
 

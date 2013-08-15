@@ -8,8 +8,10 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#include "der.h"
+
 #include "certificate-data.h"
+
+#include "ndn.cxx/security/encoding/der.h"
 
 #include "logging.h"
 

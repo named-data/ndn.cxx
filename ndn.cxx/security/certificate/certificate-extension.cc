@@ -10,7 +10,8 @@
 
 
 #include "certificate-extension.h"
-#include "der.h"
+
+#include "ndn.cxx/security/encoding/der.h"
 
 namespace ndn
 {

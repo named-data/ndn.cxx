@@ -12,7 +12,7 @@
 
 #include "osx-privatekey-store.h"
 
-#include "ndn.cxx/security/certificate/der.h"
+#include "ndn.cxx/security/encoding/der.h"
 #include "ndn.cxx/wire/ccnb.h"
 
 #include <fstream>
@@ -492,12 +492,12 @@ namespace security
   const CFStringRef OSXPrivatekeyStore::getDigestAlgorithm(DigestAlgorithm digestAlgo)
   {
     switch(digestAlgo){
-    case DIGEST_MD2:
-      return kSecDigestMD2;
-    case DIGEST_MD5:
-      return kSecDigestMD5;
-    case DIGEST_SHA1:
-      return kSecDigestSHA1;
+    // case DIGEST_MD2:
+    //   return kSecDigestMD2;
+    // case DIGEST_MD5:
+    //   return kSecDigestMD5;
+    // case DIGEST_SHA1:
+    //   return kSecDigestSHA1;
     case DIGEST_SHA256:
       return kSecDigestSHA2;
     default:
@@ -511,10 +511,10 @@ namespace security
     switch(digestAlgo){
     case DIGEST_SHA256:
       return 256;
-    case DIGEST_SHA1:
-    case DIGEST_MD2:
-    case DIGEST_MD5:
-      return 0;
+    // case DIGEST_SHA1:
+    // case DIGEST_MD2:
+    // case DIGEST_MD5:
+    //   return 0;
     default:
       _LOG_DEBUG("Unrecognized digest algorithm! Unknown digest size");
       return -1;

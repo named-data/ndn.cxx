@@ -12,6 +12,7 @@
 #define NDN_KEYCHAIN_H
 
 #include <string>
+#include <map>
 
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/data.h"
@@ -46,7 +47,7 @@ namespace security
    */
   class Keychain{
   public:    
-    Keychain(Ptr<IdentityManager> identityManager, int maxStep = 100);
+    Keychain();
 
     /*****************************************
      *          Identity Management          *
@@ -170,7 +171,7 @@ namespace security
     Ptr<IdentityManager> m_identityManager;
     Ptr<PolicyManager> m_policyManager;
     Ptr<EncryptionManager> m_encryptionManager;
-    Ptr<CertificateCache> m_certCache;
+    map<Name, Certificate> m_certCache;
     const int m_maxStep;
   };
   

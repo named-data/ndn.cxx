@@ -10,9 +10,10 @@
 
 #include <cryptopp/sha.h>
 
-#include "ndn.cxx/security/exception.h"
+
 #include "publickey.h"
-#include "der.h"
+#include "ndn.cxx/security/encoding/der.h"
+#include "ndn.cxx/security/exception.h"
 
 #include "logging.h"
 

@@ -16,7 +16,7 @@
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
 
-#include "oid.h"
+#include "ndn.cxx/security/encoding/oid.h"
 
 using namespace std;
 
