@@ -15,6 +15,7 @@
 
 #include <sqlite3.h>
 
+#include "ndn.cxx/security/encryption/symmetric-key.h"
 #include "ndn.cxx/security/identity/privatekey-store.h"
 
 namespace ndn
@@ -25,7 +26,7 @@ namespace security
   class BasicEncryptionManager : public EncryptionManager
   {
   public:
-    BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage);
+    BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage, const string & defaultKeyName, bool defaultSym);
     
     virtual ~BasicEncryptionManager() {}
 
@@ -33,23 +34,29 @@ namespace security
      *
      */
     virtual void 
-    CreateKey(const Name & keyName, KeyType keyType);
-
-    virtual void
-    InstallKey(const Name & keyName, const Blob & blob);
+    createSymKey(const Name & keyName, KeyType keyType, const string & signkeyName = "", bool sym = true);
     
     virtual Ptr<Blob>
-    Encrypt(const Publickey & publicKey, const Blob & blob);
+    encrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
 
     virtual Ptr<Blob>
-    Encrypt(const Name & keyName, const Blob & blob);
+    decrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
 
-    virtual Ptr<Blob>
-    Decrypt(const Name & keyName, const Blob & blob, bool sym = false);
+  private:
+    bool
+    doesKeyNameExist(const string & keyName);
+
+    // bool 
+    // doesEntryExist(const string & keyName, const string & keySeq);
+
+    Ptr<SymmetricKey>
+    getSymmetricKey(const string & keyName);
 
   private:
     sqlite3 * m_db;
     Ptr<PrivatekeyStore> m_privateStorage;
+    string m_defaultKeyName;
+    bool m_defaultSym;
   };
 
 }//security

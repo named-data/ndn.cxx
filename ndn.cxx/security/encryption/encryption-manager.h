@@ -30,19 +30,15 @@ namespace security
     virtual ~EncryptionManager() {}
     
     virtual void 
-    CreateKey(const Name & keyName, KeyType keyType) = 0;
+    createSymKey(const Name & keyName, KeyType keyType, const string & signkeyName, bool sym) = 0;
 
-    virtual void
-    InstallKey(const Name & keyName, const Blob & blob) = 0;
+    virtual Ptr<Blob>
+    encrypt(const Name & keyName, const Blob & blob, bool sym = false, EncryptMode em = EM_DEFAULT) = 0;
+
+    virtual Ptr<Blob>
+    decrypt(const Name & keyName, const Blob & blob, bool sym = false, EncryptMode em = EM_DEFAULT) = 0;
     
-    virtual Ptr<Blob>
-    Encrypt(const Publickey & publicKey, const Blob & blob) = 0;
-
-    virtual Ptr<Blob>
-    Encrypt(const Name & keyName, const Blob & blob) = 0;
-
-    virtual Ptr<Blob>
-    Decrypt(const Name & keyName, const Blob & blob, bool sym = false) = 0;
+  protected:
     
   };
 

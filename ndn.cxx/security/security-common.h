@@ -21,11 +21,11 @@ namespace security
 {
   enum KeyType{
     KEY_TYPE_RSA,
-    KEY_TYPE_DSA,
+    // KEY_TYPE_DSA,
     KEY_TYPE_AES,
-    KEY_TYPE_DES,
-    KEY_TYPE_RC4,
-    KEY_TYPE_RC2
+    // KEY_TYPE_DES,
+    // KEY_TYPE_RC4,
+    // KEY_TYPE_RC2
   };
 
   enum KeyClass{
@@ -39,10 +39,16 @@ namespace security
   };
 
   enum DigestAlgorithm{
-    DIGEST_MD2,
-    DIGEST_MD5,
-    DIGEST_SHA1,
+    // DIGEST_MD2,
+    // DIGEST_MD5,
+    // DIGEST_SHA1,
     DIGEST_SHA256,
+  };
+
+  enum EncryptMode{
+    EM_DEFAULT,
+    EM_CFB_AES,
+    // EM_CBC_AES,
   };
 
 }//security

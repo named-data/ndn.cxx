@@ -12,8 +12,8 @@
 
 #include "ndn.cxx/security/identity/osx-privatekey-store.h"
 #include "ndn.cxx/security/certificate/certificate-data.h"
-#include "ndn.cxx/security/certificate/der.h"
 #include "ndn.cxx/security/certificate/publickey.h"
+#include "ndn.cxx/security/encoding/der.h"
 
 using namespace std;
 using namespace boost::posix_time;
@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE (TinyXML)
 {
   TiXmlDocument doc;  
   TiXmlElement* msg;
-  TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "", "" );  
-  doc.LinkEndChild( decl );  
+  // TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "", "" );  
+  // doc.LinkEndChild( decl );  
  
   TiXmlElement * root = new TiXmlElement( "MyApp" );  
   doc.LinkEndChild( root );  
@@ -116,6 +116,7 @@ BOOST_AUTO_TEST_CASE (TinyXML)
   msg = new TiXmlElement( "Welcome" );  
   msg->LinkEndChild( new TiXmlText( "Welcome to MyApp" ));  
   msgs->LinkEndChild( msg );  
+  cout << *msg << endl;
   
   msg = new TiXmlElement( "Farewell" );  
   msg->LinkEndChild( new TiXmlText( "Thank you for using MyApp" ));  
