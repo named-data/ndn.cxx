@@ -23,6 +23,16 @@ namespace ndn {
 class SignedBlob : public Blob
 {
 public:
+
+  SignedBlob()
+  {
+  }
+
+  SignedBlob(const void *buf, size_t length)
+    :Blob(buf, length)
+  {
+  }
+  
   /**
    * @brief Set signed portion of the blob
    * @param offset An offset from the beginning of the blob

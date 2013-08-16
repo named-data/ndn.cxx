@@ -126,6 +126,24 @@ public:
   inline Blob &
   content ();
 
+  void
+  setSignedBlob(Ptr<SignedBlob> wire)
+  {
+    m_wire = wire;
+  }
+
+  Ptr<const SignedBlob> 
+  getSignedBlob() const
+  {
+    return m_wire;
+  }
+
+  Ptr<SignedBlob>
+  getSignedBlob()
+  {
+    return m_wire;
+  }
+
   ///////////////////////////////////////////////////////////////////////
   //                         Wire format                               //
   ///////////////////////////////////////////////////////////////////////

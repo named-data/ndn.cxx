@@ -19,6 +19,8 @@
 INIT_LOGGER ("ndn.Data");
 
 namespace ndn {
+  const int MAGIC_SIGNED_BLOB_OFFSET = 2 + (2 + (2 + (2 + 22) + 1) + (2 + (2 + 256) + 1) + 1);
+  const int LAST_CLOSER_SIZE = 1;
 
   Data::Data ()
   {
@@ -67,6 +69,13 @@ namespace ndn {
       <boost::iostreams::array_source> is (buffer->buf (), buffer->size ());
 
     Ptr<ndn::Data> data = Create<ndn::Data> ();
+    
+    Ptr<SignedBlob> signedBlob = Ptr<SignedBlob>(new SignedBlob(buffer->buf (), buffer->size ()));
+
+    signedBlob->setSignedPortion(MAGIC_SIGNED_BLOB_OFFSET, buffer->size() - MAGIC_SIGNED_BLOB_OFFSET - LAST_CLOSER_SIZE);
+
+    data->setSignedBlob(signedBlob);
+
     data->setSignature(Create<signature::Sha256WithRsa> ());
 
     wire::ccnb::Data::Deserialize (data, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
