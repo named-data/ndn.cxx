@@ -125,7 +125,10 @@ namespace ccnb {
       Ccnb::AppendCloser(start); //</Signature>
     }
     
-    SerializeUnsigned(data, start);
+    if(data.getSignedBlob() == NULL)
+      SerializeUnsigned (data, start);
+    else
+      start.Write(reinterpret_cast<const unsigned char*>(data.getSignedBlob()->buf()), data.getSignedBlob()->size());
     
     Ccnb::AppendCloser(start);// </Data>
   }
