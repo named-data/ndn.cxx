@@ -19,7 +19,7 @@
 
 #include "ndn.cxx/security/certificate/certificate.h"
 
-#include "policy.h"
+#include "policy-rule.h"
 
 
 
@@ -48,23 +48,26 @@ namespace security
     virtual void
     savePolicy(const string & keyName = "", bool sym = true) = 0;
 
-    virtual void 
-    setSigningPolicy(const string & policy) = 0;
+    // virtual void 
+    // setSigningPolicyRule(const string & policy) = 0;
 
     virtual void 
-    setSigningPolicy(Ptr<Policy> policy) = 0;
+    setSigningPolicyRule(Ptr<PolicyRule> policy) = 0;
 
-    virtual void 
-    setSigningInference(const string & inference) = 0;
+    // virtual void 
+    // setSigningInference(const string & inference) = 0;
 
     virtual void 
     setSigningInference(Ptr<Regex> inference) = 0;
 
-    virtual void 
-    setVerificationPolicy(const string & policy) = 0;
+    // virtual void 
+    // setVerificationPolicyRule(const string & policy) = 0;
 
     virtual void 
-    setVerificationPolicy(Ptr<Policy> policy) = 0;
+    setVerificationPolicyRule(Ptr<PolicyRule> policy) = 0;
+
+    virtual void
+    setVerificationExemption(Ptr<Regex> exempt) = 0;
 
     virtual void 
     setTrustAnchor(const Certificate & certificate) = 0;
@@ -85,11 +88,11 @@ namespace security
     checkSigningPolicy(const Name & dataName, const Name & certName) = 0;
     
     virtual Name 
-    inferSigningCert(const Name & dataName) = 0;
+    inferSigningIdentity(const Name & dataName) = 0;
 
   protected:
     string m_defaultKeyName;
-    bool m_sym;
+    bool m_defaultSym;
   };
 
 }//security

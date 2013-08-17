@@ -50,22 +50,16 @@ namespace security
     savePolicy(const string & keyName = "", bool sym = true);
 
     virtual void 
-    setSigningPolicy (const string & policy);
-
-    virtual void 
-    setSigningPolicy (Ptr<Policy> policy);
-
-    virtual void 
-    setSigningInference(const string & inference);
+    setSigningPolicyRule (Ptr<PolicyRule> policy);
 
     virtual void 
     setSigningInference(Ptr<Regex> inference);
 
-    virtual void 
-    setVerificationPolicy (const string & policy);
+    virtual void
+    setVerificationPolicyRule (Ptr<PolicyRule> policy);
 
     virtual void
-    setVerificationPolicy (Ptr<Policy> policy);
+    setVerificationExemption(Ptr<Regex> exempt);
 
     virtual void 
     setTrustAnchor(const Certificate & certificate);
@@ -86,14 +80,14 @@ namespace security
     checkSigningPolicy(const Name & dataName, const Name & certName);
 
     virtual Name 
-    inferSigningCert(const Name & dataName);
+    inferSigningIdentity(const Name & dataName);
 
   private:
     Ptr<Regex>
     parseInference (const string & inference);
     
-    Ptr<Policy>
-    parsePolicy (const string & policy);
+    Ptr<PolicyRule>
+    parsePolicyRule (const string & policy);
 
     string
     getStringItem (const string & policy, int & offset);
@@ -109,9 +103,11 @@ namespace security
     bool m_policyChanged;
     bool m_policyLoaded;
     Ptr<PrivatekeyStore> m_privatekeyStore;
-    vector< Ptr<Policy> > m_verifyPolicies;
-    vector< Ptr<Policy> > m_notVerifyPolicies;
-    vector< Ptr<Policy> > m_signPolicies;
+    vector< Ptr<PolicyRule> > m_mustFailVerify;
+    vector< Ptr<PolicyRule> > m_verifyPolicies;
+    vector< Ptr<Regex> > m_verifyExempt;
+    vector< Ptr<PolicyRule> > m_signPolicies;
+    vector< Ptr<PolicyRule> > m_mustFailSign;
     vector< Ptr<Regex> > m_signInference;
     map<Name, Certificate> m_trustAnchors;
   };

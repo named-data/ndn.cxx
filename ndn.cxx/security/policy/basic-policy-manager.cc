@@ -10,7 +10,7 @@
 
 #include "basic-policy-manager.h"
 
-#include "identity-policy.h"
+#include "identity-policy-rule.h"
 #include "ndn.cxx/security/encoding/der.h"
 
 #include <boost/filesystem.hpp>
@@ -39,6 +39,8 @@ namespace security
      m_privatekeyStore(privatekeyStore)
   {
     loadPolicy();
+
+    // _LOG_DEBUG("Policy: " << *toXML());
   }
 
   BasicPolicyManager::~BasicPolicyManager()
@@ -54,7 +56,17 @@ namespace security
 
     fs::path policyPath(m_policyPath);
     if(!fs::exists(policyPath))
-      return;
+      {
+        ostringstream oss;
+        oss << time::NowUnixTimestamp().total_seconds();
+        string masterKeyName = "local-" + oss.str();
+        m_defaultKeyName = masterKeyName;
+        m_defaultSym = true;
+
+        m_privatekeyStore->generateKey(masterKeyName);
+
+        return;
+      }
 
     ifstream fs(policyPath.c_str(), ifstream::binary);
     fs.seekg (0, ios::end);
@@ -66,8 +78,6 @@ namespace security
     fs.close();
 
     Blob readData(memblock, size);
-    _LOG_DEBUG("Size: " << size);
-    _LOG_DEBUG("READ Data");
 
     DERendec decoder;
 
@@ -77,7 +87,7 @@ namespace security
     Ptr<Blob> encryptedPolicy = decoder.decodeStringDER(*derItemListPtr->at(2));
 
     m_defaultKeyName = encryptKeyName;
-    m_sym = encryptSym;
+    m_defaultSym = encryptSym;
 
     Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, *encryptedPolicy, encryptSym);
     
@@ -93,7 +103,6 @@ namespace security
     
     while(it != NULL)
       {
-        _LOG_DEBUG(" " << it->ValueStr());
         if(it->ValueStr() == string("PolicySet"))
           loadPolicySet(dynamic_cast<TiXmlElement *>(it));
         else if(it->ValueStr() == string("TrustAnchors"))
@@ -113,31 +122,35 @@ namespace security
       {
         if(it->ValueStr() == string("VerifyPolicies"))
           {
-            TiXmlNode * vPolicy = it->FirstChild();
-            while(vPolicy != NULL)
+            TiXmlNode * vPolicyRule = it->FirstChild();
+            while(vPolicyRule != NULL)
               {
-                if(vPolicy->ValueStr() == string("IdentityPolicy"))
-                  {
-                    Ptr<IdentityPolicy> p = IdentityPolicy::fromXmlElement(dynamic_cast<TiXmlElement *>(vPolicy));
-                    if(p->mustVerify())
-                      m_verifyPolicies.push_back(p);
-                    else
-                      m_notVerifyPolicies.push_back(p);
-                  }
-                vPolicy = vPolicy->NextSibling();
+                if(vPolicyRule->ValueStr() == string("IdentityPolicyRule"))
+                  setVerificationPolicyRule(IdentityPolicyRule::fromXmlElement(dynamic_cast<TiXmlElement *>(vPolicyRule)));
+
+                vPolicyRule = vPolicyRule->NextSibling();
+              }
+          }
+        else if(it->ValueStr() == string("VerifyExempt"))
+          {
+            TiXmlNode * vExempt = it->FirstChild();
+            while(vExempt != NULL)
+              {
+                if(vExempt->ValueStr() == string("Regex"))
+                  setVerificationExemption(Regex::fromXmlElement(dynamic_cast<TiXmlElement *>(vExempt)));
+
+                vExempt = vExempt->NextSibling();
               }
           }
         else if(it->ValueStr() == string("SignPolicies"))
           {
-            TiXmlNode * sPolicy = it->FirstChild();
-            while(sPolicy != NULL)
+            TiXmlNode * sPolicyRule = it->FirstChild();
+            while(sPolicyRule != NULL)
               {
-                if(sPolicy->ValueStr() == string("IdentityPolicy"))
-                  {
-                    Ptr<IdentityPolicy> p = IdentityPolicy::fromXmlElement(dynamic_cast<TiXmlElement *>(sPolicy));                    
-                    m_signPolicies.push_back(p);
-                  }
-                sPolicy = sPolicy->NextSibling();
+                if(sPolicyRule->ValueStr() == string("IdentityPolicyRule"))
+                  setSigningPolicyRule(IdentityPolicyRule::fromXmlElement(dynamic_cast<TiXmlElement *>(sPolicyRule))); 
+ 
+                sPolicyRule = sPolicyRule->NextSibling();
               }
           }
         else if(it->ValueStr() == string("SignInferences"))
@@ -146,10 +159,8 @@ namespace security
             while(rInfer != NULL)
               {
                 if(rInfer->ValueStr() == string("Regex"))
-                  {
-                    Ptr<Regex> r = Regex::fromXmlElement(dynamic_cast<TiXmlElement *>(rInfer));
-                    m_signInference.push_back(r);
-                  }
+                  setSigningInference(Regex::fromXmlElement(dynamic_cast<TiXmlElement *>(rInfer)));
+
                 rInfer = rInfer->NextSibling();
               }
           }
@@ -164,14 +175,14 @@ namespace security
     while(it != NULL)
       {
         Blob base64RawCert(it->FirstChild()->ValueStr().c_str(), it->FirstChild()->ValueStr().size());
-        _LOG_DEBUG("cert: " << it->FirstChild()->ValueStr());
+
         string decoded;
         CryptoPP::StringSource ss(reinterpret_cast<const unsigned char *>(base64RawCert.buf()), base64RawCert.size(), true,
                                   new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
 
         Ptr<Blob> rawCertPtr = Ptr<Blob>(new Blob(decoded.c_str(), decoded.size()));
         Certificate cert(*Data::decodeFromWire(rawCertPtr));
-        _LOG_DEBUG("cert is ready!");
+
         setTrustAnchor(cert);
 
         it = it->NextSibling();
@@ -182,15 +193,15 @@ namespace security
   BasicPolicyManager::setDefaultEncryptionKey(const string & keyName, bool sym)
   {
     m_defaultKeyName = keyName;
-    m_sym = sym;
+    m_defaultSym = sym;
   }
 
   void 
   BasicPolicyManager::savePolicy(const string & keyName, bool sym)
   {
+    _LOG_DEBUG("savePolicy");
     if(m_policyChanged)
       {
-        _LOG_DEBUG("I was here!");
         string encryptKeyName;
         bool encryptSym;
         if(keyName == string(""))
@@ -198,7 +209,7 @@ namespace security
             if(m_defaultKeyName.empty())
               throw SecException("No key for encryption");
             encryptKeyName = m_defaultKeyName;
-            encryptSym = m_sym;
+            encryptSym = m_defaultSym;
           }
         else
           {
@@ -249,21 +260,33 @@ namespace security
     TiXmlElement * verifyPolicies = new TiXmlElement("VerifyPolicies");
     policySet->LinkEndChild(verifyPolicies);
 
-    vector< Ptr<Policy> >::iterator vIt = m_verifyPolicies.begin();
+    vector< Ptr<PolicyRule> >::iterator vIt = m_verifyPolicies.begin();
     for(; vIt != m_verifyPolicies.end(); vIt++)
       verifyPolicies->LinkEndChild((*vIt)->toXmlElement());
 
-    vector< Ptr<Policy> >::iterator vnIt = m_notVerifyPolicies.begin();
-    for(; vnIt != m_notVerifyPolicies.end(); vnIt++)
-      verifyPolicies->LinkEndChild((*vnIt)->toXmlElement());
+    vector< Ptr<PolicyRule> >::iterator vfIt = m_mustFailVerify.begin();
+    for(; vfIt != m_mustFailVerify.end(); vfIt++)
+      verifyPolicies->LinkEndChild((*vfIt)->toXmlElement());
+
+
+    TiXmlElement * verifyExempt = new TiXmlElement("VerifyExempt");
+    policySet->LinkEndChild(verifyExempt);
+    
+    vector< Ptr<Regex> >::iterator eIt = m_verifyExempt.begin();
+    for(; eIt != m_verifyExempt.end(); eIt++)
+      verifyExempt->LinkEndChild((*eIt)->toXmlElement());
 
 
     TiXmlElement * signPolicies = new TiXmlElement("SignPolicies");
     policySet->LinkEndChild(signPolicies);
 
-    vector< Ptr<Policy> >::iterator sIt = m_signPolicies.begin();
+    vector< Ptr<PolicyRule> >::iterator sIt = m_signPolicies.begin();
     for(; sIt != m_signPolicies.end(); sIt++)
       signPolicies->LinkEndChild((*sIt)->toXmlElement());
+
+    vector< Ptr<PolicyRule> >::iterator sfIt = m_mustFailSign.begin();
+    for(; sfIt != m_mustFailSign.end(); sfIt++)
+      signPolicies->LinkEndChild((*sfIt)->toXmlElement());
     
 
     TiXmlElement * signInferences = new TiXmlElement("SignInferences");
@@ -291,29 +314,13 @@ namespace security
     return doc;
   }
   
-
   void 
-  BasicPolicyManager::setSigningPolicy (const string & policyStr)
+  BasicPolicyManager::setSigningPolicyRule (Ptr<PolicyRule> policy)
   {
-    Ptr<Policy> policy = parsePolicy(policyStr);
-    m_signPolicies.push_back(policy);
-    
-    m_policyChanged = true;
-  }
-
-  void 
-  BasicPolicyManager::setSigningPolicy (Ptr<Policy> policy)
-  {
-    m_signPolicies.push_back(policy);
-    
-    m_policyChanged = true;
-  }
-
-  void 
-  BasicPolicyManager::setSigningInference(const string & inferenceStr)
-  {
-    Ptr<Regex> inference = parseInference(inferenceStr);
-    m_signInference.push_back(inference);
+    if(policy->isPositive())
+      m_signPolicies.push_back(policy);
+    else
+      m_mustFailSign.push_back(policy);
     
     m_policyChanged = true;
   }
@@ -327,24 +334,20 @@ namespace security
   }
 
   void 
-  BasicPolicyManager::setVerificationPolicy (const string & policyStr)
+  BasicPolicyManager::setVerificationPolicyRule (Ptr<PolicyRule> policy)
   {
-    Ptr<Policy> policy = parsePolicy(policyStr);
-    if(policy->mustVerify())
+    if(policy->isPositive())
       m_verifyPolicies.push_back(policy);
     else
-      m_notVerifyPolicies.push_back(policy);
+      m_mustFailVerify.push_back(policy);
 
     m_policyChanged = true;
   }
 
   void 
-  BasicPolicyManager::setVerificationPolicy (Ptr<Policy> policy)
+  BasicPolicyManager::setVerificationExemption (Ptr<Regex> exempt)
   {
-    if(policy->mustVerify())
-      m_verifyPolicies.push_back(policy);
-    else
-      m_notVerifyPolicies.push_back(policy);
+    m_verifyExempt.push_back(exempt);
 
     m_policyChanged = true;
   }
@@ -352,10 +355,17 @@ namespace security
   bool
   BasicPolicyManager::requireVerify (const Data & data)
   {
-    vector< Ptr<Policy> >::iterator it = m_verifyPolicies.begin();
+    vector< Ptr<PolicyRule> >::iterator it = m_verifyPolicies.begin();
     for(; it != m_verifyPolicies.end(); it++)
       {
-	if((*it)->matchDataName(data) || (*it)->matchSignerName(data))
+	if((*it)->matchDataName(data))
+	  return true;
+      }
+
+    it = m_mustFailVerify.begin();
+    for(; it != m_mustFailVerify.end(); it++)
+      {
+	if((*it)->matchDataName(data))
 	  return true;
       }
 
@@ -365,10 +375,10 @@ namespace security
   bool 
   BasicPolicyManager::skipVerify (const Data & data)
   {
-    vector< Ptr<Policy> >::iterator it = m_notVerifyPolicies.begin();
-    for(; it != m_notVerifyPolicies.end(); it++)
+    vector< Ptr<Regex> >::iterator it = m_verifyExempt.begin();
+    for(; it != m_verifyExempt.end(); it++)
       {
-	if((*it)->matchDataName(data))
+	if((*it)->match(data.getName()))
 	  return true;
       }
 
@@ -395,7 +405,14 @@ namespace security
   bool 
   BasicPolicyManager::checkVerificationPolicy(const Data & data)
   {
-    vector< Ptr<Policy> >::iterator it = m_verifyPolicies.begin();
+    vector< Ptr<PolicyRule> >::iterator it = m_mustFailVerify.begin();
+    for(; it != m_mustFailVerify.end(); it++)
+      {
+	if((*it)->satisfy(data))
+	  return false;
+      }
+
+    it = m_verifyPolicies.begin();
     for(; it != m_verifyPolicies.end(); it++)
       {
 	if((*it)->satisfy(data))
@@ -408,8 +425,15 @@ namespace security
   bool 
   BasicPolicyManager::checkSigningPolicy(const Name & dataName, const Name & certName)
   {
-    vector< Ptr<Policy> >::iterator it = m_verifyPolicies.begin();
-    for(; it != m_verifyPolicies.end(); it++)
+    vector< Ptr<PolicyRule> >::iterator it = m_mustFailSign.begin();
+    for(; it != m_mustFailSign.end(); it++)
+      {
+	if((*it)->satisfy(dataName, certName))
+	  return false;
+      }
+
+    it = m_signPolicies.begin();
+    for(; it != m_signPolicies.end(); it++)
       {
 	if((*it)->satisfy(dataName, certName))
 	  return true;
@@ -419,7 +443,7 @@ namespace security
   }
   
   Name
-  BasicPolicyManager::inferSigningCert(const Name & dataName)
+  BasicPolicyManager::inferSigningIdentity(const Name & dataName)
   {
     vector< Ptr<Regex> >::iterator it = m_signInference.begin();
     for(; it != m_signInference.end(); it++)
@@ -462,59 +486,59 @@ namespace security
     return Ptr<Regex>(new Regex(dataRegex, certExpand));
   }
 
-  Ptr<Policy>
-  BasicPolicyManager::parsePolicy (const string & policy)
+  Ptr<PolicyRule>
+  BasicPolicyManager::parsePolicyRule (const string & policy)
   {
-    string cPolicy = replaceWS(policy);
+    string cPolicyRule = replaceWS(policy);
 
     int offset = 0;
 
-    string identityType = getStringItem(cPolicy, offset);
+    string identityType = getStringItem(cPolicyRule, offset);
 
     if("IDENTITY_POLICY" == identityType){
       
       if(string::npos == offset) 
 	throw SecException("No data regex!");
 
-      string dataRegex = getStringItem(cPolicy, offset);
+      string dataRegex = getStringItem(cPolicyRule, offset);
 
 
       if(string::npos == offset) 
 	throw SecException("No data expand!");
 
-      string dataExpand = getStringItem(cPolicy, offset);
+      string dataExpand = getStringItem(cPolicyRule, offset);
 
 
       if(string::npos == offset) 
 	throw SecException("No relation!");
       
-      string op = getStringItem(cPolicy, offset);
+      string op = getStringItem(cPolicyRule, offset);
 
       
       if(string::npos == offset) 
 	throw SecException("No signer regex!");
       
-      string signerRegex = getStringItem(cPolicy, offset);
+      string signerRegex = getStringItem(cPolicyRule, offset);
 
 
       if(string::npos == offset) 
 	throw SecException("No signer expand!");
       
-      string signerExpand = getStringItem(cPolicy, offset);
+      string signerExpand = getStringItem(cPolicyRule, offset);
 
       
       if(string::npos == offset) 
 	throw SecException("No mustSign!");
       
-      string mustVerifyStr = getStringItem(cPolicy, offset);
+      string isPositiveStr = getStringItem(cPolicyRule, offset);
 
-      bool mustVerify = true;
+      bool isPositive = true;
       
-      if("NOVERIFY" == mustVerifyStr)
-	mustVerify = false;
+      if("NOVERIFY" == isPositiveStr)
+	isPositive = false;
       
 
-      return Ptr<Policy>(new IdentityPolicy(dataRegex, signerRegex, op, dataExpand, signerExpand, mustVerify));
+      return Ptr<PolicyRule>(new IdentityPolicyRule(dataRegex, signerRegex, op, dataExpand, signerExpand, isPositive));
     }
     else
       throw SecException("Unsupported policy type!");
