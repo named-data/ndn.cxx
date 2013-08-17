@@ -154,11 +154,11 @@ BOOST_AUTO_TEST_CASE (IO)
 
 BOOST_AUTO_TEST_CASE (Crypto)
 {
-  // RSA::PublicKey pubKey;
+  // CryptoPP::RSA::PublicKey pubKey;
 
-  // ByteQueue queue;
+  // CryptoPP::ByteQueue queue;
 
-  // FileSource file("out1.pub", true);
+  // CryptoPP::FileSource file("out1.pub", true);
   // file.TransferTo(queue);
   // queue.MessageEnd();
 

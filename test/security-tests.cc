@@ -15,11 +15,12 @@
 
 #include "ndn.cxx/regex/regex.h"
 
+#include "ndn.cxx/security/keychain.h"
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/security/encoding/der.h"
 #include "ndn.cxx/security/certificate/publickey.h"
 #include "ndn.cxx/security/certificate/certificate-subdescrpt.h"
-#include "ndn.cxx/security/policy/identity-policy.h"
+#include "ndn.cxx/security/policy/identity-policy-rule.h"
 #include "ndn.cxx/security/policy/basic-policy-manager.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
@@ -27,15 +28,19 @@
 #include "ndn.cxx/security/encryption/aes-cipher.h"
 #include "ndn.cxx/security/encryption/basic-encryption-manager.h"
 
+#include "ndn.cxx/security/tmp/dump-certificate.h"
+
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cryptopp/rsa.h>
 
 using namespace std;
 using namespace ndn;
+using namespace ndn::security;
 
 
 BOOST_AUTO_TEST_SUITE(SecurityTests)
@@ -133,13 +138,13 @@ BOOST_AUTO_TEST_CASE (Digest)
 
 BOOST_AUTO_TEST_CASE (IdentityPolicy)
 {
-  security::IdentityPolicy policy("^(<>*)<DNS>(<>*)$", "^(<>*)<DNS>(<>*)<><NDNCERT>", ">=", "\\1\\2", "\\1\\2", true);
+  security::IdentityPolicyRule policy("^(<>*)<DNS>(<>*)$", "^(<>*)<DNS>(<>*)<><NDNCERT>", ">=", "\\1\\2", "\\1\\2", true);
   ostringstream oss;
   oss << *policy.toXmlElement();
 
   cout << oss.str() << endl;
 
-  security::IdentityPolicy::fromXmlElement(policy.toXmlElement());
+  security::IdentityPolicyRule::fromXmlElement(policy.toXmlElement());
 
   
 }
@@ -225,7 +230,7 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   security::Certificate ndn_UCLA_KSK_cert(*ndn_UCLA_KSK_unsign_cert);
 
 
-  identityManager.addCertificateAsDefault(ndn_UCLA_KSK_cert);
+  identityManager.addCertificateAsIdentityDefault(ndn_UCLA_KSK_cert);
 
   Name ndn_UCLA_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu"));
   signingRequest = identityManager.getPublickey(ndn_UCLA_DSK_name);
@@ -249,7 +254,7 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   identityManager.signByIdentity(*ndn_Yingdi_KSK_unsign_cert, Name("/ndn/ucla.edu"));
   security::Certificate ndn_Yingdi_KSK_cert(*ndn_Yingdi_KSK_unsign_cert);
 
-  identityManager.addCertificateAsDefault(ndn_Yingdi_KSK_cert);
+  identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_KSK_cert);
 
 
   Name ndn_Yingdi_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi"));
@@ -274,7 +279,7 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   identityManager.signByIdentity(*ndn_APP_KSK_unsign_cert, Name("/ndn/ucla.edu/yingdi"));
   security::Certificate ndn_APP_KSK_cert(*ndn_APP_KSK_unsign_cert);
 
-  identityManager.addCertificateAsDefault(ndn_APP_KSK_cert);
+  identityManager.addCertificateAsIdentityDefault(ndn_APP_KSK_cert);
 
 
   Name ndn_APP_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi/app"));
@@ -323,18 +328,26 @@ BOOST_AUTO_TEST_CASE(PolicyManager)
   security::BasicIdentityStorage identityStorage;
 
   security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr);
-  
-  Ptr<security::IdentityPolicy> vPolicy = Ptr<security::IdentityPolicy>(new security::IdentityPolicy("^(<>*)<DNS>(<>*)$", "^(<>*)<DNS>(<>*)<><NDNCERT>", ">=", "\\1\\2", "\\1\\2", true));
-  policyManager.setVerificationPolicy(vPolicy);
 
-  Ptr<Data> dataPtr = identityStorage.getCertificate(Name("/ndn/DSK-1376411829/ID-CERT/0"), true);
+  policyManager.setVerificationPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<KSK-.*><ID-CERT>", "^(<>*)<DSK-.*><ID-CERT>", "==", "\\1", "\\1", false)));
+  policyManager.setVerificationPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<DSK-.*><ID-CERT>", "^(<>*)<KSK-.*><ID-CERT>", "==", "\\1", "\\1", true)));  
+  policyManager.setVerificationPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<><KSK-.*><ID-CERT>", "^(<>*)<DSK-.*><ID-CERT>", ">=", "\\1", "\\1", true)));
+  policyManager.setVerificationPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)", "^(<>*)<DSK-.*><ID-CERT>", ">", "\\1", "\\1", true)));
+
+  policyManager.setSigningPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<KSK-.*><ID-CERT>", "^(<>*)<DSK-.*><ID-CERT>", "==", "\\1", "\\1", false)));  
+  policyManager.setSigningPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<DSK-.*><ID-CERT>", "^(<>*)<KSK-.*><ID-CERT>", "==", "\\1", "\\1", true))); 
+  policyManager.setSigningPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<><KSK-.*><ID-CERT>", "^(<>*)<DSK-.*><ID-CERT>", ">=", "\\1", "\\1", true)));
+  policyManager.setSigningPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)", "^(<>*)<DSK-.*><ID-CERT>", ">", "\\1", "\\1", true)));
+
+
+  Ptr<Data> dataPtr = identityStorage.getCertificate(Name("/ndn/KSK-1376698603/ID-CERT/0"), true);
   security::Certificate cert(*dataPtr);
   
   policyManager.setTrustAnchor(cert);
 
   cerr << "SavePolicy" << endl;
   
-  policyManager.savePolicy("/ndn/ucla.edu/yingdi/app/0", true);
+  policyManager.savePolicy();
   
 }
 
@@ -383,6 +396,33 @@ BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
 
   string result(decryptedBlobPtr->buf(), decryptedBlobPtr->size());
   cout << result << endl;
+}
+
+BOOST_AUTO_TEST_CASE(KeyChain)
+{
+  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  security::Keychain keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db");
+  
+  Data data;
+  data.setName(Name("/ndn/ucla.edu/yingdi/testdata"));
+  string contentStr = "hello, world!";
+  Content content(contentStr.c_str(), contentStr.size());
+  data.setContent(content);
+
+  
+  try{
+  keychain.sign(data, Name("/ndn/ucla.edu/yingdi"), true);
+  
+  cout << boolalpha << keychain.verifyData(data) << endl;
+  }catch(security::SecException & e){
+    cerr << e.Msg() << endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DUMP)
+{
+  security::DumpCertificate dump;
+  dump.dump();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

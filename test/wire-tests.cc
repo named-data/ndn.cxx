@@ -15,6 +15,7 @@
 #include "ndn.cxx/error.h"
 
 #include "ndn.cxx/fields/content.h"
+#include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
@@ -68,6 +69,12 @@ BOOST_AUTO_TEST_CASE (DataTest)
   content.setContent(Blob(contentStr.c_str(), contentStr.size()));
 
   data.setContent(content);
+
+  Ptr<Blob> unsignedData = data.encodeToUnsignedWire();
+  Ptr<SignedBlob> signedBlobPtr = Ptr<SignedBlob>(new SignedBlob(unsignedData->buf(), unsignedData->size()));
+  signedBlobPtr->setSignedPortion(0, unsignedData->size());
+  data.setSignedBlob(signedBlobPtr);
+
 
   Ptr<Blob> encoded = data.encodeToWire ();
 
