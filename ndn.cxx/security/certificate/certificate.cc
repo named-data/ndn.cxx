@@ -27,6 +27,10 @@ namespace security
     Ptr<const signature::Sha256WithRsa> dataSig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(data.getSignature());
     Ptr<signature::Sha256WithRsa> newSig = Ptr<signature::Sha256WithRsa>::Create();
 
+    Ptr<SignedBlob> newSignedBlob = NULL;
+    if(data.getSignedBlob() != NULL)
+      newSignedBlob = Ptr<SignedBlob>(new SignedBlob(*data.getSignedBlob()));
+
     // _LOG_DEBUG("Start copying signature");
     
     newSig->setKeyLocator(dataSig->getKeyLocator());
@@ -38,6 +42,7 @@ namespace security
     setName(data.getName());
     setSignature(newSig);
     setContent(data.getContent());
+    setSignedBlob(newSignedBlob);
     
     // _LOG_DEBUG("Finish local copy: " << getContent().getContent().size());
 
