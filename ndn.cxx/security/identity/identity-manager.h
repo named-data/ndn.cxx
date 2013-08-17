@@ -66,10 +66,10 @@ namespace security
     virtual void
     addCertificateAsDefault (const Certificate & certificate);
 
-    virtual Ptr<Data>
+    virtual Ptr<Certificate>
     getCertificate (const Name & certName);
     
-    virtual Ptr<Data>
+    virtual Ptr<Certificate>
     getAnyCertificate (const Name & certName);
 
 

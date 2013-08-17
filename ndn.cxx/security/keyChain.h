@@ -19,13 +19,14 @@
 #include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/fields/signature.h"
+#include "ndn.cxx/regex/regex.h"
 
 #include "cert-cache.h"
 
 #include "identity/identity-manager.h"
 #include "policy/policy-manager.h"
 #include "encryption/encryption-manager.h"
-#include "policy/policy.h"
+#include "policy/policy-rule.h"
 #include "certificate/certificate.h"
 
 
@@ -108,6 +109,9 @@ namespace security
     virtual Ptr<Certificate> 
     getCertificate(const Name & certName);
 
+    virtual Ptr<Certificate>
+    getAnyCertificate(const Name & certName);
+
     virtual Ptr<Blob> 
     revokeKey(const Name & keyName);
 
@@ -119,13 +123,16 @@ namespace security
      *****************************************/
 
     virtual void 
-    setSigningPolicy(const string & policy);
+    setSigningPolicyRule(Ptr<PolicyRule> policy);
+
+    virtual void
+    setVerificationExemption(Ptr<Regex> exempt);
 
     virtual void 
-    setVerificationPolicy(const string & policy);
+    setVerificationPolicyRule(Ptr<PolicyRule> policy);
 
     virtual void 
-    setSigningInference(const string & inference);
+    setSigningInference(Ptr<Regex> inference);
 
     virtual void 
     setTrustAnchor(const Certificate & certificate);
@@ -141,7 +148,7 @@ namespace security
     sign(const Blob & buf, const Name & signerName, bool byID = true);
 
     virtual bool 
-    verify(const Data & data);
+    verifyData(const Data & data);
 
     virtual bool 
     verifySignature(const Data & data, const Publickey & publicKey);
@@ -160,6 +167,10 @@ namespace security
     decrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
     
 
+    //TMP:
+    Ptr<Data>
+    fakeFecthData(const Name & name);
+
   private:    
     Ptr<Data> 
     fetchData(const Name & name);
@@ -167,8 +178,6 @@ namespace security
     virtual bool 
     stepVerify(const Data & data, const int & stepCount);
 
-    Ptr<Data>
-    fakeFecthData(const Name & name);
 
   private:
     Ptr<IdentityManager> m_identityManager;

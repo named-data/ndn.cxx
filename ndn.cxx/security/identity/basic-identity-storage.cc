@@ -440,7 +440,7 @@ namespace security
     if(doesCertificateExist(certName))
       {
         sqlite3_stmt *stmt;
-        if(false == any)
+        if(!any)
           {
             sqlite3_prepare_v2 (m_db, 
                                 "SELECT certificate_data FROM Certificate \
@@ -463,16 +463,20 @@ namespace security
         
         Ptr<Data> data = NULL;
 
+
         if (res == SQLITE_ROW)
-          // _LOG_DEBUG("" << string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
-          data = Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0))));            
- 
+          {
+            data = Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0))));            
+          }
         sqlite3_finalize (stmt);
         
         return data;
       }
     else
-      return NULL;
+      {
+        _LOG_DEBUG("Certificate does not exist!");
+        return NULL;
+      }
   }
 
   Name 

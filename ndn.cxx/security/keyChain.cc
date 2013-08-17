@@ -15,16 +15,17 @@
 
 #include "keychain.h"
 #include "identity/basic-identity-storage.h"
-#include "policy/policy.h"
+#include "policy/policy-rule.h"
 #include "policy/basic-policy-manager.h"
 #include "encryption/basic-encryption-manager.h"
+#include "encoding/der.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cryptopp/rsa.h>
 
 #include "logging.h"
 
-INIT_LOGGER ("Keychain");
+INIT_LOGGER ("ndn.security.Keychain");
 
 using namespace std;
 using namespace boost::posix_time;
@@ -83,7 +84,7 @@ namespace security
   void
   Keychain::installCertificate(const Certificate & certificate)
   {
-    if(!verify(certificate)){
+    if(!verifyData(certificate)){
       _LOG_DEBUG("certificate cannot be validated!");
       throw SecException("certificate cannot be validated!");
     }
@@ -94,7 +95,13 @@ namespace security
   Ptr<Certificate> 
   Keychain::getCertificate(const Name & certName)
   {
-    return Ptr<Certificate>(new Certificate(*m_identityManager->getCertificate(certName)));
+    return m_identityManager->getCertificate(certName);
+  }
+
+  Ptr<Certificate> 
+  Keychain::getAnyCertificate(const Name & certName)
+  {
+    return m_identityManager->getAnyCertificate(certName);
   }
 
   Ptr<Blob> 
@@ -112,18 +119,25 @@ namespace security
   }
 
   void 
-  Keychain::setSigningPolicy(const string & policy)
+  Keychain::setSigningPolicyRule(Ptr<PolicyRule> policy)
   {
-    m_policyManager->setSigningPolicy(policy);
+    m_policyManager->setSigningPolicyRule(policy);
   }
 
   void 
-  Keychain::setVerificationPolicy(const string & policy)
+  Keychain::setVerificationExemption(Ptr<Regex> exempt)
   {
-    m_policyManager->setVerificationPolicy(policy);
+    m_policyManager->setVerificationExemption(exempt);
   }
+
   void 
-  Keychain::setSigningInference(const string & inference)
+  Keychain::setVerificationPolicyRule(Ptr<PolicyRule> policy)
+  {
+    m_policyManager->setVerificationPolicyRule(policy);
+  }
+  
+  void 
+  Keychain::setSigningInference(Ptr<Regex> inference)
   {
     m_policyManager->setSigningInference(inference);
   }
@@ -137,46 +151,26 @@ namespace security
   void 
   Keychain::sign(Data & data, const Name & signerName, bool byID)
   {
-    if(byID)
-      {
-        Name signingID;
-
-        if(Name() == signerName)
-          {
-            signingID = m_policyManager->inferSigningCert (data.getName ());
-            if(Name () == signingID)
-              throw SecException("No qualified identity name found!");
-          }
-        else
-          {
-            if(m_policyManager->checkSigningPolicy (data.getName (), signerName))
-              signingID = signerName;
-            else
-              throw SecException("Signing Identity name does not comply with signing policy");
-          }
-
-        m_identityManager->signByIdentity(data, signingID);
-      }
+    Name signingCertName;
+    
+    if(Name() == signerName)
+      signingCertName = m_identityManager->getDefaultCertNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));
     else
       {
-        Name signingCertName;
-
-        if(Name() == signerName)
-          {
-            signingCertName = m_policyManager->inferSigningCert (data.getName ());
-            if(Name () == signingCertName)
-              throw SecException("No qualified cert name found!");
-          }
+        if(byID)
+          signingCertName = m_identityManager->getDefaultCertNameByIdentity(signerName);
         else
-          {
-            if(m_policyManager->checkSigningPolicy (data.getName (), signerName))
-              signingCertName = signerName;
-            else
-              throw SecException("Signing cert name does not comply with signing policy");
-          }
-
-        m_identityManager->signByCert(data, signingCertName);
+          signingCertName = signerName;
       }
+
+    if(signingCertName.size() == 0)
+      throw SecException("No qualified certificate name found!");
+
+    if(!m_policyManager->checkSigningPolicy (data.getName (), signingCertName))
+      throw SecException("Signing Cert name does not comply with signing policy");
+
+    m_identityManager->signByCert(data, signingCertName);
+
   }
 
   Ptr<Signature> 
@@ -189,7 +183,7 @@ namespace security
   }
 
   bool 
-  Keychain::verify(const Data & data)
+  Keychain::verifyData(const Data & data)
   {
     _LOG_TRACE("Enter Verify");
 
@@ -229,11 +223,14 @@ namespace security
     }
     else{
       _LOG_DEBUG("KeyLocator is not trust anchor");
-      Ptr<Data> signCert = fetchData (sha256sig->getKeyLocator().getKeyName());
-      if(stepVerify(*signCert, stepCount -1))
+      Ptr<Certificate> signCertPtr = Ptr<Certificate>(new Certificate(*fetchData (sha256sig->getKeyLocator().getKeyName())));
+      if(stepVerify(*signCertPtr, stepCount -1))
         {
-          m_certCache.insert(pair<const Name, const Certificate>(signCert->getName(), Certificate(*signCert)));
-          return true;
+          m_certCache.insert(pair<const Name, const Certificate>(signCertPtr->getName(), *signCertPtr));
+          if(verifySignature(data, signCertPtr->getPublicKeyInfo()))
+            return true;
+          else 
+            return false;
         }
       else
         return false;
@@ -250,18 +247,18 @@ namespace security
   Keychain::fakeFecthData(const Name & name)
   {
     sqlite3 * fakeDB;
-    sqlite3_open("/Users/yuyingdi/Test/fake-data.db", &fakeDB);
-    
+    int res = sqlite3_open("/Users/yuyingdi/Test/fake-data.db", &fakeDB);
 
     sqlite3_stmt *stmt;
-    int res = sqlite3_prepare_v2 (fakeDB, "SELECT data_blob FROM data WHERE data_name=?", -1, &stmt, 0);
+    sqlite3_prepare_v2 (fakeDB, "SELECT data_blob FROM data WHERE data_name=?", -1, &stmt, 0);
     
-    sqlite3_bind_text(stmt, 0, name.toUri().c_str(), name.toUri().size(), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 1, name.toUri().c_str(), name.toUri().size(), SQLITE_TRANSIENT);
+
+    res = sqlite3_step(stmt);
 
     if(res == SQLITE_ROW)
-      {
-        return Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0))));    
-      }
+      return Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0))));    
+
 
     return NULL;
   }
@@ -271,7 +268,7 @@ namespace security
   {
     using namespace CryptoPP;
 
-    Ptr<Blob> unsignedData = data.encodeToUnsignedWire();
+    Blob unsignedData(data.getSignedBlob()->signed_buf(), data.getSignedBlob()->signed_size());
     bool result = false;
     
     DigestAlgorithm digestAlg = DIGEST_SHA256; //For temporary, should be assigned by Signature.getAlgorithm();
@@ -289,7 +286,9 @@ namespace security
             const Blob & sigBits = sigPtr->getSignatureBits();
 
             RSASS<PKCS1v15, SHA256>::Verifier verifier (pubKey);
-            result = verifier.VerifyMessage((const byte*) unsignedData->buf(), unsignedData->size(), (const byte*)sigBits.buf(), sigBits.size());
+            result = verifier.VerifyMessage((const byte*) unsignedData.buf(), unsignedData.size(), (const byte*)sigBits.buf(), sigBits.size());            
+            _LOG_DEBUG("Signature verified? " << data.getName() << " " << boolalpha << result);
+            
           }
       }
    

@@ -13,6 +13,9 @@
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
+#include "ndn.cxx/security/encoding/der.h"
+
+
 #include <ctime>
 #include <boost/filesystem.hpp>
 #include <fstream>
@@ -169,16 +172,16 @@ namespace security
     setDefaultCertForKey(certificate.getName());
   }
 
-  Ptr<Data>
+  Ptr<Certificate>
   IdentityManager::getCertificate (const Name & certName)
   {
-    return m_publicStorage->getCertificate(certName, false);
+    return Ptr<Certificate>(new Certificate(*m_publicStorage->getCertificate(certName, false)));
   }
 
-  Ptr<Data>
+  Ptr<Certificate>
   IdentityManager::getAnyCertificate (const Name & certName)
   {
-    return m_publicStorage->getCertificate(certName, true);
+    return Ptr<Certificate>(new Certificate(*m_publicStorage->getCertificate(certName, true)));
   }
 
   void
@@ -259,7 +262,13 @@ namespace security
     data.setSignature(sha256Sig);
 
     Ptr<Blob> unsignedData = data.encodeToUnsignedWire();
+    Ptr<SignedBlob> signedBlobPtr = Ptr<SignedBlob>(new SignedBlob(unsignedData->buf(), unsignedData->size()));
+    signedBlobPtr->setSignedPortion(0, unsignedData->size());
+    data.setSignedBlob(signedBlobPtr);
 
+    // DERendec endec;
+    // endec.printBlob(*unsignedData, "");
+    
     Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName.toUri());
 
     sha256Sig->setSignatureBits(*sigBits);
