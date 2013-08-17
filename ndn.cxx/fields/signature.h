@@ -23,6 +23,7 @@ namespace wire { class Base; }
 class Signature
 {
 public:
+
   /**
    * @brief Virtual destructor
    */

@@ -32,7 +32,13 @@ public:
     :Blob(buf, length)
   {
   }
-  
+
+  SignedBlob(const SignedBlob & signedBlob)
+    :Blob(signedBlob.buf(), signedBlob.size())
+  {
+    setSignedPortion(signedBlob.signed_begin()-signedBlob.begin(), signedBlob.signed_size());
+  }
+ 
   /**
    * @brief Set signed portion of the blob
    * @param offset An offset from the beginning of the blob
