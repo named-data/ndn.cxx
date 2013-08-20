@@ -1,0 +1,35 @@
+@font-face {
+  font-family: "Calibri";
+  src: url(_static/Calibri.ttf);
+}
+ 
+@page {
+  size: Letter landscape;
+  margin: 1.0cm;
+}
+ 
+body {
+  font-size: 18pt;
+  line-height: 120%;
+}
+ 
+body,
+div.sphinxsidebar h3,
+div.sphinxsidebar h4,
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 {
+  font-family: "Calibri", sans-serif;
+}
+ 
+div, p, hr, h1, h2 {
+  margin: 0px;
+  padding: 0px;
+}
+ 
+h1 {
+  margin-top: 10cm;
+}
