@@ -2,7 +2,6 @@
 *.pyc
 build/
 .lock*
-Makefile
 *.o
 *.DS_Store
 *~
