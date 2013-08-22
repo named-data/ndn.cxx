@@ -5,45 +5,41 @@ Proposed format in NDN packet structure
 Change highlights
 +++++++++++++++++
 
-General
--------
+1. General
 
-Common packet header, so it is trivial to distinguish "NDN" packet from any other packet, and which provides ability for backward/forward compatibility.
+    Common packet header, so it is trivial to distinguish "NDN" packet from any other packet, and which provides ability for backward/forward compatibility.
 
-Interest
---------
+2. Interest
 
-1. New ``NackType`` field
+    - New ``NackType`` field
 
-2. Interest selectors are grouped under ``Selectors`` field and separated from ``Name``, ``Nonce``, ``Scope``, ``NackType``, and ``Lifetime`` fields.
+    - Interest selectors are grouped under ``Selectors`` field and separated from ``Name``, ``Nonce``, ``Scope``, ``NackType``, and ``Lifetime`` fields.
 
-Data
-----
+2. Data
 
-1. Signature block moved to the end of the packet.
-
-2. Removing confusing ``SignedInfo`` component.
-
-3. Instead of ``SignedInfo``, meta information describing content of the data packet (type, time it was generated, freshness, final block ID, and others if any) is moved to under ``Content`` section.
-
-4. ``PublisherPublicKeyDigest`` and ``ExtOpt`` completely eliminated
-
-5. ``KeyLocator`` is simplified (only name can be used) and moved under ``Signature`` block
-
-6. ``Signature`` is completely redesigned:
-
-  - ``DigestAlgorithm`` is completely eliminated
-
-  - depending on the signature algorithm used, it would contain ``SignatureEmtpy``, ``SignatureSha256``, ``SignatureSha256WithRsa``, or ``SignatureSha256WithRsaAndMerkle`` TLV
-
-  - ``Witness`` is moved under ``SignatureSha256WithRsaAndMerkle`` TLV, since it is relevant to only this type of signature
+    - Signature block moved to the end of the packet.
+  
+    - Removing confusing ``SignedInfo`` component.
+   
+    - Instead of ``SignedInfo``, meta information describing content of the data packet (type, time it was generated, freshness, final block ID, and others if any) is moved to under ``Content`` section.
+    
+    - ``PublisherPublicKeyDigest`` and ``ExtOpt`` completely eliminated
+    
+    - ``KeyLocator`` is simplified (only name can be used) and moved under ``Signature`` block
+    
+    - ``Signature`` is completely redesigned:
+    
+      - ``DigestAlgorithm`` is completely eliminated
+    
+      - depending on the signature algorithm used, it would contain ``SignatureEmtpy``, ``SignatureSha256``, ``SignatureSha256WithRsa``, or ``SignatureSha256WithRsaAndMerkle`` TLV
+    
+      - ``Witness`` is moved under ``SignatureSha256WithRsaAndMerkle`` TLV, since it is relevant to only this type of signature
 
 This document describes a proposed modification to NDN packet structure.
 The document does not specify specific wire format, but it is assumed that a TLV-like format (e.g., Cisco proposal) is used for each of the presented field, with exception of the ``CommonHeader`` field.
 
-
-NDN Packet
-++++++++++
+NDN packet structure definitions
+++++++++++++++++++++++++++++++++
 
 ::
 
@@ -51,34 +47,17 @@ NDN Packet
                    (Interest | Data)
 
 Common NDN Header
-+++++++++++++++++
+-----------------
 
 ::
 
-	CommonHeader ::= Version Length
+	CommonHeader ::= Version
 
 - ``Version``: to provide wire-format compatibility with future (if any) and existing format.
   For example, if version is 2 bytes, 0x01D2 and 0x0482 would refer to CCNx Interest and Data packets, other values can refer to new TLV format.
 
-
-Interest
-++++++++
-
-The objective of the new format is to optimize encoding/decoding operations.
-
-::
-
-	Interest ::= Name
-                     Nonce
-	     	     Scope?
-                     NackType?
-		     Lifetime?
-	     	     Selectors?
-
-Specific order of fields TBD.
-
 Name
-++++
+----
 
 ::
 
@@ -94,8 +73,25 @@ It simply contains a sequence of ``NameComponent``. ``NameComponent`` represents
 The value of each ``NameComponent`` TLV would contains a sequence of zero or more bytes. 
 There are no restrictions on what byte sequences may be used.
 
+
+Interest
+--------
+
+The objective of the new format is to optimize encoding/decoding operations.
+
+::
+
+	Interest ::= Name
+                     Nonce
+	     	     Scope?
+                     NackType?
+		     Lifetime?
+	     	     Selectors?
+
+Specific order of fields TBD.
+
 Nonce
-+++++
+^^^^^
 
 The value of ``Nonce`` TLV is a randomly-genenerated byte string that is used to detect and discard duplicate Interest messages. 
 Applications generally do not need to generate or check ``Nonce``. 
@@ -104,7 +100,7 @@ Note that ``Nonce`` is not the only basis for detecting and discarding duplicate
 ``Nonce`` is the other required field in Interest message.
 
 Scope
-+++++
+^^^^^
 
 ``Scope`` limits where the Interest may propagate. 
 Scope 0 prevents propagation beyond the local NDN daemon (even to other applications on the same host). 
@@ -116,12 +112,12 @@ If ``Scope`` is missing, there are no limits on Interest propagating.
 Note that this is not a hop count - the value is not decremented as the Interest is forwarded.
 
 NackType
-++++++++
+^^^^^^^^
 
 ``NackType`` indicates whether the Interest message is a normal Interest or negative notification to routers. 
 
 Lifetime
-++++++++
+^^^^^^^^
 
 ``Lifetime`` indicates the time remaining before the interest times out. 
 The value is encoded as an unsigned big-endian integer. 
@@ -135,7 +131,7 @@ It is the application that chooses the value for ``Lifetime``.
 
 
 Selectors
-+++++++++
+---------
 
 ::
 
@@ -153,7 +149,7 @@ Selectors are used to advise the selection of what to send when there are multip
 ``Selectors`` contains a sequence of ``Selector``. ``Selector`` represents a set of TLVs, of which each corresponds to a specific type of selector, for instance, ``MinSuffixComponents``, ``MaxSuffixComponents``, ``Publisher``, ``Exclude``, ``ChildSelector``, ``AnswerOriginKind``, and etc.
 
 MinSuffixComponents, MaxSuffixComponents
-++++++++++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A client may need to say that the Data it is seeking has a known range of legitimate name component counts. 
 To encode this there are two selectors, named ``MinSuffixComponents`` and ``MaxSuffixComponents``, that specify these limits. 
@@ -162,7 +158,7 @@ The default value for ``MinSuffixComponents`` is 0 and for ``MaxSuffixComponents
 Often only one of these will be needed to get the desired effect.
 
 Publisher
-+++++++++
+^^^^^^^^^
 
 ::
 
@@ -179,7 +175,7 @@ Original NDN wire format uses ``PublisherPublicKeyDigest`` instead of ``Publishe
 For the reason why ``PublisherPublicKeyDigest`` is replaced by ``Publisher``, see our discussion in the section of Data.
 
 Exclude
-+++++++
+^^^^^^^
 
 ::
 
@@ -194,7 +190,7 @@ Exclude
 The ``NameComponent`` in the sequence of ``ExcludeComponent`` must occur in strictly increasing order according to the canonical NDN ordering.
 
 ChildSelector
-+++++++++++++
+^^^^^^^^^^^^^
 
 Often a given Interest will match more than one Data. 
 The ChildSelector provides a way of expressing a preference for which of these should be returned. 
@@ -206,7 +202,7 @@ This ordering is only done at the level of the name hierarchy one past the ``Nam
 The original usage of ``ChildSelector`` is preserved in this proposed format.
 
 AnswerOriginKind
-++++++++++++++++
+^^^^^^^^^^^^^^^^
 
 ``AnswerOriginKind`` encodes several bitfields that alter the usual response to Interest. 
 There is a do-not-answer-from-content-store bit, which also implies a passive bit. 
@@ -216,7 +212,7 @@ There is also utility in the passive bit alone - it means do not generate any ne
 The original usage of ``AnswerOriginKind`` is preserved in this proposed format.
 
 Data
-++++
+----
 
 ::
 
@@ -248,7 +244,7 @@ As result, we removed ``PublisherPublicKeyDigest`` from this proposed format.
 We removed ``ExtOpt`` because TLV format can easily support extension, so there are no needs of keeping ``ExtOpt`` any more.
 
 Content
-+++++++
+-------
 
 ::
 
@@ -261,25 +257,25 @@ Content
 The only required element is ``ContentBlob`` which is a sequnce of byte and is opaque to the protocol.
 
 Type
-++++
+^^^^
 
 The primitive type of the ``ContentBlob``. This is encoded as a 3-byte BLOB; when viewed using a base64Binary encoding, the encoded value has some mnemonic value.
 
 Timestamp
-+++++++++
+^^^^^^^^^
 
 ``Timestamp`` indicates the time when the Data packet is generated. 
 It is expressed in units of miliseconds since the start of Unix time.
 ``Lifetime`` in ``Interests`` and ``Freshness`` in ``Content`` are expressed in the same format as ``Timestamp``.
 
 Freshness
-+++++++++
+^^^^^^^^^
 
 ``Freshness`` is a only suggestion to a node about how long it should wait after the arrival of this ContentObject before marking it as stale. 
 
 
 FinalBlockID
-++++++++++++
+^^^^^^^^^^^^
 
 ``FinalBlockID`` indicates the identifier of the final block in a sequence of fragments. 
 It should be present in the final block itself, and may also be present in other fragments to provide advanced warning of the end to consumers. 
@@ -288,7 +284,7 @@ The value here should be equal to the last explicit ``NameComponent`` of the fin
 The original usage of ``FinalBlockID`` is preserved in this format.
 
 Signature
-+++++++++
+---------
 
 ::
 
@@ -313,7 +309,7 @@ Among these mechanisms, ``SignatureEmpty`` indicates that the Data is not secure
 ``SignatureSha256WithRsaAndMerkle`` indicates that the integerity and provenance of Data is protected by a RSA signature over SHA-256-Merkle-Hash digest.
 
 KeyLocator
-++++++++++
+^^^^^^^^^^
 
 ::
 
