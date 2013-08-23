@@ -11,6 +11,9 @@
 #ifndef NDN_CERTIFICATE_OID_H
 #define NDN_CERTIFICATE_OID_H
 
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/fields/blob.h"
+
 #include <string>
 #include <vector>
 
@@ -19,12 +22,11 @@ using namespace std;
 namespace ndn
 {
 
-namespace security
-{
-
   class OID
   {
   public:
+    OID () {};
+    
     OID(const string & oid);
 
     OID(const vector<int> & oid);
@@ -33,7 +35,25 @@ namespace security
 
     OID(const Blob & blob); //For DER
 
-    string toString();
+    const vector<int> &
+    getIntegerList() const
+    {
+      return m_oid;
+    }
+
+    vector<int> &
+    getIntegerList()
+    {
+      return m_oid;
+    }
+
+    void
+    setIntegerList(const vector<int> & value){
+      m_oid = value;
+    }
+
+    string 
+    toString();
 
     Ptr<Blob> toDER();
 
@@ -47,8 +67,6 @@ namespace security
   private:
     vector<int> m_oid;
   };
-
-}//security
 
 }//ndn
 

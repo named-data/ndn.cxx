@@ -47,23 +47,23 @@ Ptr<Blob> readKey(string filename)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  Ptr<Blob> keyPtr = readKey("out1.pub");
-  Time notBefore = from_iso_string("20130718T010203");
-  Time notAfter  = from_iso_string("20130719T040506");
-  vector<Ptr<security::CertificateSubDescrypt> > subjectList;
-  subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.10", "UCLA")));
-  subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.4", "Yu")));
-  subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.42", "Yingdi")));
+  // Ptr<Blob> keyPtr = readKey("out1.pub");
+  // Time notBefore = from_iso_string("20130718T010203");
+  // Time notAfter  = from_iso_string("20130719T040506");
+  // vector<Ptr<security::CertificateSubDescrypt> > subjectList;
+  // subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.10", "UCLA")));
+  // subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.4", "Yu")));
+  // subjectList.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.42", "Yingdi")));
   
-  security::CertificateData cert(notBefore, notAfter, subjectList, Ptr<security::Publickey>(new security::Publickey(*keyPtr)));
+  // security::CertificateData cert(notBefore, notAfter, subjectList, Ptr<security::Publickey>(new security::Publickey(*keyPtr)));
 
-  security::DERendec endec;
+  // security::DERendec endec;
 
-  endec.printDecoded(*cert.toDER(), "", 0);
+  // endec.printDecoded(*cert.toDER(), "", 0);
 
-  security::CertificateData cert2(*cert.toDER());
+  // security::CertificateData cert2(*cert.toDER());
   
-  cert2.printCertificate();
+  // cert2.printCertificate();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -15,7 +15,7 @@
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
 
-#include "ndn.cxx/security/encoding/oid.h"
+#include "ndn.cxx/helpers/oid.h"
 
 using namespace std;
 
@@ -27,9 +27,9 @@ namespace security
   class CertificateExtension
   {
   public:
-    CertificateExtension(string oid, bool critical, Ptr<Blob> extnValue);
+    CertificateExtension (const string & oid, const bool & critical, const Blob & extnValue);
     
-    CertificateExtension(const Blob & blob);
+    CertificateExtension (const Blob & blob);
 
     Ptr<Blob> 
     toDER();
@@ -37,9 +37,9 @@ namespace security
   private:
       
   private:
-    Ptr<OID> m_extnID;
+    OID m_extnID;
     bool m_critical;
-    Ptr<Blob> m_extnValue;
+    Blob m_extnValue;
   };
   
 }//security

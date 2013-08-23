@@ -13,7 +13,9 @@
 
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
-#include "ndn.cxx/security/encoding/oid.h"
+
+#include "ndn.cxx/security/security-common.h"
+#include "ndn.cxx/helpers/oid.h"
 
 namespace ndn
 {
@@ -23,34 +25,59 @@ namespace security
   class Publickey
   {
   public:
-    Publickey(const Blob & blob, bool pem =false);
 
-    Ptr<Blob> 
-    getDigest() const;
+    Publickey () {}
+    /*
+     * @brief Constructor of Publickey
+     * @param blob bytes of public key in the format specided
+     * @pem   true if PEM encoded, otherwise DER
+     */
+    Publickey (const Blob & blob, bool pem =false);
 
-    Ptr<Blob> 
-    getKeyBlob()
-    { 
+    /*
+     * @brief copy Constructor of Publickey
+     * @param publickey 
+     */    
+    Publickey (const Publickey & publickey);
+
+    /*
+     * @brief get the digest of the public key
+     * @param digestAlgo the digest algorithm, ndn::security::DIGEST_SHA256 by default 
+     */
+    Ptr<const Blob> 
+    getDigest (DigestAlgorithm digestAlgo = DIGEST_SHA256) const;
+
+    // Blob & 
+    // getKeyBlob()
+    // { 
+    //   return m_key; 
+    // }
+
+    /*
+     * @brief get the raw bytes
+     */
+    Blob & 
+    getKeyBlob ()
+    {
       return m_key; 
     }
-
-    const Ptr<Blob> 
-    getKeyBlob() const
+    
+    const Blob & 
+    getKeyBlob () const
     {
       return m_key; 
     }
     
   private:
-    bool 
-    fromDER(const Blob & blob);
+    void 
+    fromDER (const Blob & blob);
     
-    bool 
-    fromPEM(const Blob & blob);
+    void 
+    fromPEM (const Blob & blob);
     
   private:
-    Ptr<OID> m_algorithm; //Algorithm
-    Ptr<Blob> m_keyBits;  //Public Key Bits
-    Ptr<Blob> m_key;  //PublicKeyInfo in terms of DER
+    OID m_algorithm; //Algorithm
+    Blob m_key;      //PublicKeyInfo in terms of DER
   };
 
 }//security

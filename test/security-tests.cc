@@ -62,7 +62,8 @@ Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
   Time notBefore = boost::posix_time::ptime_from_tm(current);
   current.tm_year = current.tm_year + 20;
   Time notAfter = boost::posix_time::ptime_from_tm(current);
-  security::CertificateData certData(notBefore, notAfter, subject, pubKey);
+  security::CertificateData certData(notBefore, notAfter, *pubKey);
+  certData.addSubjectDescription(security::CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
 
   Ptr<Blob> certBlob = certData.toDER();
 

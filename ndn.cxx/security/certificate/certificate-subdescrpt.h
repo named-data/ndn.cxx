@@ -16,7 +16,7 @@
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
 
-#include "ndn.cxx/security/encoding/oid.h"
+#include "ndn.cxx/helpers/oid.h"
 
 using namespace std;
 
@@ -28,26 +28,27 @@ namespace security
   class CertificateSubDescrypt
   {
   public:
-    CertificateSubDescrypt(string oid, string value);
+    CertificateSubDescrypt (string oid, string value);
     
-    CertificateSubDescrypt(const Blob & blob);
+    CertificateSubDescrypt (const Blob & blob);
 
     Ptr<Blob> 
-    toDER();
+    toDER ();
 
-    string 
-    getOidStr()
+    string
+    getOidStr ()
     {
-      return m_oid->toString();
+      return m_oid.toString();
     }
 
-    string getValue()
+    const string &
+    getValue () const
     {
       return m_value;
     }
     
   private:
-    Ptr<OID> m_oid;
+    OID m_oid;
     string m_value;
   };
 

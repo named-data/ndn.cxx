@@ -25,13 +25,11 @@ namespace ndn
 
 namespace security
 {
-  CertificateData::CertificateData(Time notBefore, Time notAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Publickey> key)
-  {
-    m_notBefore = notBefore;
-    m_notAfter  = notAfter;
-    m_key = key;
-    m_subjectList = sSubjectList;
-  }
+  CertificateData::CertificateData(Time notBefore, Time notAfter, const Publickey & publickey)
+    :m_notBefore(notBefore),
+     m_notAfter(notAfter),
+     m_key(publickey)
+  {}
 
   CertificateData::CertificateData(const Blob & blob)
   {
@@ -43,7 +41,7 @@ namespace security
 
     decodeSubject(*items->at(1));
 
-    m_key = Ptr<Publickey>(new Publickey(*items->at(2), false));
+    m_key = Publickey(*items->at(2), false);
 
     if(4 == items->size())
       decodeExtn(*items->at(3));
@@ -54,9 +52,14 @@ namespace security
     //TODO
   }
 
+  void 
+  CertificateData::addSubjectDescription(const CertificateSubDescrypt & descrypt)
+  {
+    m_subjectList.push_back(descrypt); 
+  }
 
   void 
-  CertificateData::addExtension(Ptr<CertificateExtension> extn)
+  CertificateData::addExtension(const CertificateExtension & extn)
   {
     m_extnList.push_back(extn);
   }
@@ -68,7 +71,7 @@ namespace security
 
     certSeq.push_back(encodeValidity());
     certSeq.push_back(encodeSubject());
-    certSeq.push_back(m_key->getKeyBlob());
+    certSeq.push_back(Ptr<Blob>(&m_key.getKeyBlob()));
     if(0 != m_extnList.size())
       certSeq.push_back(encodeExtn());
     
@@ -82,9 +85,9 @@ namespace security
   {
     vector<Ptr<Blob> > subjectSeq;
 
-    vector<Ptr<CertificateSubDescrypt> >::iterator it = m_subjectList.begin();
+    vector<CertificateSubDescrypt>::iterator it = m_subjectList.begin();
     for(; it < m_subjectList.end(); it++){
-      subjectSeq.push_back((*it)->toDER());
+      subjectSeq.push_back(it->toDER());
     }
 
     DERendec encoder;
@@ -107,7 +110,7 @@ namespace security
     vector<Ptr<Blob> >::iterator it = items->begin();
     
     for(; it < items->end(); it++){
-      m_subjectList.push_back(Ptr<CertificateSubDescrypt>(new CertificateSubDescrypt(**it)));
+      m_subjectList.push_back(CertificateSubDescrypt(**it));
     }
   }
 
@@ -139,9 +142,9 @@ namespace security
   {
     vector<Ptr<Blob> > extnSeq;
 
-    vector<Ptr<CertificateExtension> >::iterator it = m_extnList.begin();
+    vector<CertificateExtension>::iterator it = m_extnList.begin();
     for(; it < m_extnList.end(); it++){
-      extnSeq.push_back((*it)->toDER());
+      extnSeq.push_back(it->toDER());
     }
 
     DERendec encoder;
@@ -164,7 +167,7 @@ namespace security
     vector<Ptr<Blob> >::iterator it = items->begin();
     
     for(; it < items->end(); it++){
-      m_extnList.push_back(Ptr<CertificateExtension>(new CertificateExtension(**it)));
+      m_extnList.push_back(CertificateExtension(**it));
     }
   }
 
@@ -173,9 +176,9 @@ namespace security
   {
     cout << "Subject Info:" << endl;
       
-    vector<Ptr<CertificateSubDescrypt> >::iterator it = m_subjectList.begin();
+    vector<CertificateSubDescrypt>::iterator it = m_subjectList.begin();
     for(; it < m_subjectList.end(); it++){
-      cout << (*it)->getOidStr() << "\t" << (*it)->getValue() << endl;
+      cout << it->getOidStr() << "\t" << it->getValue() << endl;
     }
   }
 
@@ -187,7 +190,7 @@ namespace security
     printSubjectInfo();
     cout << "Validity:" << endl;
     cout << getNotBefore() << "\t" << getNotAfter() << endl;
-    decoder.printDecoded(*m_key->getKeyBlob(), "", 0);
+    decoder.printDecoded(m_key.getKeyBlob(), "", 0);
   }
 
 }//security

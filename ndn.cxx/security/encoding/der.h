@@ -16,8 +16,7 @@
 
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/blob.h"
-
-#include "oid.h"
+#include "ndn.cxx/helpers/oid.h"
 
 using namespace std;
 
@@ -32,52 +31,52 @@ namespace security
     DERendec();
     
     Ptr<Blob> 
-    encodeStringDER(const Blob & str);
+    encodeStringDER(const Blob & str); //
     
     Ptr<Blob> 
-    decodeStringDER(const Blob & blob);
+    decodeStringDER(const Blob & blob); //
 
     Ptr<Blob> 
-    encodeBitStringDER(const Blob & bits, int paddingLen);
+    encodeBitStringDER(const Blob & bits, int paddingLen); //
 
     Ptr<Blob> 
-    decodeBitStringDER(const Blob & blob, int & paddingLen);
+    decodeBitStringDER(const Blob & blob, int & paddingLen); //
 
     Ptr<Blob> 
-    encodePrintableStringDER(const string & str);
+    encodePrintableStringDER(const string & str); //
     
     Ptr<string> 
-    decodePrintableStringDER(const Blob & blob);
+    decodePrintableStringDER(const Blob & blob); //
 
     Ptr<Blob> 
-    encodeGTimeDER(const Time & str);
+    encodeGTimeDER(const Time & str); //
 
     Time 
-    decodeGTimeDER(const Blob & blob);
+    decodeGTimeDER(const Blob & blob); //
 
     Ptr<Blob> 
-    encodeIntegerDER(const Blob & blob);
+    encodeIntegerDER(const Blob & blob); //
     
     Ptr<Blob> 
-    decodeIntegerDER(const Blob & blob);
+    decodeIntegerDER(const Blob & blob); //
 
     Ptr<Blob> 
-    encodeSequenceDER(vector<Ptr<Blob> > & components);
+    encodeSequenceDER(vector<Ptr<Blob> > & components); //
 
     Ptr<vector<Ptr<Blob> > > 
-    decodeSequenceDER(const Blob & blob);
+    decodeSequenceDER(const Blob & blob); //
 
     Ptr<Blob> 
-    encodeBoolDER(bool b);
+    encodeBoolDER(bool b); //
 
     bool 
-    decodeBoolDER(const Blob & blob);
+    decodeBoolDER(const Blob & blob); //
 
     Ptr<Blob> 
-    encodeNULLDER();
+    encodeNULLDER(); //
 
     void 
-    decodeNULLDER(const Blob & blob);
+    decodeNULLDER(const Blob & blob); //
 
     void 
     printDecoded(const Blob & blob, string indent, int offset);

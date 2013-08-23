@@ -11,17 +11,16 @@
 #include <stdlib.h>
 #include <sstream>
 
-#include "ndn.cxx/security/exception.h"
-
-#include "der.h"
 #include "oid.h"
 
+#include "ndn.cxx/security/exception.h"
+#include "ndn.cxx/security/encoding/der.h"
+
+
 using namespace std;
+using namespace ndn::security;
 
 namespace ndn
-{
-
-namespace security
 {
   OID::OID(const vector<int> & oid)
     : m_oid(oid)
@@ -160,7 +159,4 @@ namespace security
   {
     return !equal(oid);
   }
-
-}//security
-
 }//ndn

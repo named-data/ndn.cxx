@@ -26,50 +26,52 @@ namespace ndn
 
 namespace security
 {
-
-  Publickey::Publickey(const Blob & blob, bool pem)
+  Publickey::Publickey (const Blob & blob, bool pem)
   {
-    bool res = false;
-
-    m_key = Ptr<Blob>(new Blob(blob.buf(), blob.size()));
-
     if(pem)
-      res = fromPEM(blob);
+      fromPEM(blob);
     else
-      res = fromDER(blob);
-
-    if(!res){
-      throw SecException("public key is not created!");
-    }
+      fromDER(blob);
   }
 
-  Ptr<Blob> Publickey::getDigest() const
-  {
-    CryptoPP::SHA256 hash;
-    byte digest[CryptoPP::SHA256::DIGESTSIZE];
+  Publickey::Publickey (const Publickey & publickey)
+    :m_algorithm(publickey.m_algorithm),
+     m_key(publickey.m_key.buf(), publickey.m_key.size())
+  {}
 
-    hash.CalculateDigest(digest, (byte *)m_key->buf(), m_key->size());
+  Ptr<const Blob> 
+  Publickey::getDigest (DigestAlgorithm digestAlgo) const
+  {
     
-    return Ptr<Blob>( new Blob (digest, CryptoPP::SHA256::DIGESTSIZE));
+    if(DIGEST_SHA256 == digestAlgo)
+      {
+        CryptoPP::SHA256 hash;
+        byte digest[CryptoPP::SHA256::DIGESTSIZE];
+
+        hash.CalculateDigest(digest, (byte *)m_key.buf(), m_key.size());
+    
+        return Ptr<const Blob>( new Blob (digest, CryptoPP::SHA256::DIGESTSIZE));
+      }
+    else
+      throw UnrecognizedDigestAlgoException("Wrong format!");
   }
 
-  bool Publickey::fromDER(const Blob & blob)
+  void 
+  Publickey::fromDER (const Blob & blob)
   {
+    Ptr<Blob>(new Blob(blob.buf(), blob.size()));
+
     DERendec endec;
     Ptr<vector<Ptr<Blob> > > sequence = endec.decodeSequenceDER(blob);
 
-    m_algorithm = Ptr<OID>(new OID(*endec.decodeSequenceDER(*sequence->at(0))->at(0)));
-      
-    m_keyBits = sequence->at(1);
-    
-    return true;
+    m_algorithm = *endec.decodeSequenceDER(*sequence->at(0))->at(0);
   }
     
-  bool Publickey::fromPEM(const Blob & blob)
+  void 
+  Publickey::fromPEM (const Blob & blob)
   {
     //TODO:
-    _LOG_DEBUG("PEM format is not supported yet!");
-    return false;
+    throw UnrecognizedKeyFormatException("PEM is not supported in Publickey");
   }
 
 

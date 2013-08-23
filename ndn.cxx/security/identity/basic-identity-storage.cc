@@ -272,7 +272,7 @@ namespace security
   }
 
   void
-  BasicIdentityStorage::addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob)
+  BasicIdentityStorage::addKey (const Name & keyName, KeyType keyType, Blob & pubKeyBlob)
   {
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
@@ -290,7 +290,7 @@ namespace security
     sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, keyId.c_str(),  keyId.size (), SQLITE_TRANSIENT);
     sqlite3_bind_int(stmt, 3, (int)keyType);
-    sqlite3_bind_blob(stmt, 4, pubKeyBlob->buf(), pubKeyBlob->size(), SQLITE_TRANSIENT);
+    sqlite3_bind_blob(stmt, 4, pubKeyBlob.buf(), pubKeyBlob.size(), SQLITE_TRANSIENT);
 
     int res = sqlite3_step (stmt);
 
@@ -402,7 +402,7 @@ namespace security
    
     Ptr<Blob> keyBlob = getKey(keyName);
     
-    if(keyBlob == NULL or (*keyBlob) != (*certificate.getPublicKeyInfo().getKeyBlob()))
+    if(keyBlob == NULL or (*keyBlob) != (certificate.getPublicKeyInfo().getKeyBlob()))
       throw SecException("Certificate does not match public key!");
 
     // Insert the certificate

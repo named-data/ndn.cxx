@@ -52,7 +52,7 @@ namespace security
     getKeyNameForCert (const Name & certName) = 0;
 
     virtual void 
-    addKey (const Name & keyName, KeyType keyType, Ptr<Blob> pubKeyBlob) = 0;
+    addKey (const Name & keyName, KeyType keyType, Blob & pubKeyBlob) = 0;
 
     virtual Ptr<Blob>
     getKey (const Name & keyName) = 0;

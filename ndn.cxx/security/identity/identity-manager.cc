@@ -287,11 +287,11 @@ namespace security
     // _LOG_DEBUG("Get key blob");
     Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
     // _LOG_DEBUG("Extract key blob");
-    Ptr<Publickey> publickey = Ptr<Publickey>(new Publickey(*keyBlob));
+    Publickey publickey(*keyBlob);
 
     // _LOG_DEBUG("Generate CertificateData");
-    vector< Ptr<CertificateSubDescrypt> > subject;
-    subject.push_back(Ptr<CertificateSubDescrypt>(new CertificateSubDescrypt("2.5.4.41", keyName.toUri())));
+    vector<CertificateSubDescrypt> subject;
+    subject.push_back(CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
     tm current = boost::posix_time::to_tm(time::Now());
     current.tm_hour = 0;
     current.tm_min  = 0;
@@ -302,7 +302,9 @@ namespace security
 
     // _LOG_DEBUG("notBefore: " << boost::posix_time::to_iso_string(notBefore) << " notAfter: " << boost::posix_time::to_iso_string(notAfter)); 
 
-    CertificateData certData(notBefore, notAfter, subject, publickey);
+    CertificateData certData(notBefore, notAfter, publickey);
+    certData.addSubjectDescription(CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
+
     Ptr<Blob> certBlob = certData.toDER();
 
     // _LOG_DEBUG("certBlob.size: " << certBlob->size());
@@ -318,7 +320,7 @@ namespace security
     keyLocator.setKeyName (certName);
     
     sha256Sig->setKeyLocator (keyLocator);
-    sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
+    sha256Sig->setPublisherKeyDigest (*publickey.getDigest ());
 
     data->setSignature(sha256Sig);
 

@@ -35,6 +35,21 @@ namespace security
     const string m_errMsg;
   };
 
+  class UnrecognizedKeyFormatException : public SecException
+  {
+  public:
+    UnrecognizedKeyFormatException(const string & errMsg)
+    :SecException(errMsg)
+    {}
+  };
+
+  class UnrecognizedDigestAlgoException : public SecException
+  {
+  public:
+    UnrecognizedDigestAlgoException(const string & errMsg)
+    :SecException(errMsg)
+    {}
+  };
 } //security
 
 } //ndn

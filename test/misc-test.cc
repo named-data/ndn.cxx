@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE (Digest)
 
   security::Publickey pubKey(*keyPtr, false);
 
-  Ptr<Blob> digest = pubKey.getDigest();
+  Ptr<const Blob> digest = pubKey.getDigest();
 
   security::DERendec endec;
   endec.printBlob(*digest, "");
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE (SignVerify)
   // queue.MessageEnd();
   // pubKey.Load(queue);
   ByteQueue queue;
-  queue.Put((const byte*)publickeyPtr->getKeyBlob ()->buf (), publickeyPtr->getKeyBlob ()->size ());
+  queue.Put((const byte*)publickeyPtr->getKeyBlob ().buf (), publickeyPtr->getKeyBlob ().size ());
   pubKey.Load(queue);
 
 

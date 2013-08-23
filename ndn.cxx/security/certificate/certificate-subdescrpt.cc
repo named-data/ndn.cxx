@@ -19,21 +19,18 @@ namespace ndn
 namespace security
 {
 
-  CertificateSubDescrypt::CertificateSubDescrypt(string oid, string value)
-  {
-    DERendec encoder;
-    
-    m_oid = Ptr<OID>(new OID(oid));
-    m_value = value;
-  }
+  CertificateSubDescrypt::CertificateSubDescrypt (string oid, string value)
+    :m_oid(oid),
+     m_value(value)
+  {}
 
-  CertificateSubDescrypt::CertificateSubDescrypt(const Blob & blob)
+  CertificateSubDescrypt::CertificateSubDescrypt (const Blob & blob)
   {
     DERendec endec;
 
     Ptr<vector<Ptr<Blob> > > items = endec.decodeSequenceDER(blob);
     
-    m_oid = Ptr<OID>(new OID(*(items->at(0))));
+    m_oid = OID(*(items->at(0)));
     m_value = *(endec.decodePrintableStringDER(*(items->at(1))));
   }
 
@@ -44,7 +41,7 @@ namespace security
 
     vector<Ptr<Blob> > seq;
 
-    seq.push_back(m_oid->toDER());
+    seq.push_back(m_oid.toDER());
     seq.push_back(encoder.encodePrintableStringDER(m_value));
 
     return encoder.encodeSequenceDER(seq);

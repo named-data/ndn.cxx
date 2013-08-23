@@ -34,27 +34,27 @@ namespace ndn
 
 namespace security
 {
+  typedef vector<CertificateSubDescrypt> SubDescryptList;
+  typedef vector<CertificateExtension> ExtensionList;
   
   class CertificateData
   {
   public:
-    CertificateData(Time notBefore, Time notAfter, vector<Ptr<CertificateSubDescrypt> > & sSubjectList, Ptr<Publickey> key);
-    
-    CertificateData(const Blob & blob);
 
-    CertificateData(const Data & data);
+    CertificateData (Time m_notBefore, Time m_notAfter, const Publickey & publickey);
+    
+    CertificateData (const Blob & blob);
+
+    CertificateData (const Data & data);
 
     void 
-    addExtension (Ptr<CertificateExtension> extn);
+    addSubjectDescription (const CertificateSubDescrypt & descrypt);
+
+    void 
+    addExtension (const CertificateExtension & extn);
     
     Ptr<Blob> 
     toDER ();
-
-    void 
-    printCertificate ();
-
-    void 
-    printSubjectInfo ();
 
     Time & 
     getNotBefore ()
@@ -71,14 +71,20 @@ namespace security
     Publickey & 
     getKey ()
     {
-      return *m_key;
+      return m_key;
     }
 
     const Publickey &
     getKey () const
     {
-      return *m_key;
+      return m_key;
     }
+
+    void 
+    printCertificate ();
+
+    void 
+    printSubjectInfo ();
 
   private:
     Ptr<Blob> 
@@ -100,11 +106,11 @@ namespace security
     decodeSubject (const Blob & blob);
     
   private:
-    vector<Ptr<CertificateSubDescrypt> > m_subjectList;
+    SubDescryptList m_subjectList;
     Time m_notBefore;
     Time m_notAfter;
-    Ptr<Publickey> m_key;
-    vector<Ptr<CertificateExtension> > m_extnList;    
+    Publickey m_key;
+    ExtensionList m_extnList;    
   };
 
 }//security
