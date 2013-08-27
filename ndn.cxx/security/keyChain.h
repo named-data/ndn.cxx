@@ -16,6 +16,7 @@
 
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/data.h"
+#include "ndn.cxx/interest.h"
 #include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/fields/signature.h"
@@ -29,6 +30,8 @@
 #include "policy/policy-rule.h"
 #include "certificate/certificate.h"
 
+#include "ndn.cxx/wrapper/closure.h"
+
 
 
 using namespace std;
@@ -36,8 +39,15 @@ using namespace std;
 namespace ndn
 {
 
+  class FakeWrapper;
+
 namespace security
 {
+
+  typedef boost::function<void (Ptr<Data>)> VerifiedCallback;
+  typedef boost::function<void ()> VerifyFailCallback;
+  typedef boost::function<void (Ptr<Data>)> RecursiveVerifiedCallback;
+
   /**
    * @brief Keychain class, the main class of security library
    *
@@ -49,6 +59,9 @@ namespace security
   class Keychain{
   public:    
     Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & encryptionPath);
+
+    virtual
+    ~Keychain(){};
 
     /*****************************************
      *          Identity Management          *
@@ -96,7 +109,7 @@ namespace security
      * @param certificate the certificate in terms of Data packet
      */
     virtual void 
-    installCertificate(const Certificate & certificate);
+    installCertificate(Ptr<Certificate> certificatePtr);
 
 
     /**
@@ -147,11 +160,8 @@ namespace security
     virtual Ptr<Signature> 
     sign(const Blob & buf, const Name & signerName, bool byID = true);
 
-    virtual bool 
-    verifyData(const Data & data);
-
-    virtual bool 
-    verifySignature(const Data & data, const Publickey & publicKey);
+    virtual void 
+    verifyData(Ptr<Data> dataPtr, const VerifiedCallback & verifiedCallback, const VerifyFailCallback & failureCallback);
 
     /*****************************************
      *           Encrypt/Decrypt             *
@@ -171,13 +181,36 @@ namespace security
     Ptr<Data>
     fakeFecthData(const Name & name);
 
+    void
+    setFakeWrapper(FakeWrapper * wrapper)
+    {
+      m_handler = wrapper;
+    }
+
   private:    
     Ptr<Data> 
     fetchData(const Name & name);
 
-    virtual bool 
-    stepVerify(const Data & data, const int & stepCount);
+    virtual void 
+    stepVerify(Ptr<Data> dataPtr, 
+               const int stepCount, 
+               const RecursiveVerifiedCallback & recursiveVerifiedCallback, 
+               const VerifyFailCallback & failureCallback);
 
+    virtual void
+    onCertInterestTimeout(Ptr<Closure> closurePtr, Ptr<Interest> interestPtr, int retry, const VerifyFailCallback & failureCallback);
+
+    virtual void
+    onCertVerified(Ptr<Data>cert, 
+                   Ptr<Data>data, 
+                   const RecursiveVerifiedCallback &preRecurVerifyCallback, 
+                   const VerifyFailCallback &failureCallback);
+
+    // virtual void
+    // onOriginalCertVerified(Ptr<Certificate> cert, 
+    //                        Ptr<Data>data, 
+    //                        const VerifiedCallback &verifiedCallback, 
+    //                        const VerifyFailCallback &failureCallback);
 
   private:
     Ptr<IdentityManager> m_identityManager;
@@ -185,6 +218,7 @@ namespace security
     Ptr<EncryptionManager> m_encryptionManager;
     map<Name, Certificate> m_certCache;
     const int m_maxStep;
+    FakeWrapper* m_handler;
   };
   
 

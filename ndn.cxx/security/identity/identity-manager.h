@@ -55,7 +55,7 @@ namespace security
 
 
     virtual void
-    addCertificate (const Certificate & certificate);
+    addCertificate (Ptr<Certificate> certificate);
 
     virtual void
     setDefaultCertForKey (const Name & certName);

@@ -27,6 +27,7 @@ namespace ndn
 namespace security
 {
   Publickey::Publickey (const Blob & blob, bool pem)
+    :m_key(blob.buf(), blob.size())
   {
     if(pem)
       fromPEM(blob);

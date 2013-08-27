@@ -147,9 +147,9 @@ namespace security
   }
 
   void
-  IdentityManager::addCertificate (const Certificate & certificate)
+  IdentityManager::addCertificate (Ptr<Certificate> certificate)
   {
-    m_publicStorage->addCertificate(certificate);
+    m_publicStorage->addCertificate(*certificate);
   }
 
   void 

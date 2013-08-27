@@ -1,14 +1,21 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
 /*
  * Copyright (c) 2013, Regents of the University of California
- *                     Alexander Afanasyev
- *                     Zhenkai Zhu
+ *                     Yingdi Yu
  *
  * BSD license, See the LICENSE file for more information
  *
- * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
- *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-BOOST_AUTO_TEST_SUITE(SecurityTests)
+#include <boost/test/unit_test.hpp>
+
+BOOST_AUTO_TEST_SUITE(DERTests)
+
+BOOST_AUTO_TEST_CASE(Basic)
+{
+
+}
+  
+BOOST_AUTO_TEST_SUITE_END()
 

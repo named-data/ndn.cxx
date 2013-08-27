@@ -54,6 +54,11 @@ Interest::Interest (const Interest &other)
   m_publisherPublicKeyDigest = other.m_publisherPublicKeyDigest;
 }
 
+
+//   /*
+//    * !!!
+//    * Interest::Interest (const ccn_parsed_interest *pi) is for temporary use, should be removed!!
+//    */
 // Interest::Interest (const ccn_parsed_interest *pi)
 //   : m_maxSuffixComponents (Interest::ncomps)
 //   , m_minSuffixComponents (Interest::ncomps)
