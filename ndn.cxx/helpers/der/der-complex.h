@@ -62,7 +62,7 @@ namespace der
 
   private:
     bool m_childChanged;
-    bool m_size;
+    int m_size;
     DerNodePtrList m_nodeList;
   };
 

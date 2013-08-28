@@ -11,6 +11,10 @@
 
 #include "der-complex.h"
 
+#include "logging.h"
+
+INIT_LOGGER("ndn.der.DerComplex")
+
 namespace ndn
 {
 
@@ -34,11 +38,13 @@ namespace der
      m_size(0)
   {
     m_size = DerNode::decodeHeader(start);
+    // _LOG_DEBUG("Size: " << m_size);
     
     int accSize = 0;
     
-    while(accSize == m_size)
+    while(accSize < m_size)
       {
+        // _LOG_DEBUG("accSize: " << accSize);
         Ptr<DerNode> nodePtr = DerNode::parseDer(start);
         accSize += nodePtr->getSize();
         addChild(nodePtr, false);
@@ -57,7 +63,7 @@ namespace der
 	m_childChanged = false;
       }
 
-    return m_size;
+    return m_size + m_header.size();
   }
 
   void

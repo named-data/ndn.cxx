@@ -62,7 +62,7 @@ namespace der
         
     printData(derBStr.getHeader(), indent);
     const Blob & payload = derBStr.getPayload();
-    cout << indent << "   " << " " << hex << setw(2) << setfill('0') << (int)(uint8_t)payload[0];
+    cout << indent << "   " << " " << hex << setw(2) << setfill('0') << (int)(uint8_t)payload[0] << endl;
     printData(payload, indent + "   ", 1);
   }
 
@@ -127,6 +127,7 @@ namespace der
     for(int i = offset; i < blob.size(); i++)
       {
         cout << " " << hex << setw(2) << setfill('0') << (int)(uint8_t)blob[i];
+        count++;
         if(8 == count)
           {
             count = 0;

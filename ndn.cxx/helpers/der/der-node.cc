@@ -23,7 +23,9 @@
 
 #include <iostream>
 
+#include "logging.h"
 
+INIT_LOGGER("ndn.der.DerNode");
 
 namespace ndn
 {
@@ -92,23 +94,33 @@ namespace der
     uint8_t sizeLen = start.ReadU8();    
     m_header.push_back(sizeLen);
 
-    bool shortFormat = sizeLen & (1 << 7);
+    bool longFormat = sizeLen & (1 << 7);
 
-    if(shortFormat)
-      {        
-        return sizeLen;
+    if(!longFormat)
+      {
+        // _LOG_DEBUG("Short Format");
+        // _LOG_DEBUG("sizeLen: " << (int)sizeLen);
+        return (int)sizeLen;
       }
     else
       {
+        // _LOG_DEBUG("Long Format");
         uint8_t byte;
+        int lenCount = sizeLen & ((1<<7) - 1);
+        // _LOG_DEBUG("sizeLen: " << (int)sizeLen);
+        // _LOG_DEBUG("mask: " << (int)((1<<7) - 1));
+        // _LOG_DEBUG("lenCount: " << (int)lenCount);
         int size = 0;
         do
           {
             byte = start.ReadU8();
             m_header.push_back(byte);
-            size = size * 128 + (byte & (1<<7 - 1));
+            size = size * 256 + ((int)byte & ((1<<7) - 1));
+            // _LOG_DEBUG("byte: " << (int)byte);
+            // _LOG_DEBUG("size: " << size);
+            lenCount--;
           }
-        while(byte & (1 << 7));
+        while(lenCount > 0);
 
         return size;
       }
@@ -137,8 +149,9 @@ namespace der
   Ptr<DerNode>
   DerNode::parseDer(InputIterator &start)
   {
-    uint8_t type = start.PeekU8();
+    int type = start.PeekU8();
 
+    _LOG_DEBUG("Type: " << hex << setw(2) << setfill('0') << type);
     switch(type)
       {
       case DER_BOOLEAN:
