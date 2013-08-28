@@ -26,7 +26,7 @@ namespace ndn
     : m_executor (new Executor(1))
     , m_keychain (keychain)
   {
-    m_keychain->setFakeWrapper(this);
+    // m_keychain->setFakeWrapper(this);
     m_executor->start();
   }
 

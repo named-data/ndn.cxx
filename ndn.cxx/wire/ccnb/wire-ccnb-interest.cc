@@ -35,19 +35,19 @@ namespace ccnb {
 void
 Interest::Serialize (const ndn::Interest &interest, OutputIterator &start)
 {
-  Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Interest, CcnbParser::CCN_DTAG); // <Interest>
+  Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Interest, CcnbParser::NDN_DTAG); // <Interest>
   
-  Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG); // <Name>
+  Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Name, CcnbParser::NDN_DTAG); // <Name>
   Ccnb::SerializeName (start, interest.getName());                // <Component>...</Component>...
   Ccnb::AppendCloser (start);                               // </Name>
 
   if (interest.getMinSuffixComponents () != ndn::Interest::ncomps)
     {
-      Ccnb::AppendTaggedNumber (start, CcnbParser::CCN_DTAG_MinSuffixComponents, interest.getMinSuffixComponents ());
+      Ccnb::AppendTaggedNumber (start, CcnbParser::NDN_DTAG_MinSuffixComponents, interest.getMinSuffixComponents ());
     }
   if (interest.getMaxSuffixComponents () != ndn::Interest::ncomps)
     {
-      Ccnb::AppendTaggedNumber (start, CcnbParser::CCN_DTAG_MaxSuffixComponents, interest.getMaxSuffixComponents ());
+      Ccnb::AppendTaggedNumber (start, CcnbParser::NDN_DTAG_MaxSuffixComponents, interest.getMaxSuffixComponents ());
     }
   // if (interest.getExclude ().size () > 0)
   //   {
@@ -55,31 +55,31 @@ Interest::Serialize (const ndn::Interest &interest, OutputIterator &start)
   //   }
   if (interest.getChildSelector () != ndn::Interest::CHILD_DEFAULT)
     {
-      Ccnb::AppendTaggedNumber (start, CcnbParser::CCN_DTAG_ChildSelector, interest.getChildSelector ());
+      Ccnb::AppendTaggedNumber (start, CcnbParser::NDN_DTAG_ChildSelector, interest.getChildSelector ());
     }
   if (interest.getAnswerOriginKind () != ndn::Interest::AOK_DEFAULT)
     {
-      Ccnb::AppendTaggedNumber (start, CcnbParser::CCN_DTAG_AnswerOriginKind, interest.getAnswerOriginKind ());
+      Ccnb::AppendTaggedNumber (start, CcnbParser::NDN_DTAG_AnswerOriginKind, interest.getAnswerOriginKind ());
     }
   if (interest.getScope () != ndn::Interest::NO_SCOPE)
     {
-      Ccnb::AppendTaggedNumber (start, CcnbParser::CCN_DTAG_Scope, interest.getScope ());
+      Ccnb::AppendTaggedNumber (start, CcnbParser::NDN_DTAG_Scope, interest.getScope ());
     }
   if (!interest.getInterestLifetime ().is_negative ())
     {
-      Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_InterestLifetime, CcnbParser::CCN_DTAG);
+      Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_InterestLifetime, CcnbParser::NDN_DTAG);
       Ccnb::AppendTimestampBlob (start, interest.getInterestLifetime ());
       Ccnb::AppendCloser (start);
     }
   // if (interest.GetNonce()>0)
   //   {
   //     uint32_t nonce = interest.getNonce();
-  //     Ccnb::AppendTaggedBlob (start, CcnbParser::CCN_DTAG_Nonce, nonce);
+  //     Ccnb::AppendTaggedBlob (start, CcnbParser::NDN_DTAG_Nonce, nonce);
   //   }
     
   // if (interest.GetNack ()>0)
   //   {
-  //     Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Nack, CcnbParser::CCN_DTAG);
+  //     Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Nack, CcnbParser::NDN_DTAG);
   //     Ccnb::AppendNumber (start, interest.GetNack ());
   //     Ccnb::AppendCloser (start);
   //   }
@@ -108,7 +108,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
 
   switch (n.m_dtag)
     {
-    case CcnbParser::CCN_DTAG_Interest:
+    case CcnbParser::NDN_DTAG_Interest:
       _LOG_DEBUG ("Interest");
   
       // process nested blocks
@@ -117,7 +117,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
           block->accept (*this, param);
         }
       break;
-    case CcnbParser::CCN_DTAG_Name:
+    case CcnbParser::NDN_DTAG_Name:
       {
         _LOG_DEBUG ("Name");
 
@@ -127,7 +127,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
         m_interest->setName (name);
         break;
       }
-    // case CcnbParser::CCN_DTAG_MinSuffixComponents:
+    // case CcnbParser::NDN_DTAG_MinSuffixComponents:
     //   _LOG_DEBUG ("MinSuffixComponents");
     //   if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
     //     throw CcnbParser::CcnbDecodingException ();
@@ -137,7 +137,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
     //                                                                        nonNegativeIntegerVisitor
     //                                                                        )));
     //   break;
-    // case CcnbParser::CCN_DTAG_MaxSuffixComponents:
+    // case CcnbParser::NDN_DTAG_MaxSuffixComponents:
     //   _LOG_DEBUG ("MaxSuffixComponents");
     //   if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
     //     throw CcnbParser::CcnbDecodingException ();
@@ -147,7 +147,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
     //                                                                        nonNegativeIntegerVisitor
     //                                                                        )));
     //   break;
-    // case CcnbParser::CCN_DTAG_Exclude:
+    // case CcnbParser::NDN_DTAG_Exclude:
     //   {
     //     _LOG_DEBUG ("Exclude");
     //     // process exclude components
@@ -160,7 +160,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
     //     m_interest->SetExclude (exclude);
     //     break;
     //   }
-    // case CcnbParser::CCN_DTAG_ChildSelector:
+    // case CcnbParser::NDN_DTAG_ChildSelector:
     //   _LOG_DEBUG ("ChildSelector");
     //   if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
     //     throw CcnbParser::CcnbDecodingException ();
@@ -171,7 +171,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
     //                                                                        nonNegativeIntegerVisitor
     //                                                                        )));
     //   break;
-    // case CCN_DTAG_AnswerOriginKind:
+    // case NDN_DTAG_AnswerOriginKind:
     //   _LOG_DEBUG ("AnswerOriginKind");
     //   if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
     //     throw CcnbParser::CcnbDecodingException ();
@@ -181,7 +181,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
     //                                                                        nonNegativeIntegerVisitor
     //                                                                        )));
     //   break;
-    case CcnbParser::CCN_DTAG_Scope: 
+    case CcnbParser::NDN_DTAG_Scope: 
       _LOG_DEBUG ("Scope");
       if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
         throw CcnbParser::CcnbDecodingException ();
@@ -191,7 +191,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
                                                                            nonNegativeIntegerVisitor
                                                                            )));
       break;
-    case CcnbParser::CCN_DTAG_InterestLifetime:
+    case CcnbParser::NDN_DTAG_InterestLifetime:
       _LOG_DEBUG ("InterestLifetime");
       if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
         throw CcnbParser::CcnbDecodingException ();
@@ -202,7 +202,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
                                                                         timestampVisitor
                                                                         )));
       break;
-    // case CcnbParser::CCN_DTAG_Nonce:
+    // case CcnbParser::NDN_DTAG_Nonce:
     //   _LOG_DEBUG ("Nonce");
     //   if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
     //     throw CcnbParser::CcnbDecodingException ();
@@ -215,7 +215,7 @@ InterestVisitor::visit (CcnbParser::Dtag &n, boost::any param/*should be Interes
     //   break;
     
             
-    // case CcnbParser::CCN_DTAG_Nack:
+    // case CcnbParser::NDN_DTAG_Nack:
     //   _LOG_DEBUG ("Nack");
     //   if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
     //     throw CcnbParser::CcnbDecodingException ();

@@ -46,35 +46,35 @@ namespace ccnb {
 
     // _LOG_DEBUG("Append Name!");
     {
-      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG); // <Name>
+      Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_Name, CcnbParser::NDN_DTAG); // <Name>
       Ccnb::SerializeName(start, data.getName());                // <Component>...</Component>...
       Ccnb::AppendCloser(start);                               // </Name>
     }
 
     // _LOG_DEBUG("Append SignedInfo!");
     {
-      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_SignedInfo, CcnbParser::CCN_DTAG); // <SignedInfo>
+      Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_SignedInfo, CcnbParser::NDN_DTAG); // <SignedInfo>
       {
         // _LOG_DEBUG("Append PublisherPublicKeyDigest!");
         Ccnb::AppendTaggedBlob(start, 
-                               CcnbParser::CCN_DTAG_PublisherPublicKeyDigest,
+                               CcnbParser::NDN_DTAG_PublisherPublicKeyDigest,
                                reinterpret_cast<const uint8_t*>(sha256sig->getPublisherKeyDigest().buf()), 
                                sha256sig->getPublisherKeyDigest().size()); //<PublisherPublicKeyDigest>
       }
       {
         // _LOG_DEBUG("Append Timestamp!");
-        Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Timestamp, CcnbParser::CCN_DTAG);            // <Timestamp>...
+        Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Timestamp, CcnbParser::NDN_DTAG);            // <Timestamp>...
         TimeInterval ti = data.getContent().getTimestamp() - time::UNIX_EPOCH_TIME;
         Ccnb::AppendTimestampBlob (start, ti);
         Ccnb::AppendCloser (start); //</Timestamp>
       }
       {
         // _LOG_DEBUG("Append KeyLocator!");
-        Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyLocator, CcnbParser::CCN_DTAG); // <KeyLocator>
+        Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_KeyLocator, CcnbParser::NDN_DTAG); // <KeyLocator>
         {
-          Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_KeyName, CcnbParser::CCN_DTAG);    // <KeyName>
+          Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_KeyName, CcnbParser::NDN_DTAG);    // <KeyName>
           {
-            Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG);       // <Name>
+            Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_Name, CcnbParser::NDN_DTAG);       // <Name>
             Ccnb::SerializeName(start, sha256sig->getKeyLocator().getKeyName());         //   <Component>...</Component>...
             Ccnb::AppendCloser(start);                                     // </Name>
           }
@@ -87,10 +87,10 @@ namespace ccnb {
 
     // _LOG_DEBUG("Append Content!");
     {
-      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Content, CcnbParser::CCN_DTAG); // <Content>
+      Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_Content, CcnbParser::NDN_DTAG); // <Content>
       uint32_t payloadSize = data.content().size();
       if (payloadSize > 0){
-        Ccnb::AppendBlockHeader (start, payloadSize, CcnbParser::CCN_BLOB);
+        Ccnb::AppendBlockHeader (start, payloadSize, CcnbParser::NDN_BLOB);
         start.Write(reinterpret_cast<const uint8_t*>(data.content().buf()), data.content().size());
         // _LOG_DEBUG("payLoadSize: " << payloadSize);
       }
@@ -111,13 +111,13 @@ namespace ccnb {
     Ptr<const signature::Sha256WithRsa> sha256sig = DynamicCast<const signature::Sha256WithRsa>(sig);
 
     // _LOG_DEBUG("Append Signature!");
-    Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Data, CcnbParser::CCN_DTAG); // <Data>
+    Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_Data, CcnbParser::NDN_DTAG); // <Data>
     {
-      Ccnb::AppendBlockHeader(start, CcnbParser::CCN_DTAG_Signature, CcnbParser::CCN_DTAG); //<Signature>
+      Ccnb::AppendBlockHeader(start, CcnbParser::NDN_DTAG_Signature, CcnbParser::NDN_DTAG); //<Signature>
       {
-        Ccnb::AppendString(start, CcnbParser::CCN_DTAG_DigestAlgorithm, sha256sig->getDigestAlgorithm()); //<DigestAlgorithm>
+        Ccnb::AppendString(start, CcnbParser::NDN_DTAG_DigestAlgorithm, sha256sig->getDigestAlgorithm()); //<DigestAlgorithm>
         Ccnb::AppendTaggedBlobWithPadding(start, 
-                                          CcnbParser::CCN_DTAG_SignatureBits, 
+                                          CcnbParser::NDN_DTAG_SignatureBits, 
                                           16, 
                                           reinterpret_cast<const uint8_t*>(sha256sig->getSignatureBits().buf()), 
                                           sha256sig->getSignatureBits().size()); //<SignatureBits>
@@ -150,27 +150,27 @@ namespace ccnb {
 
     switch (n.m_dtag)
     {
-    case CcnbParser::CCN_DTAG_Data:
+    case CcnbParser::NDN_DTAG_Data:
       // _LOG_DEBUG ("Data");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
         }
       break;
-    case CcnbParser::CCN_DTAG_Signature:
+    case CcnbParser::NDN_DTAG_Signature:
       // _LOG_DEBUG ("Signature");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
         }
       break;
-    case CcnbParser::CCN_DTAG_DigestAlgorithm:
+    case CcnbParser::NDN_DTAG_DigestAlgorithm:
       // _LOG_DEBUG ("DigestAlgorithm");
       break;
-    case CcnbParser::CCN_DTAG_Witness:
+    case CcnbParser::NDN_DTAG_Witness:
       // _LOG_DEBUG ("Witness");
       break;
-    case CcnbParser::CCN_DTAG_SignatureBits:
+    case CcnbParser::NDN_DTAG_SignatureBits:
       {
         // _LOG_DEBUG ("SignatureBits");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
@@ -182,7 +182,7 @@ namespace ccnb {
 
         break;
       }
-    case CcnbParser::CCN_DTAG_Name:
+    case CcnbParser::NDN_DTAG_Name:
       {
         // _LOG_DEBUG ("Name");
 
@@ -192,14 +192,14 @@ namespace ccnb {
         m_data->setName (name);
         break;
       }
-    case CcnbParser::CCN_DTAG_SignedInfo:
+    case CcnbParser::NDN_DTAG_SignedInfo:
       // _LOG_DEBUG ("SignedInfo");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
         }
       break;
-    case CcnbParser::CCN_DTAG_PublisherPublicKeyDigest:
+    case CcnbParser::NDN_DTAG_PublisherPublicKeyDigest:
       {
         // _LOG_DEBUG ("PublisherPublicKeyDigest");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
@@ -211,7 +211,7 @@ namespace ccnb {
         
         break;
       }
-    case CcnbParser::CCN_DTAG_Timestamp:
+    case CcnbParser::NDN_DTAG_Timestamp:
       {
         // _LOG_DEBUG ("Timestamp");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
@@ -221,7 +221,7 @@ namespace ccnb {
         m_data->getContent().setTimeStamp(time::UNIX_EPOCH_TIME + tsOffset);
         break;
       }
-    case CcnbParser::CCN_DTAG_Type:
+    case CcnbParser::NDN_DTAG_Type:
       {
         // _LOG_DEBUG ("Type");
         if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
@@ -231,21 +231,21 @@ namespace ccnb {
         m_data->getContent().setType(Data::toType(typeBytes));
         break;
       }
-    case CcnbParser::CCN_DTAG_FreshnessSeconds:
+    case CcnbParser::NDN_DTAG_FreshnessSeconds:
       // _LOG_DEBUG ("FreshnessSeconds");
       m_data->getContent().setFreshness();
       break;
-    case CcnbParser::CCN_DTAG_FinalBlockID:
-      // _LOG_DEBUG ("CCN_DTAG_FinalBlockID");
+    case CcnbParser::NDN_DTAG_FinalBlockID:
+      // _LOG_DEBUG ("NDN_DTAG_FinalBlockID");
       break;
-    case CcnbParser::CCN_DTAG_KeyLocator:
+    case CcnbParser::NDN_DTAG_KeyLocator:
       // _LOG_DEBUG ("KeyLocator");
       BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
         {
           block->accept (*this, param);
         }
       break;
-    case CcnbParser::CCN_DTAG_KeyName:
+    case CcnbParser::NDN_DTAG_KeyName:
       {
         // _LOG_DEBUG ("KeyName");
         
@@ -257,7 +257,7 @@ namespace ccnb {
         sha256sig->getKeyLocator().setKeyName(name);
         break;
       }
-    case CcnbParser::CCN_DTAG_Content:
+    case CcnbParser::NDN_DTAG_Content:
       {
         // _LOG_DEBUG ("Content");
 
@@ -468,37 +468,37 @@ NDN_NAMESPACE_END
 // void
 // Data::Serialize (OutputIterator start) const
 // {
-//   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Data, CcnbParser::CCN_DTAG); // <Data>
+//   Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Data, CcnbParser::NDN_DTAG); // <Data>
 
 //   // fake signature
-//   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Signature, CcnbParser::CCN_DTAG); // <Signature>
+//   Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Signature, CcnbParser::NDN_DTAG); // <Signature>
 //   // Signature ::= √DigestAlgorithm?
 //   //               Witness?
 //   //               √SignatureBits
 //   // if (GetSignature ().GetDigestAlgorithm () != Signature::DefaultDigestAlgorithm)
 //   //   {
-//   //     Ccnb::AppendString (start, CcnbParser::CCN_DTAG_DigestAlgorithm, GetSignature ().GetDigestAlgorithm ());
+//   //     Ccnb::AppendString (start, CcnbParser::NDN_DTAG_DigestAlgorithm, GetSignature ().GetDigestAlgorithm ());
 //   //   }
-//   Ccnb::AppendString (start, CcnbParser::CCN_DTAG_DigestAlgorithm, "NOP");
-//   Ccnb::AppendTaggedBlobWithPadding (start, CcnbParser::CCN_DTAG_SignatureBits, 16, m_data->GetSignature ()); // <SignatureBits />
+//   Ccnb::AppendString (start, CcnbParser::NDN_DTAG_DigestAlgorithm, "NOP");
+//   Ccnb::AppendTaggedBlobWithPadding (start, CcnbParser::NDN_DTAG_SignatureBits, 16, m_data->GetSignature ()); // <SignatureBits />
 //   Ccnb::AppendCloser (start);                                    // </Signature>
 
-//   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG);    // <Name>
+//   Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Name, CcnbParser::NDN_DTAG);    // <Name>
 //   Ccnb::SerializeName (start, m_data->GetName());                                      //   <Component>...</Component>...
 //   Ccnb::AppendCloser (start);                                                          // </Name>
 
 //   // fake signature
-//   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_SignedInfo, CcnbParser::CCN_DTAG); // <SignedInfo>
+//   Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_SignedInfo, CcnbParser::NDN_DTAG); // <SignedInfo>
 //   // SignedInfo ::= √PublisherPublicKeyDigest
 //   //                √Timestamp
 //   //                √Type?
 //   //                √FreshnessSeconds?
 //   //                FinalBlockID?
 //   //                KeyLocator?
-//   // Ccnb::AppendTaggedBlob (start, CcnbParser::CCN_DTAG_PublisherPublicKeyDigest,         // <PublisherPublicKeyDigest>...
+//   // Ccnb::AppendTaggedBlob (start, CcnbParser::NDN_DTAG_PublisherPublicKeyDigest,         // <PublisherPublicKeyDigest>...
 //   //                         GetSignedInfo ().GetPublisherPublicKeyDigest ());
 
-//   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Timestamp, CcnbParser::CCN_DTAG);            // <Timestamp>...
+//   Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Timestamp, CcnbParser::NDN_DTAG);            // <Timestamp>...
 //   Ccnb::AppendTimestampBlob (start, m_data->GetTimestamp ());
 //   Ccnb::AppendCloser (start);
 
@@ -509,21 +509,21 @@ NDN_NAMESPACE_END
 //   //     type[1] = (GetSignedInfo ().GetContentType () >> 8 ) & 0xFF;
 //   //     type[2] = (GetSignedInfo ().GetContentType ()      ) & 0xFF;
 
-//   //     Ccnb::AppendTaggedBlob (start, CCN_DTAG_Type, type, 3);
+//   //     Ccnb::AppendTaggedBlob (start, NDN_DTAG_Type, type, 3);
 //   //   }
 //   if (m_data->GetFreshness () > Seconds(0))
 //     {
-//       Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_FreshnessSeconds, CcnbParser::CCN_DTAG);
+//       Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_FreshnessSeconds, CcnbParser::NDN_DTAG);
 //       Ccnb::AppendNumber (start, m_data->GetFreshness ().ToInteger (Time::S));
 //       Ccnb::AppendCloser (start);
 //     }
 //   if (m_data->GetKeyLocator () != 0)
 //     {
-//       Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_KeyLocator, CcnbParser::CCN_DTAG); // <KeyLocator>
+//       Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_KeyLocator, CcnbParser::NDN_DTAG); // <KeyLocator>
 //       {
-//         Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_KeyName, CcnbParser::CCN_DTAG);    // <KeyName>
+//         Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_KeyName, CcnbParser::NDN_DTAG);    // <KeyName>
 //         {
-//           Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Name, CcnbParser::CCN_DTAG);       // <Name>
+//           Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Name, CcnbParser::NDN_DTAG);       // <Name>
 //           Ccnb::SerializeName (start, *m_data->GetKeyLocator ());         //   <Component>...</Component>...
 //           Ccnb::AppendCloser (start);                                     // </Name>
 //         }
@@ -534,11 +534,11 @@ NDN_NAMESPACE_END
 
 //   Ccnb::AppendCloser (start);                                     // </SignedInfo>
 
-//   Ccnb::AppendBlockHeader (start, CcnbParser::CCN_DTAG_Content, CcnbParser::CCN_DTAG); // <Content>
+//   Ccnb::AppendBlockHeader (start, CcnbParser::NDN_DTAG_Content, CcnbParser::NDN_DTAG); // <Content>
 
 //   uint32_t payloadSize = m_data->GetPayload ()->GetSize ();
 //   if (payloadSize > 0)
-//     Ccnb::AppendBlockHeader (start, payloadSize, CcnbParser::CCN_BLOB);
+//     Ccnb::AppendBlockHeader (start, payloadSize, CcnbParser::NDN_BLOB);
 
 //   // there are no closing tags !!!
 //   // The closing tag is handled by DataTail
@@ -548,29 +548,29 @@ NDN_NAMESPACE_END
 // Data::GetSerializedSize () const
 // {
 //   size_t written = 0;
-//   written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_Data); // <Data>
+//   written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_Data); // <Data>
 
 //   // fake signature
-//   written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_Signature); // <Signature>
+//   written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_Signature); // <Signature>
 //   // Signature ::= DigestAlgorithm?
 //   //               Witness?
 //   //               SignatureBits
 //   // if (GetSignature ().GetDigestAlgorithm () != Signature::DefaultDigestAlgorithm)
 //   //   {
-//   //     written += Ccnb::EstimateString (CcnbParser::CCN_DTAG_DigestAlgorithm, GetSignature ().GetDigestAlgorithm ());
+//   //     written += Ccnb::EstimateString (CcnbParser::NDN_DTAG_DigestAlgorithm, GetSignature ().GetDigestAlgorithm ());
 //   //   }
-//   written += Ccnb::EstimateString (CcnbParser::CCN_DTAG_DigestAlgorithm, "NOP");
+//   written += Ccnb::EstimateString (CcnbParser::NDN_DTAG_DigestAlgorithm, "NOP");
 //   // "signature" will be always padded to 16 octets
-//   written += Ccnb::EstimateTaggedBlob (CcnbParser::CCN_DTAG_SignatureBits, 16);      // <SignatureBits />
-//   // written += Ccnb::EstimateTaggedBlob (CcnbParser::CCN_DTAG_SignatureBits, sizeof (m_data->GetSignature ()));      // <SignatureBits />
+//   written += Ccnb::EstimateTaggedBlob (CcnbParser::NDN_DTAG_SignatureBits, 16);      // <SignatureBits />
+//   // written += Ccnb::EstimateTaggedBlob (CcnbParser::NDN_DTAG_SignatureBits, sizeof (m_data->GetSignature ()));      // <SignatureBits />
 //   written += 1;                                    // </Signature>
 
-//   written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_Name);    // <Name>
+//   written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_Name);    // <Name>
 //   written += Ccnb::SerializedSizeName (m_data->GetName ()); //   <Component>...</Component>...
 //   written += 1;                                  // </Name>
 
 //   // fake signature
-//   written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_SignedInfo); // <SignedInfo>
+//   written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_SignedInfo); // <SignedInfo>
 //   // SignedInfo ::= √PublisherPublicKeyDigest
 //   //                √Timestamp
 //   //                √Type?
@@ -578,31 +578,31 @@ NDN_NAMESPACE_END
 //   //                FinalBlockID?
 //   //                KeyLocator?
 
-//   // written += Ccnb::EstimateTaggedBlob (CCN_DTAG_PublisherPublicKeyDigest,                          // <PublisherPublicKeyDigest>...
+//   // written += Ccnb::EstimateTaggedBlob (NDN_DTAG_PublisherPublicKeyDigest,                          // <PublisherPublicKeyDigest>...
 //   //                                      sizeof (GetSignedInfo ().GetPublisherPublicKeyDigest ()));
 
-//   written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_Timestamp);                  // <Timestamp>...
+//   written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_Timestamp);                  // <Timestamp>...
 //   written += Ccnb::EstimateTimestampBlob (m_data->GetTimestamp ());
 //   written += 1;
 
 //   // if (GetSignedInfo ().GetContentType () != DATA)
 //   //   {
-//   //     written += Ccnb::EstimateTaggedBlob (CcnbParser::CCN_DTAG_Type, 3);
+//   //     written += Ccnb::EstimateTaggedBlob (CcnbParser::NDN_DTAG_Type, 3);
 //   //   }
 //   if (m_data->GetFreshness () > Seconds(0))
 //     {
-//       written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_FreshnessSeconds);
+//       written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_FreshnessSeconds);
 //       written += Ccnb::EstimateNumber (m_data->GetFreshness ().ToInteger (Time::S));
 //       written += 1;
 //     }
 
 //   if (m_data->GetKeyLocator () != 0)
 //     {
-//       written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_KeyLocator); // <KeyLocator>
+//       written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_KeyLocator); // <KeyLocator>
 //       {
-//         written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_KeyName);    // <KeyName>
+//         written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_KeyName);    // <KeyName>
 //         {
-//           written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_Name);       // <Name>
+//           written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_Name);       // <Name>
 //           written += Ccnb::SerializedSizeName (*m_data->GetKeyLocator ());        //   <Component>...</Component>...
 //           written += 1;                                               // </Name>
 //         }
@@ -613,7 +613,7 @@ NDN_NAMESPACE_END
 
 //   written += 1; // </SignedInfo>
 
-//   written += Ccnb::EstimateBlockHeader (CcnbParser::CCN_DTAG_Content); // <Content>
+//   written += Ccnb::EstimateBlockHeader (CcnbParser::NDN_DTAG_Content); // <Content>
 
 //   uint32_t payloadSize = m_data->GetPayload ()->GetSize ();
 //   if (payloadSize > 0)
@@ -642,14 +642,14 @@ NDN_NAMESPACE_END
 
 //     switch (n.m_dtag)
 //       {
-//       case CcnbParser::CCN_DTAG_Data:
+//       case CcnbParser::NDN_DTAG_Data:
 //         // process nested blocks
 //         BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
 //           {
 //             block->accept (*this, param);
 //           }
 //         break;
-//       case CcnbParser::CCN_DTAG_Name:
+//       case CcnbParser::NDN_DTAG_Name:
 //         {
 //           // process name components
 //           Ptr<Name> name = Create<Name> ();
@@ -658,7 +658,7 @@ NDN_NAMESPACE_END
 //           break;
 //         }
 
-//       case CcnbParser::CCN_DTAG_Signature:
+//       case CcnbParser::NDN_DTAG_Signature:
 //         // process nested blocks
 //         BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
 //           {
@@ -666,7 +666,7 @@ NDN_NAMESPACE_END
 //           }
 //         break;
 
-//       // case CCN_DTAG_DigestAlgorithm:
+//       // case NDN_DTAG_DigestAlgorithm:
 //       //   NS_LOG_DEBUG ("DigestAlgorithm");
 //       //   if (n.m_nestedTags.size ()!=1) // should be exactly one UDATA inside this tag
 //       //     throw CcnbParser::CcnbDecodingException ();
@@ -676,7 +676,7 @@ NDN_NAMESPACE_END
 //       //                                    (stringVisitor)));
 //       //   break;
 
-//       case CcnbParser::CCN_DTAG_SignatureBits:
+//       case CcnbParser::NDN_DTAG_SignatureBits:
 //         NS_LOG_DEBUG ("SignatureBits");
 //         if (n.m_nestedTags.size ()!=1) // should be only one nested tag
 //           throw CcnbParser::CcnbDecodingException ();
@@ -686,7 +686,7 @@ NDN_NAMESPACE_END
 //                                       (uint32tBlobVisitor)));
 //         break;
 
-//       case CcnbParser::CCN_DTAG_SignedInfo:
+//       case CcnbParser::NDN_DTAG_SignedInfo:
 //         // process nested blocks
 //         BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
 //           {
@@ -694,7 +694,7 @@ NDN_NAMESPACE_END
 //           }
 //         break;
 
-//       // case CCN_DTAG_PublisherPublicKeyDigest:
+//       // case NDN_DTAG_PublisherPublicKeyDigest:
 //       //   NS_LOG_DEBUG ("PublisherPublicKeyDigest");
 //       //   if (n.m_nestedTags.size ()!=1) // should be only one nested tag
 //       //     throw CcnbParser::CcnbDecodingException ();
@@ -704,7 +704,7 @@ NDN_NAMESPACE_END
 //       //                                 (uint32tBlobVisitor)));
 //       //   break;
 
-//       case CcnbParser::CCN_DTAG_Timestamp:
+//       case CcnbParser::NDN_DTAG_Timestamp:
 //         NS_LOG_DEBUG ("Timestamp");
 //         if (n.m_nestedTags.size()!=1) // should be exactly one nested tag
 //           throw CcnbParser::CcnbDecodingException ();
@@ -714,7 +714,7 @@ NDN_NAMESPACE_END
 //                                   (timestampVisitor)));
 //         break;
 
-//       // case CCN_DTAG_Type:
+//       // case NDN_DTAG_Type:
 //       //   NS_LOG_DEBUG ("Type");
 //       //   if (n.m_nestedTags.size ()!=1) // should be only one nested tag
 //       //     throw CcnbParser::CcnbDecodingException ();
@@ -725,7 +725,7 @@ NDN_NAMESPACE_END
 //       //                                  (contentTypeVisitor))));
 //       //   break;
 
-//       case CcnbParser::CCN_DTAG_FreshnessSeconds:
+//       case CcnbParser::NDN_DTAG_FreshnessSeconds:
 //         NS_LOG_DEBUG ("FreshnessSeconds");
 
 //         if (n.m_nestedTags.size()!=1) // should be exactly one nested tag
@@ -737,7 +737,7 @@ NDN_NAMESPACE_END
 //                                        (nonNegativeIntegerVisitor))));
 //         break;
 
-//       case CcnbParser::CCN_DTAG_KeyLocator:
+//       case CcnbParser::NDN_DTAG_KeyLocator:
 //         // process nested blocks
 //         BOOST_FOREACH (Ptr<CcnbParser::Block> block, n.m_nestedTags)
 //           {
@@ -745,7 +745,7 @@ NDN_NAMESPACE_END
 //           }
 //         break;
 
-//       case CcnbParser::CCN_DTAG_KeyName:
+//       case CcnbParser::NDN_DTAG_KeyName:
 //         {
 //           if (n.m_nestedTags.size ()!=1) // should be exactly one nested tag
 //             throw CcnbParser::CcnbDecodingException ();
@@ -757,7 +757,7 @@ NDN_NAMESPACE_END
 //           break;
 //         }
 
-//       case CcnbParser::CCN_DTAG_Content: // !!! HACK
+//       case CcnbParser::NDN_DTAG_Content: // !!! HACK
 //         // This hack was necessary for memory optimizations (i.e., content is virtual payload)
 //         NS_ASSERT_MSG (n.m_nestedTags.size() == 0, "Parser should have stopped just after processing <Content> tag");
 //         break;

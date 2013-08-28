@@ -1,0 +1,171 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
+/*
+ * Copyright (c) 2013, Regents of the University of California
+ *                     Alexander Afanasyev
+ *                     Zhenkai Zhu
+ *                     Yingdi Yu
+ *
+ * BSD license, See the LICENSE file for more information
+ *
+ * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Yingdi Yu <yingdi@cs.ucla.edu>
+ */
+
+#ifndef NDN_WRAPPER_H
+#define NDN_WRAPPER_H
+
+#include <boost/thread/locks.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/thread.hpp>
+
+#include "ndn.cxx/common.h"
+#include "ndn.cxx/fields/name.h"
+#include "ndn.cxx/interest.h"
+#include "ndn.cxx/security/keychain.h"
+
+#include "closure.h"
+
+
+class Executor;
+
+namespace ndn {
+  namespace security {
+    class Keychain;
+  }
+
+  class Wrapper
+  {
+  public:
+    const static int MAX_FRESHNESS = 2147; // max value for ccnx
+    const static int DEFAULT_FRESHNESS = 60;
+    typedef boost::function<void (Ptr<Interest>)> InterestCallback;
+
+    Wrapper(Ptr<security::Keychain> keychain);
+    ~Wrapper();
+    
+    void
+    start (); // called automatically in constructor
+
+    /**
+     * @brief Because of uncertainty with executor, in some case it is necessary to call shutdown explicitly (see test-server-and-fetch.cc)
+     */
+    void
+    shutdown (); // called in destructor, but can called manually
+
+    int
+    setInterestFilter (const Name &prefix, const InterestCallback &interestCallback, bool record = true);
+    
+    void
+    clearInterestFilter (const Name &prefix, bool record = true);
+
+    int
+    sendInterest (Ptr<Interest> interest, Ptr<Closure> closurePtr);
+
+    int
+    publishDataByCert (const Name &name, const unsigned char *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &certName=Name());
+
+    inline int
+    publishDataByCert (const Name &name, const Blob &content, int freshness = DEFAULT_FRESHNESS, const Name &certName=Name());
+
+    inline int
+    publishDataByCert (const Name &name, const std::string &content, int freshness = DEFAULT_FRESHNESS, const Name &certName=Name());
+
+    int
+    publishDataByIdentity (const Name &name, const unsigned char *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &identityName=Name());
+
+    inline int
+    publishDataByIdentity (const Name &name, const Blob &content, int freshness = DEFAULT_FRESHNESS, const Name &identityName=Name());
+
+    inline int
+    publishDataByIdentity (const Name &name, const std::string &content, int freshness = DEFAULT_FRESHNESS, const Name &identityName=Name());
+
+    // static Name
+    // getLocalPrefix ();
+
+    // Bytes
+    // createContentObject(const Name &name, const void *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &keyNameParam=Name());
+
+    int
+    putToCcnd (const Blob &contentObject);
+
+    // bool
+    // verify(PcoPtr &pco, double maxWait = 1 /*seconds*/);
+
+    // PcoPtr
+    // get (const Interest &interest, double maxWait = 4.0/*seconds*/);
+
+  private:
+    Wrapper(const Wrapper &other) {}
+
+    int
+    publishDataByCert (Data &data, const Name &certName);
+
+    int
+    publishDataByIdentity (Data &data, const Name &identityName);
+
+  protected:
+    void
+    connectCcnd();
+
+    /// @cond include_hidden
+    void
+    ccnLoop ();
+    
+    /// @endcond
+
+  protected:
+    typedef boost::shared_mutex Lock;
+    typedef boost::unique_lock<Lock> WriteLock;
+    typedef boost::shared_lock<Lock> ReadLock;
+
+    typedef boost::recursive_mutex RecLock;
+    typedef boost::unique_lock<RecLock> UniqueRecLock;
+
+    ccn* m_handle;
+    RecLock m_mutex;
+    boost::thread m_thread;
+    bool m_running;
+    bool m_connected;
+    std::map<Name, InterestCallback> m_registeredInterests;
+    Ptr<Executor> m_executor;
+    Ptr<security::Keychain> m_keychain;
+};
+
+typedef boost::shared_ptr<Wrapper> WrapperPtr;
+
+/**
+ * @brief Namespace holding all exceptions that can be fired by the library
+ */
+namespace Error
+{
+struct ndnOperation : boost::exception, std::exception { };
+}
+
+inline int
+Wrapper::publishDataByCert (const Name &name, const Blob &content, int freshness, const Name &certName)
+{
+  return publishDataByCert (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), freshness, certName);
+}
+
+inline int
+Wrapper::publishDataByIdentity (const Name &name, const Blob &content, int freshness, const Name &identityName)
+{
+  return publishDataByIdentity (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), freshness, identityName);
+}
+
+inline int
+Wrapper::publishDataByCert (const Name &name, const std::string &content, int freshness, const Name &certName)
+{
+  return publishDataByCert (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), freshness, certName);
+}
+
+inline int
+Wrapper::publishDataByIdentity (const Name &name, const std::string &content, int freshness, const Name &identityName)
+{
+  return publishDataByIdentity (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), freshness, identityName);
+}
+
+} // ndn
+
+#endif

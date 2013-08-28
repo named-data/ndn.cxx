@@ -97,6 +97,21 @@ Name::Name (const string &uri)
     }
 }
 
+  /*
+   * Temporary use only
+   */
+Name::Name (const unsigned char *data, const ccn_indexbuf *comps)
+{
+  for (unsigned int i = 0; i < comps->n - 1; i++)
+  {
+    const unsigned char *compPtr;
+    size_t size;
+    ccn_name_comp_get(data, comps, i, &compPtr, &size);
+
+    append (name::Component (compPtr, size));
+  }
+}
+
 Name::Name (const Name &other)
 {
   m_comps = other.m_comps;

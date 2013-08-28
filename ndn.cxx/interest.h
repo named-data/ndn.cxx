@@ -43,6 +43,9 @@ public:
    */
   Interest (const Interest &interest);
 
+  /*
+   * Temporary use, should be removed!
+   */
   /**
    * @brief Create an interest based on ccn_parsed_interest data structure
    * @param interest pointer to ccn_parsed_interest data structure
@@ -50,7 +53,7 @@ public:
    * This method will create an interest with empty name, since ccn_parsed_interest structure
    * has limited amount of information
    */
-  // Interest (const ccn_parsed_interest *interest);
+  Interest (const ccn_parsed_interest *interest);
 
   /**
    * @brief Set interest name

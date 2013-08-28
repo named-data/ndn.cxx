@@ -39,7 +39,7 @@ using namespace std;
 namespace ndn
 {
 
-  class FakeWrapper;
+  class Wrapper;
 
 namespace security
 {
@@ -181,8 +181,14 @@ namespace security
     Ptr<Data>
     fakeFecthData(const Name & name);
 
+    // void
+    // setFakeWrapper(FakeWrapper * wrapper)
+    // {
+    //   m_handler = wrapper;
+    // }
+
     void
-    setFakeWrapper(FakeWrapper * wrapper)
+    setWrapper(Wrapper * wrapper)
     {
       m_handler = wrapper;
     }
@@ -218,7 +224,7 @@ namespace security
     Ptr<EncryptionManager> m_encryptionManager;
     map<Name, Certificate> m_certCache;
     const int m_maxStep;
-    FakeWrapper* m_handler;
+    Wrapper* m_handler;
   };
   
 

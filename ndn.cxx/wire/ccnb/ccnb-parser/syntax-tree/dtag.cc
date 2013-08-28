@@ -29,14 +29,14 @@ Dtag::Dtag (InputIterator &start, uint32_t dtag)
   //  * content (including virtual payload) will be stored in Packet
   //  * buffer
   //  */
-  // if (dtag == CCN_DTAG_Content)
+  // if (dtag == NDN_DTAG_Content)
   //   {
   //     Block::ParseBlock (start, true); // process length field and ignore it
   //     return; // hack #1. Do not process nesting block for <Content>
   //   }
   
   // parse attributes until first nested block reached
-  while (!start.IsEnd () && BufferIteratorPeekU8 (start)!=CCN_CLOSE)
+  while (!start.IsEnd () && BufferIteratorPeekU8 (start)!=NDN_CLOSE)
     {
       Ptr<Block> block = Block::ParseBlock (start);
       if (DynamicCast<BaseAttr> (block)!=0)
@@ -49,12 +49,12 @@ Dtag::Dtag (InputIterator &start, uint32_t dtag)
     }
 
   // parse the rest of nested blocks
-  while (!start.IsEnd () && BufferIteratorPeekU8 (start)!=CCN_CLOSE)
+  while (!start.IsEnd () && BufferIteratorPeekU8 (start)!=NDN_CLOSE)
     {
       // // hack #2. Stop processing nested blocks if last block was <Content>
-      // if (m_dtag == CCN_DTAG_Data && // we are in <Data>
+      // if (m_dtag == NDN_DTAG_Data && // we are in <Data>
       //     DynamicCast<Dtag> (m_nestedTags.back())!=0 && // last block is DTAG
-      //     DynamicCast<Dtag> (m_nestedTags.back())->m_dtag == CCN_DTAG_Content) 
+      //     DynamicCast<Dtag> (m_nestedTags.back())->m_dtag == NDN_DTAG_Content) 
       //   {
       //     return; 
       //   }
@@ -63,9 +63,9 @@ Dtag::Dtag (InputIterator &start, uint32_t dtag)
     }
 
   // // hack #3. Stop processing when last tag was <Data>
-  // if (m_dtag == CCN_DTAG_Data && // we are in <Data>
+  // if (m_dtag == NDN_DTAG_Data && // we are in <Data>
   //     DynamicCast<Dtag> (m_nestedTags.back())!=0 && // last block is DTAG
-  //     DynamicCast<Dtag> (m_nestedTags.back())->m_dtag == CCN_DTAG_Content) 
+  //     DynamicCast<Dtag> (m_nestedTags.back())->m_dtag == NDN_DTAG_Content) 
   //   {
   //     return; 
   //   }
@@ -73,7 +73,7 @@ Dtag::Dtag (InputIterator &start, uint32_t dtag)
   if (start.IsEnd ())
       throw CcnbDecodingException ();
 
-  start.ReadU8 (); // read CCN_CLOSE
+  start.ReadU8 (); // read NDN_CLOSE
   // std::cout << "closer, position = " << Block::counter << "\n";
   // Block::counter ++;
 }

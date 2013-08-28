@@ -24,10 +24,10 @@ namespace wire {
 namespace CcnbParser {
 
 /// @cond include_hidden
-const uint8_t CCN_TT_BITS = 3;
-const uint8_t CCN_TT_MASK = ((1 << CCN_TT_BITS) - 1);
-const uint8_t CCN_MAX_TINY= ((1 << (7-CCN_TT_BITS)) - 1);
-const uint8_t CCN_TT_HBIT = ((uint8_t)(1 << 7));
+const uint8_t NDN_TT_BITS = 3;
+const uint8_t NDN_TT_MASK = ((1 << NDN_TT_BITS) - 1);
+const uint8_t NDN_MAX_TINY= ((1 << (7-NDN_TT_BITS)) - 1);
+const uint8_t NDN_TT_HBIT = ((uint8_t)(1 << 7));
 /// @endcond
 
 // int Block::counter = 0;
@@ -39,7 +39,7 @@ Ptr<Block> Block::ParseBlock (InputIterator &start, bool dontParseBlock)
 
   // We will have problems if length field is more than 32 bits. Though it's really impossible
   uint8_t byte = 0;
-  while (!start.IsEnd() && !(byte & CCN_TT_HBIT))
+  while (!start.IsEnd() && !(byte & NDN_TT_HBIT))
     {
       value <<= 7;
       value += byte;
@@ -55,27 +55,27 @@ Ptr<Block> Block::ParseBlock (InputIterator &start, bool dontParseBlock)
     }
   
   value <<= 4;
-  value += ( (byte&(~CCN_TT_HBIT)) >> 3);
+  value += ( (byte&(~NDN_TT_HBIT)) >> 3);
   
   /**
    * Huh. After fighting with NS-3, it became apparent that Create<T>(...) construct
    * doesn't work with references.  Just simply doesn't work.  wtf?
    */
-  switch (byte & CCN_TT_MASK)
+  switch (byte & NDN_TT_MASK)
     {
-    case CCN_BLOB:
+    case NDN_BLOB:
       return Ptr<Blob> (new Blob(start, value), false);
-    case CCN_UDATA:
+    case NDN_UDATA:
       return Ptr<Udata> (new Udata(start, value), false);
-    case CCN_TAG:
+    case NDN_TAG:
       return Ptr<Tag> (new Tag(start, value), false);
-    case CCN_ATTR:
+    case NDN_ATTR:
       return Ptr<Attr> (new Attr(start, value), false);
-    case CCN_DTAG:
+    case NDN_DTAG:
       return Ptr<Dtag> (new Dtag(start, value), false);
-    case CCN_DATTR:
+    case NDN_DATTR:
       return Ptr<Dattr> (new Dattr(start, value), false);
-    case CCN_EXT:
+    case NDN_EXT:
       return Ptr<Ext> (new Ext(start, value), false);
     default:
       throw CcnbDecodingException ();

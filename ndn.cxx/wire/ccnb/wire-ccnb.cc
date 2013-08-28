@@ -24,10 +24,10 @@ namespace wire {
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-#define CCN_TT_BITS 3
-#define CCN_TT_MASK ((1 << CCN_TT_BITS) - 1)
-#define CCN_MAX_TINY ((1 << (7-CCN_TT_BITS)) - 1)
-#define CCN_TT_HBIT ((unsigned char)(1 << 7))
+#define NDN_TT_BITS 3
+#define NDN_TT_MASK ((1 << NDN_TT_BITS) - 1)
+#define NDN_MAX_TINY ((1 << (7-NDN_TT_BITS)) - 1)
+#define NDN_TT_HBIT ((unsigned char)(1 << 7))
 
 size_t
 Ccnb::AppendBlockHeader (OutputIterator &start, size_t val, uint32_t tt)
@@ -35,12 +35,12 @@ Ccnb::AppendBlockHeader (OutputIterator &start, size_t val, uint32_t tt)
   unsigned char buf[1+8*((sizeof(val)+6)/7)];
   unsigned char *p = &(buf[sizeof(buf)-1]);
   size_t n = 1;
-  p[0] = (CCN_TT_HBIT & ~CcnbParser::CCN_CLOSE) |
-    ((val & CCN_MAX_TINY) << CCN_TT_BITS) |
-    (CCN_TT_MASK & tt);
-  val >>= (7-CCN_TT_BITS);
+  p[0] = (NDN_TT_HBIT & ~CcnbParser::NDN_CLOSE) |
+    ((val & NDN_MAX_TINY) << NDN_TT_BITS) |
+    (NDN_TT_MASK & tt);
+  val >>= (7-NDN_TT_BITS);
   while (val != 0) {
-    (--p)[0] = (((unsigned char)val) & ~CCN_TT_HBIT) | CcnbParser::CCN_CLOSE;
+    (--p)[0] = (((unsigned char)val) & ~NDN_TT_HBIT) | CcnbParser::NDN_CLOSE;
     n++;
     val >>= 7;
   }
@@ -51,7 +51,7 @@ Ccnb::AppendBlockHeader (OutputIterator &start, size_t val, uint32_t tt)
 size_t
 Ccnb::EstimateBlockHeader (size_t value)
 {
-  value >>= (7-CCN_TT_BITS);
+  value >>= (7-NDN_TT_BITS);
   size_t n = 1;
   while (value>0)
     {
@@ -68,7 +68,7 @@ Ccnb::AppendNumber (OutputIterator &start, uint32_t number)
   os << number;
 
   size_t written = 0;
-  written += AppendBlockHeader (start, os.str().size(), CcnbParser::CCN_UDATA);
+  written += AppendBlockHeader (start, os.str().size(), CcnbParser::NDN_UDATA);
   written += os.str().size();
   start.Write (reinterpret_cast<const unsigned char*>(os.str().c_str()), os.str().size());
 
@@ -86,7 +86,7 @@ Ccnb::EstimateNumber (uint32_t number)
 size_t
 Ccnb::AppendCloser (OutputIterator &start)
 {
-  start.WriteU8 (CcnbParser::CCN_CLOSE);
+  start.WriteU8 (CcnbParser::NDN_CLOSE);
   return 1;
 }
 
@@ -101,7 +101,7 @@ Ccnb::AppendCloser (OutputIterator &start)
 //   for (;  required_bytes < 7 && ts != 0; ts >>= 8) // not more than 6 bytes?
 //     required_bytes++;
 
-//   size_t len = AppendBlockHeader(start, required_bytes, CcnbParser::CCN_BLOB);
+//   size_t len = AppendBlockHeader(start, required_bytes, CcnbParser::NDN_BLOB);
 
 //   // write part with seconds
 //   ts = time.ToInteger (Time::S) >> 4;
@@ -128,7 +128,7 @@ Ccnb::AppendTimestampBlob (OutputIterator &os, const TimeInterval &time)
   for (;  required_bytes < 7 && ts != 0; ts >>= 8) // not more than 6 bytes?
      required_bytes++;
 
-  size_t len = AppendBlockHeader(os, required_bytes, CcnbParser::CCN_BLOB);
+  size_t len = AppendBlockHeader(os, required_bytes, CcnbParser::NDN_BLOB);
 
   // write part with seconds
   ts = time.total_seconds () >> 4;
@@ -171,11 +171,11 @@ size_t
 Ccnb::AppendTaggedBlob (OutputIterator &start, uint32_t dtag,
                         const uint8_t *data, size_t size)
 {
-  size_t written = AppendBlockHeader (start, dtag, CcnbParser::CCN_DTAG);
+  size_t written = AppendBlockHeader (start, dtag, CcnbParser::NDN_DTAG);
   /* 2 */
   if (size>0)
     {
-      written += AppendBlockHeader (start, size, CcnbParser::CCN_BLOB);
+      written += AppendBlockHeader (start, size, CcnbParser::NDN_BLOB);
       start.Write (data, size);
       written += size;
       /* size */
@@ -198,12 +198,12 @@ Ccnb::AppendTaggedBlobWithPadding (OutputIterator &start, uint32_t dtag,
     }
 
 
-  size_t written = AppendBlockHeader (start, dtag, CcnbParser::CCN_DTAG);
+  size_t written = AppendBlockHeader (start, dtag, CcnbParser::NDN_DTAG);
 
   /* 2 */
   if (length>0)
     {
-      written += AppendBlockHeader (start, length, CcnbParser::CCN_BLOB);
+      written += AppendBlockHeader (start, length, CcnbParser::NDN_BLOB);
       start.Write (data, size);
       start.WriteU8 (0, length - size);
       written += length;
@@ -228,9 +228,9 @@ size_t
 Ccnb::AppendString (OutputIterator &start, uint32_t dtag,
                     const std::string &string)
 {
-  size_t written = AppendBlockHeader (start, dtag, CcnbParser::CCN_DTAG);
+  size_t written = AppendBlockHeader (start, dtag, CcnbParser::NDN_DTAG);
   {
-    written += AppendBlockHeader (start, string.size (), CcnbParser::CCN_UDATA);
+    written += AppendBlockHeader (start, string.size (), CcnbParser::NDN_UDATA);
     start.Write (reinterpret_cast<const uint8_t*> (string.c_str ()), string.size ());
     written += string.size ();
   }
@@ -242,7 +242,7 @@ Ccnb::AppendString (OutputIterator &start, uint32_t dtag,
 void
 Ccnb::AppendTaggedNumber (OutputIterator &os, uint32_t dtag, uint32_t number)
 {
-  AppendBlockHeader (os, dtag, CcnbParser::CCN_DTAG);
+  AppendBlockHeader (os, dtag, CcnbParser::NDN_DTAG);
   {
     AppendNumber (os, number);
   }
@@ -261,7 +261,7 @@ Ccnb::SerializeName (OutputIterator &start, const Name &name)
   size_t written = 0;
   BOOST_FOREACH (const name::Component &component, name)
     {
-      written += AppendTaggedBlob (start, CcnbParser::CCN_DTAG_Component,
+      written += AppendTaggedBlob (start, CcnbParser::NDN_DTAG_Component,
                                    reinterpret_cast<const uint8_t*>(component.buf ()), component.size());
     }
   return written;
@@ -273,7 +273,7 @@ Ccnb::SerializedSizeName (const Name &name)
   size_t written = 0;
   BOOST_FOREACH (const name::Component &component, name)
     {
-      written += EstimateTaggedBlob (CcnbParser::CCN_DTAG_Component, component.size ());
+      written += EstimateTaggedBlob (CcnbParser::NDN_DTAG_Component, component.size ());
     }
   return written;
 }

@@ -31,7 +31,7 @@ NameVisitor::visit (Dtag &n, boost::any param/*should be Name* */)
 
   switch (n.m_dtag)
     {
-    case CCN_DTAG_Component:
+    case NDN_DTAG_Component:
       if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
         throw CcnbDecodingException ();
       components.append (

@@ -16,10 +16,10 @@
 namespace ndn {
 namespace wire {
 
-#define CCN_TT_BITS 3
-#define CCN_TT_MASK ((1 << CCN_TT_BITS) - 1)
-#define CCN_MAX_TINY ((1 << (7-CCN_TT_BITS)) - 1)
-#define CCN_TT_HBIT ((unsigned char)(1 << 7))
+#define NDN_TT_BITS 3
+#define NDN_TT_MASK ((1 << NDN_TT_BITS) - 1)
+#define NDN_MAX_TINY ((1 << (7-NDN_TT_BITS)) - 1)
+#define NDN_TT_HBIT ((unsigned char)(1 << 7))
 
 void
 Ccnb::appendBlockHeader (std::ostream &os, size_t val, Ccnb::ccn_tt tt)
@@ -27,12 +27,12 @@ Ccnb::appendBlockHeader (std::ostream &os, size_t val, Ccnb::ccn_tt tt)
   unsigned char buf[1+8*((sizeof(val)+6)/7)];
   unsigned char *p = &(buf[sizeof(buf)-1]);
   size_t n = 1;
-  p[0] = (CCN_TT_HBIT & ~Ccnb::CCN_CLOSE_TAG) |
-  ((val & CCN_MAX_TINY) << CCN_TT_BITS) |
-  (CCN_TT_MASK & tt);
-  val >>= (7-CCN_TT_BITS);
+  p[0] = (NDN_TT_HBIT & ~Ccnb::NDN_CLOSE_TAG) |
+  ((val & NDN_MAX_TINY) << NDN_TT_BITS) |
+  (NDN_TT_MASK & tt);
+  val >>= (7-NDN_TT_BITS);
   while (val != 0) {
-    (--p)[0] = (((unsigned char)val) & ~CCN_TT_HBIT) | Ccnb::CCN_CLOSE_TAG;
+    (--p)[0] = (((unsigned char)val) & ~NDN_TT_HBIT) | Ccnb::NDN_CLOSE_TAG;
     n++;
     val >>= 7;
   }
@@ -45,7 +45,7 @@ Ccnb::appendNumber (std::ostream &os, uint32_t number)
 {
   std::string numberStr = boost::lexical_cast<std::string> (number);
 
-  appendBlockHeader (os, numberStr.size (), Ccnb::CCN_UDATA);
+  appendBlockHeader (os, numberStr.size (), Ccnb::NDN_UDATA);
   numberStr.size ();
   os.write (numberStr.c_str (), numberStr.size ());
 }
@@ -53,10 +53,10 @@ Ccnb::appendNumber (std::ostream &os, uint32_t number)
 void
 Ccnb::appendName (std::ostream &os, const Name &name)
 {
-  Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_Name, Ccnb::CCN_DTAG); // <Name>
+  Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_Name, Ccnb::NDN_DTAG); // <Name>
   for (Name::const_iterator component = name.begin (); component != name.end (); component ++)
     {
-      appendTaggedBlob (os, Ccnb::CCN_DTAG_Component, component->buf (), component->size ());
+      appendTaggedBlob (os, Ccnb::NDN_DTAG_Component, component->buf (), component->size ());
     }
   Ccnb::appendCloser (os);                                        // </Name>
 }
@@ -72,7 +72,7 @@ Ccnb::appendTimestampBlob (std::ostream &os, const TimeInterval &time)
   for (;  required_bytes < 7 && ts != 0; ts >>= 8) // not more than 6 bytes?
      required_bytes++;
 
-  appendBlockHeader(os, required_bytes, Ccnb::CCN_BLOB);
+  appendBlockHeader(os, required_bytes, Ccnb::NDN_BLOB);
 
   // write part with seconds
   ts = time.total_seconds () >> 4;
@@ -91,15 +91,15 @@ Ccnb::appendTimestampBlob (std::ostream &os, const TimeInterval &time)
 void
 Ccnb::appendExclude (std::ostream &os, const Exclude &exclude)
 {
-  appendBlockHeader (os, Ccnb::CCN_DTAG_Exclude, Ccnb::CCN_DTAG); // <Exclude>
+  appendBlockHeader (os, Ccnb::NDN_DTAG_Exclude, Ccnb::NDN_DTAG); // <Exclude>
 
   for (Exclude::const_reverse_iterator item = exclude.rbegin (); item != exclude.rend (); item ++)
     {
       if (!item->first.empty ())
-        appendTaggedBlob (os, Ccnb::CCN_DTAG_Component, item->first.buf (), item->first.size ());
+        appendTaggedBlob (os, Ccnb::NDN_DTAG_Component, item->first.buf (), item->first.size ());
       if (item->second)
         {
-          appendBlockHeader (os, Ccnb::CCN_DTAG_Any, Ccnb::CCN_DTAG); // <Any>
+          appendBlockHeader (os, Ccnb::NDN_DTAG_Any, Ccnb::NDN_DTAG); // <Any>
           appendCloser (os); // </Any>
         }
     }
@@ -109,7 +109,7 @@ Ccnb::appendExclude (std::ostream &os, const Exclude &exclude)
 void
 Ccnb::appendInterest (std::ostream &os, const Interest &interest)
 {
-  Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_Interest, Ccnb::CCN_DTAG); // <Interest>
+  Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_Interest, Ccnb::NDN_DTAG); // <Interest>
 
   // this is used for now as an interest template. Name should be empty
   // Ccnb::appendName (os, interest.getName ());
@@ -117,11 +117,11 @@ Ccnb::appendInterest (std::ostream &os, const Interest &interest)
 
   if (interest.getMinSuffixComponents () != Interest::ncomps)
     {
-      appendTaggedNumber (os, Ccnb::CCN_DTAG_MinSuffixComponents, interest.getMinSuffixComponents ());
+      appendTaggedNumber (os, Ccnb::NDN_DTAG_MinSuffixComponents, interest.getMinSuffixComponents ());
     }
   if (interest.getMaxSuffixComponents () != Interest::ncomps)
     {
-      appendTaggedNumber (os, Ccnb::CCN_DTAG_MaxSuffixComponents, interest.getMaxSuffixComponents ());
+      appendTaggedNumber (os, Ccnb::NDN_DTAG_MaxSuffixComponents, interest.getMaxSuffixComponents ());
     }
   if (interest.getExclude ().size () > 0)
     {
@@ -129,31 +129,31 @@ Ccnb::appendInterest (std::ostream &os, const Interest &interest)
     }
   if (interest.getChildSelector () != Interest::CHILD_DEFAULT)
     {
-      appendTaggedNumber (os, Ccnb::CCN_DTAG_ChildSelector, interest.getChildSelector ());
+      appendTaggedNumber (os, Ccnb::NDN_DTAG_ChildSelector, interest.getChildSelector ());
     }
   if (interest.getAnswerOriginKind () != Interest::AOK_DEFAULT)
     {
-      appendTaggedNumber (os, Ccnb::CCN_DTAG_AnswerOriginKind, interest.getAnswerOriginKind ());
+      appendTaggedNumber (os, Ccnb::NDN_DTAG_AnswerOriginKind, interest.getAnswerOriginKind ());
     }
   if (interest.getScope () != Interest::NO_SCOPE)
     {
-      appendTaggedNumber (os, Ccnb::CCN_DTAG_Scope, interest.getScope ());
+      appendTaggedNumber (os, Ccnb::NDN_DTAG_Scope, interest.getScope ());
     }
   if (!interest.getInterestLifetime ().is_negative ())
     {
-      Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_InterestLifetime, Ccnb::CCN_DTAG);
+      Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_InterestLifetime, Ccnb::NDN_DTAG);
       Ccnb::appendTimestampBlob (os, interest.getInterestLifetime ());
       Ccnb::appendCloser (os);
     }
   // if (GetNonce()>0)
   //   {
   //     uint32_t nonce = interest.GetNonce();
-  //     appendTaggedBlob (start, Ccnb::CCN_DTAG_Nonce, nonce);
+  //     appendTaggedBlob (start, Ccnb::NDN_DTAG_Nonce, nonce);
   //   }
 
   // if (GetNack ()>0)
   //   {
-  //     appendBlockHeader (start, Ccnb::CCN_DTAG_Nack, Ccnb::CCN_DTAG);
+  //     appendBlockHeader (start, Ccnb::NDN_DTAG_Nack, Ccnb::NDN_DTAG);
   //     appendNumber (start, interest.GetNack ());
   //     appendCloser (start);
   //   }
@@ -178,33 +178,33 @@ Ccnb::appendSignature (std::ostream &os, const signature::Sha256WithRsa &signatu
 {
   if (userData == SIGNATURE_Block)
     {
-      Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_Signature, Ccnb::CCN_DTAG); // <Signature>
+      Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_Signature, Ccnb::NDN_DTAG); // <Signature>
       // if (signature.getDigestAlgorithm () != "2.16.840.1.101.3.4.2.1")
       //   {
-      //     appendString (os, Ccnb::CCN_DTAG_DigestAlgorithm, signature.getDigestAlgorithm ());
+      //     appendString (os, Ccnb::NDN_DTAG_DigestAlgorithm, signature.getDigestAlgorithm ());
       //   }
-      appendTaggedBlob (os, Ccnb::CCN_DTAG_SignatureBits, signature.getSignatureBits ());
+      appendTaggedBlob (os, Ccnb::NDN_DTAG_SignatureBits, signature.getSignatureBits ());
       Ccnb::appendCloser (os); // </Signature>
     }
   else if (userData == SINATURE_INFO_PublisherPublicKeyDigest)
     {
-      Ccnb::appendTaggedBlob (os, Ccnb::CCN_DTAG_PublisherPublicKeyDigest, signature.getPublisherKeyDigest ());
+      Ccnb::appendTaggedBlob (os, Ccnb::NDN_DTAG_PublisherPublicKeyDigest, signature.getPublisherKeyDigest ());
     }
   else if (userData == SINATURE_INFO_KeyLocator)
     {
-      Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_Signature, Ccnb::CCN_DTAG); // <Signature>
+      Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_Signature, Ccnb::NDN_DTAG); // <Signature>
       switch (signature.getKeyLocator ().getType ())
         {
         case KeyLocator::NOTSET:
           break;
         case KeyLocator::KEY:
-          Ccnb::appendTaggedBlob (os, Ccnb::CCN_DTAG_Key, signature.getKeyLocator ().getKey ());
+          Ccnb::appendTaggedBlob (os, Ccnb::NDN_DTAG_Key, signature.getKeyLocator ().getKey ());
           break;
         case KeyLocator::CERTIFICATE:
-          Ccnb::appendTaggedBlob (os, Ccnb::CCN_DTAG_Key, signature.getKeyLocator ().getCertificate ());
+          Ccnb::appendTaggedBlob (os, Ccnb::NDN_DTAG_Key, signature.getKeyLocator ().getCertificate ());
           break;
         case KeyLocator::KEYNAME:
-          Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_KeyName, Ccnb::CCN_DTAG); // <KeyName>
+          Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_KeyName, Ccnb::NDN_DTAG); // <KeyName>
           Ccnb::appendName (os, signature.getKeyLocator ().getKeyName ());
           Ccnb::appendCloser (os); // </KeyName>
           break;
@@ -221,36 +221,36 @@ Ccnb::appendData (std::ostream &os, const Data &data)
     BOOST_THROW_EXCEPTION (error::wire::Ccnb ()
                            << error::msg ("Signature is required, but not set"));
 
-  Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_ContentObject, Ccnb::CCN_DTAG); // <ContentObject>
+  Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_ContentObject, Ccnb::NDN_DTAG); // <ContentObject>
 
   // necessary for now, because of the changed storage order
   data.getSignature ()->doubleDispatch (os, *this, SIGNATURE_Block);
 
   Ccnb::appendName (os, data.getName ());
 
-  Ccnb::appendBlockHeader (os, Ccnb::CCN_DTAG_SignedInfo, Ccnb::CCN_DTAG); // <SignedInfo>
+  Ccnb::appendBlockHeader (os, Ccnb::NDN_DTAG_SignedInfo, Ccnb::NDN_DTAG); // <SignedInfo>
   data.getSignature ()->doubleDispatch (os, *this, SINATURE_INFO_PublisherPublicKeyDigest);
 
   Ccnb::appendTimestampBlob (os, data.getContent ().getTimestamp ());
 
   BOOST_ASSERT (sizeof (TYPES) == 3 * (static_cast<int> (Content::NACK)+1));
-  Ccnb::appendTaggedBlob (os, Ccnb::CCN_DTAG_Type, TYPES [data.getContent ().getType ()], 3);
+  Ccnb::appendTaggedBlob (os, Ccnb::NDN_DTAG_Type, TYPES [data.getContent ().getType ()], 3);
 
   if (data.getContent ().getFreshness () != Content::noFreshness)
     {
-      Ccnb::appendTaggedNumber (os, Ccnb::CCN_DTAG_FreshnessSeconds,
+      Ccnb::appendTaggedNumber (os, Ccnb::NDN_DTAG_FreshnessSeconds,
                                 data.getContent ().getFreshness ().total_seconds ());
     }
 
   if (data.getContent ().getFinalBlockId () != Content::noFinalBlock)
     {
-      Ccnb::appendTaggedBlob (os, Ccnb::CCN_DTAG_FinalBlockID, data.getContent ().getFinalBlockId ());
+      Ccnb::appendTaggedBlob (os, Ccnb::NDN_DTAG_FinalBlockID, data.getContent ().getFinalBlockId ());
     }
 
   data.getSignature ()->doubleDispatch (os, *this, SINATURE_INFO_KeyLocator);
   Ccnb::appendCloser (os); // </SignedInfo>
 
-  Ccnb::appendTaggedBlob (os, Ccnb::CCN_DTAG_Content, data.content ());
+  Ccnb::appendTaggedBlob (os, Ccnb::NDN_DTAG_Content, data.content ());
 
   Ccnb::appendCloser (os); // </ContentObject>
 }

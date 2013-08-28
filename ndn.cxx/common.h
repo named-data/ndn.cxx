@@ -18,6 +18,10 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/function.hpp>
 
+extern "C" {
+#include <ccn/ccn.h>
+}
+
 namespace ndn
 {
 template<class T>
