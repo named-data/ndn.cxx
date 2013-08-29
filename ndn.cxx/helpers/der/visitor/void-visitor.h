@@ -22,15 +22,15 @@ namespace der
   class VoidVisitor
   {
   public:
-    virtual void visit (DerBool&,             boost::any)=0;
-    virtual void visit (DerInteger&,          boost::any)=0;
-    virtual void visit (DerPrintableString&,  boost::any)=0;
-    virtual void visit (DerBitString&,        boost::any)=0;
-    virtual void visit (DerNull&,             boost::any)=0;
-    virtual void visit (DerOctetString&,      boost::any)=0;
-    virtual void visit (DerOid&,              boost::any)=0;
-    virtual void visit (DerSequence&,         boost::any)=0;
-    virtual void visit (DerGtime&,            boost::any)=0;
+    virtual void visit (DerBool&,             boost::any);
+    virtual void visit (DerInteger&,          boost::any);
+    virtual void visit (DerPrintableString&,  boost::any);
+    virtual void visit (DerBitString&,        boost::any);
+    virtual void visit (DerNull&,             boost::any);
+    virtual void visit (DerOctetString&,      boost::any);
+    virtual void visit (DerOid&,              boost::any);
+    virtual void visit (DerSequence&,         boost::any);
+    virtual void visit (DerGtime&,            boost::any);
   };
 
 }//der

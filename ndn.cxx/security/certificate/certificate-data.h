@@ -40,6 +40,7 @@ namespace security
   class CertificateData
   {
   public:
+    CertificateData () {}
 
     CertificateData (Time m_notBefore, Time m_notAfter, const Publickey & publickey);
     
@@ -56,16 +57,34 @@ namespace security
     Ptr<Blob> 
     toDER ();
 
+    void
+    setNotBefore (const Time & notBefore)
+    {
+      m_notBefore = notBefore;
+    }
+
     Time & 
     getNotBefore ()
     {
       return m_notBefore;
+    }
+
+    void
+    setNotAfter (const Time & notAfter)
+    {
+      m_notAfter = notAfter;
     }
     
     Time & 
     getNotAfter ()
     {
       return m_notAfter;
+    }
+
+    void
+    setKey (const Publickey & key)
+    {
+      m_key = key;
     }
 
     Publickey & 

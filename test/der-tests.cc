@@ -123,6 +123,35 @@ BOOST_AUTO_TEST_CASE(DisplayCert)
   }
 }
 
+BOOST_AUTO_TEST_CASE(SimpleVisitor)
+{
+  ifstream cis ("test-cert.data", ios::binary);
+  
+  cis.seekg(0, ios::end);
+  ifstream::pos_type size = cis.tellg();
+
+  char * memblock = new char [size];
+  
+  cis.seekg(0, ios::beg);
+  cis.read (memblock, size);
+  cis.close();
+
+  Blob blob(memblock, size);
+  security::DERendec endec;
+  endec.printDecoded(blob, "", 0);
+
+  boost::iostreams::stream
+    <boost::iostreams::array_source> is (memblock, size);
+
+  try{
+  Ptr<der::DerNode> node = der::DerNode::parseDer(reinterpret_cast<InputIterator &>(is));
+  der::PrintVisitor printVisitor;
+  node->accept(printVisitor, string(""));
+  }catch(der::DerException & e){
+    cout << e.Msg() << endl;
+  }
+}
+
 
   
 BOOST_AUTO_TEST_SUITE_END()

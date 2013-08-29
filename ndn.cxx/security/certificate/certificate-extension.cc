@@ -25,6 +25,13 @@ namespace security
      m_extnValue(extnValue.buf(), extnValue.size())
   {}
 
+  CertificateExtension::CertificateExtension(const OID & oid, const bool & critical, const Blob & extnValue)
+    :m_extnID(oid),
+     m_critical(critical),
+     m_extnValue(extnValue.buf(), extnValue.size())
+  {}
+
+
   CertificateExtension::CertificateExtension(const Blob & blob)
   {
     DERendec decoder;

@@ -28,6 +28,8 @@ namespace security
   {
   public:
     CertificateExtension (const string & oid, const bool & critical, const Blob & extnValue);
+
+    CertificateExtension (const OID & oid, const bool & critical, const Blob & extnValue);
     
     CertificateExtension (const Blob & blob);
 

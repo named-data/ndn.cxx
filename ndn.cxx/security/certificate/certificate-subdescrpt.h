@@ -29,6 +29,8 @@ namespace security
   {
   public:
     CertificateSubDescrypt (string oid, string value);
+
+    CertificateSubDescrypt (OID oid, string value);
     
     CertificateSubDescrypt (const Blob & blob);
 

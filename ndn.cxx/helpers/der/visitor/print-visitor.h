@@ -8,8 +8,8 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_DER_PRINT_VISITOR
-#define NDN_DER_PRINT_VISITOR
+#ifndef NDN_DER_PRINT_VISITOR_H
+#define NDN_DER_PRINT_VISITOR_H
 
 #include "void-visitor.h"
 

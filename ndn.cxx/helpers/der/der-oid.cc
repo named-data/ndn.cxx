@@ -128,6 +128,22 @@ namespace der
     }
   }
 
+  int
+  DerOid::decode128(int & offset)
+  {
+    uint8_t flagMask = 0x80;
+    int result = 0;
+    while(m_payload[offset] & flagMask){
+      result = 128 * result + (uint8_t) m_payload[offset] - 128;
+      offset++;
+    }
+
+    result = result * 128 + m_payload[offset];
+    offset++;
+
+    return result;
+  }
+
 }//der
 
 }//ndn

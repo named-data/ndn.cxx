@@ -41,12 +41,15 @@ namespace der
     virtual boost::any accept(NoArguVisitor & visitor)             { return visitor.visit(*this);        }
     virtual boost::any accept(Visitor & visitor, boost::any param) { return visitor.visit(*this, param); }
 
+    int 
+    decode128 (int & offset);
+
   private:
     void 
     prepareEncoding (const vector<int> & value);
 
     void 
-    encode128 (int value, ostringstream & os);
+    encode128 (int value, ostringstream & os);    
   };
 
 }//der

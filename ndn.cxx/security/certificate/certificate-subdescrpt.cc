@@ -24,6 +24,11 @@ namespace security
      m_value(value)
   {}
 
+  CertificateSubDescrypt::CertificateSubDescrypt (OID oid, string value)
+    :m_oid(oid),
+     m_value(value)
+  {}
+
   CertificateSubDescrypt::CertificateSubDescrypt (const Blob & blob)
   {
     DERendec endec;
