@@ -343,8 +343,21 @@ BOOST_AUTO_TEST_CASE(PolicyManager)
   policyManager.setSigningPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)", "^(<>*)<DSK-.*><ID-CERT>", ">", "\\1", "\\1", true)));
 
 
-  Ptr<Data> dataPtr = identityStorage.getCertificate(Name("/ndn/KSK-1376698603/ID-CERT/0"), true);
-  security::Certificate cert(*dataPtr);
+  ifstream is ("trust-anchor.data", ios::binary);
+
+  is.seekg (0, ios::end);
+  ifstream::pos_type size = is.tellg();
+  char * memblock = new char [size];
+    
+  is.seekg (0, ios::beg);
+  is.read (memblock, size);
+  is.close();
+
+  Ptr<Blob> readBlob = Ptr<Blob>(new Blob(memblock, size));
+
+  Ptr<Data> readData = Data::decodeFromWire (readBlob);
+
+  security::Certificate cert(*readData); 
   
   policyManager.setTrustAnchor(cert);
 
@@ -352,6 +365,41 @@ BOOST_AUTO_TEST_CASE(PolicyManager)
   
   policyManager.savePolicy();
   
+}
+
+BOOST_AUTO_TEST_CASE(DumpCert)
+{ 
+  security::BasicIdentityStorage identityStorage;
+
+  Ptr<Data> data = identityStorage.getCertificate(Name("/ndn/KSK-1376698603/ID-CERT/0"), true);
+
+  Ptr<Blob> dataBlob = data->encodeToWire();
+
+  ofstream os ("trust-anchor.data", ios::binary); 
+
+  os.write(dataBlob->buf(), dataBlob->size());
+
+  os.close();
+
+  ifstream is ("trust-anchor.data", ios::binary);
+
+  is.seekg (0, ios::end);
+  ifstream::pos_type size = is.tellg();
+  char * memblock = new char [size];
+    
+  is.seekg (0, ios::beg);
+  is.read (memblock, size);
+  is.close();
+
+  Ptr<Blob> readBlob = Ptr<Blob>(new Blob(memblock, size));
+
+  Ptr<Data> readData = Data::decodeFromWire (readBlob);
+
+  security::Certificate cert(*readData); 
+
+  DERendec endec;
+  
+  endec.printDecoded(cert.content(), "", 0);
 }
 
 BOOST_AUTO_TEST_CASE(PolicyManagerLoad)
