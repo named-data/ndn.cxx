@@ -24,6 +24,33 @@ namespace der
     virtual void visit (DerSequence&,         boost::any);
   };
 
+  class CertValidityVisitor : public VoidVisitor
+  {
+  public:
+    virtual void visit (DerSequence&,         boost::any);
+  };
+
+  class CertSubDescryptVisitor : public VoidVisitor
+  {
+  public:
+    virtual void visit (DerSequence&,         boost::any);
+  };
+
+  class CertSubjectVisitor : public VoidVisitor
+  {
+    virtual void visit (DerSequence&,         boost::any);
+  };
+
+  class CertExtnEntryVisitor : public VoidVisitor
+  {
+    virtual void visit (DerSequence&,         boost::any);
+  };
+  
+  class CertExtensionVisitor : public VoidVisitor
+  {
+    virtual void visit (DerSequence&,         boost::any);
+  };
+
 }//der
 
 }//ndn
