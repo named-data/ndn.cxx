@@ -110,7 +110,7 @@ namespace der
           {
             byte = start.ReadU8();
             m_header.push_back(byte);
-            size = size * 256 + ((int)byte & ((1<<7) - 1));
+            size = size * 256 + (int)byte;
             // _LOG_DEBUG("byte: " << (int)byte);
             // _LOG_DEBUG("size: " << size);
             lenCount--;
@@ -132,6 +132,7 @@ namespace der
   DerNode::decode (InputIterator & start)
   {
     int payloadSize = decodeHeader(start);
+    // _LOG_DEBUG("payloadSize: " << payloadSize);
     if(payloadSize > 0 )
       {
         char buf[payloadSize];

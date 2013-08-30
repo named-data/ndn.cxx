@@ -14,6 +14,7 @@
 
 #include "ndn.cxx/helpers/der/der.h"
 #include "ndn.cxx/helpers/der/visitor/simple-visitor.h"
+#include "ndn.cxx/helpers/der/visitor/print-visitor.h"
 
 #include <boost/filesystem.hpp>
 #include <tinyxml.h>
@@ -93,16 +94,19 @@ namespace security
       <boost::iostreams::array_source> is (memblock, size);
 
     Ptr<der::DerSequence> root = DynamicCast<der::DerSequence>(der::DerNode::parse(reinterpret_cast<InputIterator &>(is)));
+    // der::PrintVisitor printVisitor;
+    // _LOG_DEBUG("read size: " << size);
+    // root->accept(printVisitor, string(""));
     const der::DerNodePtrList & children = root->getChildren();
     der::SimpleVisitor simpleVisitor;
-    _LOG_DEBUG("type: " << children[0]->getType());
+    // _LOG_DEBUG("type: " << children[0]->getType());
     string encryptKeyName = boost::any_cast<string>(children[0]->accept(simpleVisitor));
-    _LOG_DEBUG("keyName: " << encryptKeyName);
-    _LOG_DEBUG("type: " << children[1]->getType());
+    // _LOG_DEBUG("keyName: " << encryptKeyName);
+    // _LOG_DEBUG("type: " << children[1]->getType());
     bool encryptSym = boost::any_cast<bool>(children[1]->accept(simpleVisitor));
-    _LOG_DEBUG("type: " << children[2]->getType());
+    // _LOG_DEBUG("type: " << children[2]->getType());
     Ptr<Blob> encryptedPolicy = boost::any_cast<Ptr<Blob> >(children[2]->accept(simpleVisitor));
-    _LOG_DEBUG("policy size: " << encryptedPolicy->size());
+    // _LOG_DEBUG("policy size: " << encryptedPolicy->size());
 
     m_defaultKeyName = encryptKeyName;
     m_defaultSym = encryptSym;

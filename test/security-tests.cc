@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(PolicyManagerLoad)
   cerr << "GET policyManager" << endl;
   try{
   policyManager.displayPolicy();
-  cerr << policyManager.getTrustAnchor(Name("/ndn/DSK-1376411829/ID-CERT/0"))->getName().toUri() << endl;
+  cerr << policyManager.getTrustAnchor(Name("/ndn/KSK-1376698603/ID-CERT/0"))->getName().toUri() << endl;
   }catch(security::SecException & e){
     cerr << e.Msg() << endl;
   }

@@ -218,11 +218,11 @@ namespace security
                                       pData.size()
                                       );
 
-    _LOG_DEBUG("CreateData");
+    // _LOG_DEBUG("CreateData");
     
     SecKeyRef decryptKey = (SecKeyRef)getKey(keyName, keyClass);
 
-    _LOG_DEBUG("GetKey");
+    // _LOG_DEBUG("GetKey");
 
     CFErrorRef error;
     SecTransformRef decrypt = SecDecryptTransformCreate(decryptKey, &error);
