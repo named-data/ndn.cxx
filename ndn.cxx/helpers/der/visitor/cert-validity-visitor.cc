@@ -11,7 +11,7 @@
 #include "cert-validity-visitor.h"
 
 #include "simple-visitor.h"
-#include "../der-sequence.h"
+#include "../der.h"
 
 #include "ndn.cxx/security/certificate/certificate-data.h"
 
@@ -27,7 +27,7 @@ namespace der
   void 
   CertValidityVisitor::visit (DerSequence& derSeq, boost::any param)
   {
-    // _LOG_DEBUG("CertValidityVisitor::visit");
+    _LOG_DEBUG("CertValidityVisitor::visit");
     
     security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
 

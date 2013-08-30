@@ -11,6 +11,9 @@
 
 #include "certificate-data.h"
 
+#include "ndn.cxx/helpers/der/visitor/certificate-data-visitor.h"
+#include "ndn.cxx/helpers/der/visitor/print-visitor.h"
+
 
 #include "logging.h"
 
@@ -94,6 +97,30 @@ namespace security
 
     return root;
   }
+
+
+  void 
+  CertificateData::printCertificate()
+  {
+    cout << "Validity:" << endl;
+    cout << m_notBefore << endl;
+    cout << m_notAfter << endl;
+
+    cout << "Subject Info:" << endl;  
+    vector<CertificateSubDescrypt>::iterator it = m_subjectList.begin();
+    for(; it < m_subjectList.end(); it++){
+      cout << it->getOidStr() << "\t" << it->getValue() << endl;
+    }
+
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (m_key.getKeyBlob().buf (), m_key.getKeyBlob().size ());
+
+    Ptr<der::DerNode> keyRoot = der::DerNode::parse(reinterpret_cast<InputIterator &> (is));
+
+    der::PrintVisitor printVisitor;
+    keyRoot->accept(printVisitor, string(""));
+  }
+
 
 }//security
 

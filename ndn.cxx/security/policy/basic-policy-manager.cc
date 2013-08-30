@@ -13,6 +13,7 @@
 #include "identity-policy-rule.h"
 
 #include "ndn.cxx/helpers/der/der.h"
+#include "ndn.cxx/helpers/der/visitor/simple-visitor.h"
 
 #include <boost/filesystem.hpp>
 #include <tinyxml.h>

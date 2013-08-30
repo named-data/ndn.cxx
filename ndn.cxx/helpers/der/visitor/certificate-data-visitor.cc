@@ -17,7 +17,7 @@
 #include "publickey-visitor.h"
 #include "simple-visitor.h"
 
-#include "../der-sequence.h"
+#include "../der.h"
 #include "ndn.cxx/security/certificate/certificate-data.h"
 
 #include "logging.h"
@@ -32,7 +32,7 @@ namespace der
   void 
   CertificateDataVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    // _LOG_DEBUG("CertificateDataVisitor::visit");
+    _LOG_DEBUG("CertificateDataVisitor::visit");
 
     const DerNodePtrList & children = derSeq.getChildren();
     CertValidityVisitor validityVisitor;
@@ -41,7 +41,7 @@ namespace der
     children[1]->accept(subjectVisitor, param);
     PublickeyVisitor pubkeyVisitor;
     security::CertificateData* certData = boost::any_cast<security::CertificateData*>(param);
-    certData->setKey(*boost::any_cast<security::Publickey*>(children[2]->accept(pubkeyVisitor)));
+    certData->setKey(*boost::any_cast<Ptr<security::Publickey> >(children[2]->accept(pubkeyVisitor)));
         
     if(children.size() > 3)
       {

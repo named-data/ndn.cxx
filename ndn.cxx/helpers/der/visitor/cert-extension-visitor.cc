@@ -12,7 +12,7 @@
 
 #include "cert-extension-entry-visitor.h"
 
-#include "../der-sequence.h"
+#include "../der.h"
 
 namespace ndn
 {

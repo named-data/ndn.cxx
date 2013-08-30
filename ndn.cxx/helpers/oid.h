@@ -33,8 +33,6 @@ namespace ndn
 
     OID(const OID & oid);
 
-    OID(const Blob & blob); //For DER
-
     const vector<int> &
     getIntegerList() const
     {
@@ -54,8 +52,6 @@ namespace ndn
 
     string 
     toString();
-
-    Ptr<Blob> toDER();
 
     bool operator == (const OID & oid);
 

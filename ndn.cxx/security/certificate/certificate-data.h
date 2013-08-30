@@ -93,6 +93,9 @@ namespace security
     getKey () const
     { return m_key; }
 
+    void 
+    printCertificate ();
+
   private:
     SubDescryptList m_subjectList;
     Time m_notBefore;

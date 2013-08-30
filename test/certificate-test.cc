@@ -10,7 +10,7 @@
 
 #include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/publicKey.h"
-#include "ndn.cxx/security/encoding/der.h"
+#include "ndn.cxx/helpers/der/der.h"
 
 using namespace std;
 using namespace boost::posix_time;

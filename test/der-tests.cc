@@ -15,9 +15,8 @@
 #include "ndn.cxx/security/certificate/certificate.h"
 #include "ndn.cxx/security/certificate/publickey.h"
 #include "ndn.cxx/security/certificate/certificate-data.h"
-#include "ndn.cxx/security/encoding/der.h"
 #include "ndn.cxx/helpers/der/exception.h"
-#include "ndn.cxx/helpers/der/der-node.h"
+#include "ndn.cxx/helpers/der/der.h"
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
 #include "ndn.cxx/helpers/der/visitor/certificate-data-visitor.h"
 
@@ -175,6 +174,9 @@ BOOST_AUTO_TEST_CASE(CertificateDataVisitor)
   der::CertificateDataVisitor certDataVisitor;
   security::CertificateData certData;
   node->accept(certDataVisitor, boost::any(&certData));
+  
+  certData.printCertificate();
+
   }catch(der::DerException & e){
     cout << e.Msg() << endl;
   }

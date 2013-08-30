@@ -12,7 +12,7 @@
 
 #include "simple-visitor.h"
 
-#include "../der-sequence.h"
+#include "../der.h"
 
 #include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/publickey.h"
@@ -29,7 +29,7 @@ namespace der
   void
   CertPubkeyVisitor::visit (DerSequence& derSeq, boost::any param)
   {
-    // _LOG_DEBUG("CertPubkeyVisitor::visit");
+    _LOG_DEBUG("CertPubkeyVisitor::visit");
 
     const DerNodePtrList & children = derSeq.getChildren();
 

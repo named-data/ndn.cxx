@@ -154,7 +154,7 @@ namespace der
     Blob m_payload;
     DerComplex * m_parent;
   };
-  
+
 }//der
 
 }//ndn

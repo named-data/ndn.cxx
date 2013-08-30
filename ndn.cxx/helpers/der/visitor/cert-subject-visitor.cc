@@ -13,7 +13,7 @@
 
 #include "cert-subject-descrypt-visitor.h"
 
-#include "../der-sequence.h"
+#include "../der.h"
 
 #include "logging.h"
 
@@ -27,7 +27,7 @@ namespace der
   void 
   CertSubjectVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    // _LOG_DEBUG("CertSubjectVisitor::visit");
+    _LOG_DEBUG("CertSubjectVisitor::visit");
 
     const DerNodePtrList & children = derSeq.getChildren();
     

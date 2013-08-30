@@ -19,7 +19,6 @@
 
 #include "ndn.cxx/security/keychain.h"
 #include "ndn.cxx/security/exception.h"
-#include "ndn.cxx/security/encoding/der.h"
 #include "ndn.cxx/security/certificate/publickey.h"
 #include "ndn.cxx/security/certificate/certificate-subdescrpt.h"
 #include "ndn.cxx/security/policy/identity-policy-rule.h"

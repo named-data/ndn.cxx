@@ -14,7 +14,7 @@
 #include "oid.h"
 
 #include "ndn.cxx/security/exception.h"
-#include "ndn.cxx/security/encoding/der.h"
+#include "ndn.cxx/helpers/der/der.h"
 
 
 using namespace std;
@@ -49,77 +49,6 @@ namespace ndn
   OID::OID(const OID & oid)
     :m_oid(oid.m_oid)
   {}
-
-  OID::OID(const Blob & blob)
-  {
-    if(0x06 != blob[0])
-      throw SecException("decode Object Identifier, Type mismatch");
-
-    DERendec endec;
-
-    int offset = 1;
-
-    int size = endec.decodeSize(blob, offset);
-    int end = offset + size;
-
-    int first = blob[offset];
-    
-    m_oid.push_back(first / 40);
-    m_oid.push_back(first % 40);
-
-    offset++;
-    
-    while(offset < end){
-      m_oid.push_back(endec.decodeInteger128(blob, offset));
-    }
-  }
-
-  Ptr<Blob> OID::toDER()
-  {
-    DERendec endec;
-    Ptr<Blob> result = Ptr<Blob>::Create();
-
-    result->push_back(0x06);
-
-    int data = 0;
-    
-    if(m_oid.size() >= 1){
-      if(0 <= m_oid[0] && 2 >= m_oid[0])
-	data = m_oid[0] * 40;
-      else
-	throw SecException("first integer of oid is out of range");
-    }
-    else
-      throw SecException("no integer in oid");
-
-    if(m_oid.size() >= 2){
-      if(0 <= m_oid[1] && 39 >= m_oid[1])
-	data += m_oid[1];
-      else
-	throw SecException("second integer of oid is out of range");
-    }
-
-    Ptr<Blob> tmpResult = Ptr<Blob>::Create();
-
-    Ptr<Blob> dataPtr = endec.encodeInteger128(data);
-
-    tmpResult->insert(tmpResult->end(), dataPtr->begin(), dataPtr->end());
-
-    if(m_oid.size() > 2){
-      int i = 2;
-      for(; i < m_oid.size(); i++){
-	dataPtr = endec.encodeInteger128(m_oid[i]);
-	tmpResult->insert(tmpResult->end(), dataPtr->begin(), dataPtr->end());
-      }
-    }
-
-    Ptr<Blob> lenPtr = endec.encodeSize(tmpResult->size());
-
-    result->insert(result->end(), lenPtr->begin(), lenPtr->end());
-    result->insert(result->end(), tmpResult->begin(), tmpResult->end());
-    
-    return result;
-  }
 
   string OID::toString()
   {

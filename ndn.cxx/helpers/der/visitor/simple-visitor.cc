@@ -9,17 +9,10 @@
  */
 
 #include "simple-visitor.h"
-#include "ndn.cxx/helpers/oid.h"
 
-#include "../der-bool.h"
-#include "../der-integer.h"
-#include "../der-bit-string.h"
-#include "../der-octet-string.h"
-#include "../der-printable-string.h"
-#include "../der-null.h"
-#include "../der-sequence.h"
-#include "../der-gtime.h"
-#include "../der-oid.h"
+#include "../der.h"
+
+#include "ndn.cxx/helpers/oid.h"
 
 using namespace std;
 

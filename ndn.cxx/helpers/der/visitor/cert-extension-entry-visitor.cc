@@ -12,7 +12,7 @@
 
 #include "simple-visitor.h"
 
-#include "../der-sequence.h"
+#include "../der.h"
 
 #include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/certificate-extension.h"
