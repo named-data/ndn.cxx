@@ -59,7 +59,8 @@ namespace der
   boost::any 
   SimpleVisitor::visit (DerOctetString& derOStr)
   {
-    return boost::any(derOStr.getPayload());
+    Ptr<Blob> result = Ptr<Blob>(new Blob(derOStr.getPayload().buf(), derOStr.getPayload().size()));
+    return boost::any(result);
   }
   
   boost::any 

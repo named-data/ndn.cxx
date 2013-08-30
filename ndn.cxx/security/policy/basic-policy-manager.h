@@ -82,6 +82,9 @@ namespace security
     virtual Name 
     inferSigningIdentity(const Name & dataName);
 
+    void
+    displayPolicy ();
+
   private:
     Ptr<Regex>
     parseInference (const string & inference);
@@ -97,6 +100,8 @@ namespace security
 
     TiXmlDocument * toXML ();
     
+    virtual void
+    loadPolicyFromFile();
 
   private:
     const string m_policyPath;

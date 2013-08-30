@@ -69,7 +69,15 @@ namespace security
 
         return;
       }
+    else
+      loadPolicyFromFile();
+  }
 
+  void
+  BasicPolicyManager::loadPolicyFromFile()
+  {
+    fs::path policyPath(m_policyPath);
+    
     ifstream fs(policyPath.c_str(), ifstream::binary);
     fs.seekg (0, ios::end);
     ifstream::pos_type size = fs.tellg();
@@ -87,14 +95,19 @@ namespace security
     Ptr<der::DerSequence> root = DynamicCast<der::DerSequence>(der::DerNode::parse(reinterpret_cast<InputIterator &>(is)));
     const der::DerNodePtrList & children = root->getChildren();
     der::SimpleVisitor simpleVisitor;
+    _LOG_DEBUG("type: " << children[0]->getType());
     string encryptKeyName = boost::any_cast<string>(children[0]->accept(simpleVisitor));
+    _LOG_DEBUG("keyName: " << encryptKeyName);
+    _LOG_DEBUG("type: " << children[1]->getType());
     bool encryptSym = boost::any_cast<bool>(children[1]->accept(simpleVisitor));
-    const Blob& encryptedPolicy = boost::any_cast<const Blob&>(children[2]->accept(simpleVisitor));
+    _LOG_DEBUG("type: " << children[2]->getType());
+    Ptr<Blob> encryptedPolicy = boost::any_cast<Ptr<Blob> >(children[2]->accept(simpleVisitor));
+    _LOG_DEBUG("policy size: " << encryptedPolicy->size());
 
     m_defaultKeyName = encryptKeyName;
     m_defaultSym = encryptSym;
 
-    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, encryptedPolicy, encryptSym);
+    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, *encryptedPolicy, encryptSym);
     
     string decryptedStr(decrypted->buf(), decrypted->size());
     
@@ -252,6 +265,13 @@ namespace security
 
         m_policyChanged = false;
       }
+  }
+
+  void
+  BasicPolicyManager::displayPolicy ()
+  {
+    TiXmlDocument* doc = toXML();
+    cout << *doc << endl;
   }
 
   TiXmlDocument * 

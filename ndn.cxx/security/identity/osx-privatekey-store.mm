@@ -217,8 +217,12 @@ namespace security
                                       reinterpret_cast<const unsigned char*>(pData.buf()),
                                       pData.size()
                                       );
+
+    _LOG_DEBUG("CreateData");
     
     SecKeyRef decryptKey = (SecKeyRef)getKey(keyName, keyClass);
+
+    _LOG_DEBUG("GetKey");
 
     CFErrorRef error;
     SecTransformRef decrypt = SecDecryptTransformCreate(decryptKey, &error);

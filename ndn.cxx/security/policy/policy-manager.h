@@ -90,6 +90,9 @@ namespace security
     virtual Name 
     inferSigningIdentity(const Name & dataName) = 0;
 
+    virtual void
+    displayPolicy () = 0;
+
   protected:
     string m_defaultKeyName;
     bool m_defaultSym;

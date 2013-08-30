@@ -408,6 +408,7 @@ BOOST_AUTO_TEST_CASE(PolicyManagerLoad)
   security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr);
   cerr << "GET policyManager" << endl;
   try{
+  policyManager.displayPolicy();
   cerr << policyManager.getTrustAnchor(Name("/ndn/DSK-1376411829/ID-CERT/0"))->getName().toUri() << endl;
   }catch(security::SecException & e){
     cerr << e.Msg() << endl;
