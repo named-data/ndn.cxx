@@ -15,6 +15,10 @@
 
 #include "../der-sequence.h"
 
+#include "logging.h"
+
+INIT_LOGGER("ndn.der.CertSubjectVisitor");
+
 namespace ndn
 {
 
@@ -23,6 +27,8 @@ namespace der
   void 
   CertSubjectVisitor::visit(DerSequence& derSeq, boost::any param)
   {
+    // _LOG_DEBUG("CertSubjectVisitor::visit");
+
     const DerNodePtrList & children = derSeq.getChildren();
     
     CertSubDescryptVisitor descryptVisitor;
@@ -30,7 +36,10 @@ namespace der
     DerNodePtrList::const_iterator it = children.begin();
 
     while(it != children.end())
+      {
 	(*it)->accept(descryptVisitor, param);
+        it++;
+      }
   }
 
 }//der

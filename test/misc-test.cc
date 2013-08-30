@@ -13,7 +13,6 @@
 #include "ndn.cxx/security/identity/osx-privatekey-store.h"
 #include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/publickey.h"
-#include "ndn.cxx/security/encoding/der.h"
 
 using namespace std;
 using namespace boost::posix_time;
@@ -245,12 +244,9 @@ BOOST_AUTO_TEST_CASE (Digest)
 
   Ptr<Blob> keyPtr = readKey("out1.pub");
 
-  security::Publickey pubKey(*keyPtr, false);
+  Ptr<security::Publickey> pubKey = security::Publickey::fromDER(*keyPtr);
 
-  Ptr<const Blob> digest = pubKey.getDigest();
-
-  security::DERendec endec;
-  endec.printBlob(*digest, "");
+  Ptr<const Blob> digest = pubKey->getDigest();
 }
 
 BOOST_AUTO_TEST_CASE (BlobComparison)

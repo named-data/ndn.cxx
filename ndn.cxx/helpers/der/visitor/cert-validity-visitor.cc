@@ -15,6 +15,10 @@
 
 #include "ndn.cxx/security/certificate/certificate-data.h"
 
+#include "logging.h"
+
+INIT_LOGGER("ndn.der.CertValidityVisitor");
+
 namespace ndn
 {
 
@@ -23,7 +27,9 @@ namespace der
   void 
   CertValidityVisitor::visit (DerSequence& derSeq, boost::any param)
   {
-    security::CertificateData& certData = boost::any_cast<security::CertificateData&> (param); 
+    // _LOG_DEBUG("CertValidityVisitor::visit");
+    
+    security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
 
     const DerNodePtrList & children = derSeq.getChildren();
     
@@ -32,8 +38,11 @@ namespace der
     Time notBefore = boost::any_cast<Time>(children[0]->accept(simpleVisitor));
     Time notAfter = boost::any_cast<Time>(children[1]->accept(simpleVisitor));
 
-    certData.setNotBefore(notBefore);
-    certData.setNotAfter(notAfter);
+    // _LOG_DEBUG("parsed notBefore: " << notBefore);
+    // _LOG_DEBUG("parsed notAfter: " << notAfter);
+
+    certData->setNotBefore(notBefore);
+    certData->setNotAfter(notAfter);
   }
 
 }//der

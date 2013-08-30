@@ -25,7 +25,7 @@ namespace der
   void 
   CertExtnEntryVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    security::CertificateData& certData = boost::any_cast<security::CertificateData&> (param); 
+    security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
     
     const DerNodePtrList & children = derSeq.getChildren();
     
@@ -37,7 +37,7 @@ namespace der
 
     security::CertificateExtension extension(oid, critical, value);
 
-    certData.addExtension(extension);
+    certData->addExtension(extension);
   }
 
 }//der

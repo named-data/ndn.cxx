@@ -13,8 +13,6 @@
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
-#include "ndn.cxx/security/encoding/der.h"
-
 
 #include <ctime>
 #include <boost/filesystem.hpp>
@@ -137,7 +135,7 @@ namespace security
   Ptr<Publickey>
   IdentityManager::getPublickey(const Name & keyName)
   {
-    return Ptr<Publickey>(new Publickey(*m_publicStorage->getKey(keyName)));
+    return Publickey::fromDER(m_publicStorage->getKey(keyName));
   }
 
   Name
@@ -287,7 +285,7 @@ namespace security
     // _LOG_DEBUG("Get key blob");
     Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
     // _LOG_DEBUG("Extract key blob");
-    Publickey publickey(*keyBlob);
+    Ptr<Publickey> publickey = Publickey::fromDER(keyBlob);
 
     // _LOG_DEBUG("Generate CertificateData");
     vector<CertificateSubDescrypt> subject;
@@ -302,10 +300,10 @@ namespace security
 
     // _LOG_DEBUG("notBefore: " << boost::posix_time::to_iso_string(notBefore) << " notAfter: " << boost::posix_time::to_iso_string(notAfter)); 
 
-    CertificateData certData(notBefore, notAfter, publickey);
+    CertificateData certData(notBefore, notAfter, *publickey);
     certData.addSubjectDescription(CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
 
-    Ptr<Blob> certBlob = certData.toDER();
+    Ptr<Blob> certBlob = certData.toDERBlob();
 
     // _LOG_DEBUG("certBlob.size: " << certBlob->size());
 
@@ -320,7 +318,7 @@ namespace security
     keyLocator.setKeyName (certName);
     
     sha256Sig->setKeyLocator (keyLocator);
-    sha256Sig->setPublisherKeyDigest (*publickey.getDigest ());
+    sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
 
     data->setSignature(sha256Sig);
 

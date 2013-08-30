@@ -16,6 +16,7 @@
 #include "ndn.cxx/fields/blob.h"
 
 #include "ndn.cxx/helpers/oid.h"
+#include "ndn.cxx/helpers/der/der.h"
 
 using namespace std;
 
@@ -30,13 +31,9 @@ namespace security
     CertificateExtension (const string & oid, const bool & critical, const Blob & extnValue);
 
     CertificateExtension (const OID & oid, const bool & critical, const Blob & extnValue);
-    
-    CertificateExtension (const Blob & blob);
 
-    Ptr<Blob> 
+    Ptr<der::DerNode> 
     toDER();
-
-  private:
       
   private:
     OID m_extnID;

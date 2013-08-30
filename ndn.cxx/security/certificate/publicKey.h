@@ -16,6 +16,7 @@
 
 #include "ndn.cxx/security/security-common.h"
 #include "ndn.cxx/helpers/oid.h"
+#include "ndn.cxx/helpers/der/der.h"
 
 namespace ndn
 {
@@ -27,12 +28,8 @@ namespace security
   public:
 
     Publickey () {}
-    /*
-     * @brief Constructor of Publickey
-     * @param blob bytes of public key in the format specided
-     * @pem   true if PEM encoded, otherwise DER
-     */
-    Publickey (const Blob & blob, bool pem =false);
+
+    Publickey (const OID & algorithm, const Blob & keyBlob);
 
     /*
      * @brief copy Constructor of Publickey
@@ -40,18 +37,21 @@ namespace security
      */    
     Publickey (const Publickey & publickey);
 
+    Ptr<der::DerNode>
+    toDER();
+
+    static Ptr<Publickey>
+    fromDER(Ptr<Blob> blob);
+
+    static Ptr<Publickey>
+    fromDER(const Blob& blob);
+
     /*
      * @brief get the digest of the public key
      * @param digestAlgo the digest algorithm, ndn::security::DIGEST_SHA256 by default 
      */
     Ptr<const Blob> 
     getDigest (DigestAlgorithm digestAlgo = DIGEST_SHA256) const;
-
-    // Blob & 
-    // getKeyBlob()
-    // { 
-    //   return m_key; 
-    // }
 
     /*
      * @brief get the raw bytes
@@ -67,13 +67,6 @@ namespace security
     {
       return m_key; 
     }
-    
-  private:
-    void 
-    fromDER (const Blob & blob);
-    
-    void 
-    fromPEM (const Blob & blob);
     
   private:
     OID m_algorithm; //Algorithm

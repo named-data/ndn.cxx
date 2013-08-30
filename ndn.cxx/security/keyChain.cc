@@ -20,7 +20,6 @@
 #include "policy/policy-rule.h"
 #include "policy/basic-policy-manager.h"
 #include "encryption/basic-encryption-manager.h"
-#include "encoding/der.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
@@ -293,8 +292,8 @@ namespace security
     Ptr<const Certificate> trustedCert = m_policyManager->getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
 
     if(NULL != trustedCert){
-      CertificateData certData(trustedCert->getContent().getContent());
-      if(verifySignature(*dataPtr, certData.getKey()))
+      Ptr<CertificateData> certData = CertificateData::fromDER(trustedCert->content());
+      if(verifySignature(*dataPtr, certData->getKey()))
         {
           return preRecurVerifyCallback(dataPtr);
         }

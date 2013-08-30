@@ -14,10 +14,12 @@
 #include "ndn.cxx/data.h"
 #include "ndn.cxx/security/certificate/certificate.h"
 #include "ndn.cxx/security/certificate/publickey.h"
+#include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/encoding/der.h"
 #include "ndn.cxx/helpers/der/exception.h"
 #include "ndn.cxx/helpers/der/der-node.h"
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
+#include "ndn.cxx/helpers/der/visitor/certificate-data-visitor.h"
 
 #include <sqlite3.h>
 #include <fstream>
@@ -79,14 +81,12 @@ BOOST_AUTO_TEST_CASE(DisplayKey)
   kis.close();
 
   Blob blob(memblock, size);
-  security::DERendec endec;
-  endec.printDecoded(blob, "", 0);
 
   boost::iostreams::stream
     <boost::iostreams::array_source> is (memblock, size);
 
   try{
-  Ptr<der::DerNode> node = der::DerNode::parseDer(reinterpret_cast<InputIterator &>(is));
+  Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
   der::PrintVisitor printVisitor;
   node->accept(printVisitor, string(""));
   }catch(der::DerException & e){
@@ -108,14 +108,12 @@ BOOST_AUTO_TEST_CASE(DisplayCert)
   cis.close();
 
   Blob blob(memblock, size);
-  security::DERendec endec;
-  endec.printDecoded(blob, "", 0);
 
   boost::iostreams::stream
     <boost::iostreams::array_source> is (memblock, size);
 
   try{
-  Ptr<der::DerNode> node = der::DerNode::parseDer(reinterpret_cast<InputIterator &>(is));
+  Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
   der::PrintVisitor printVisitor;
   node->accept(printVisitor, string(""));
   }catch(der::DerException & e){
@@ -123,7 +121,7 @@ BOOST_AUTO_TEST_CASE(DisplayCert)
   }
 }
 
-BOOST_AUTO_TEST_CASE(SimpleVisitor)
+BOOST_AUTO_TEST_CASE(PrintVisitor)
 {
   ifstream cis ("test-cert.data", ios::binary);
   
@@ -137,16 +135,46 @@ BOOST_AUTO_TEST_CASE(SimpleVisitor)
   cis.close();
 
   Blob blob(memblock, size);
-  security::DERendec endec;
-  endec.printDecoded(blob, "", 0);
 
   boost::iostreams::stream
     <boost::iostreams::array_source> is (memblock, size);
 
   try{
-  Ptr<der::DerNode> node = der::DerNode::parseDer(reinterpret_cast<InputIterator &>(is));
+  Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
   der::PrintVisitor printVisitor;
   node->accept(printVisitor, string(""));
+  }catch(der::DerException & e){
+    cout << e.Msg() << endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CertificateDataVisitor)
+{
+  ifstream cis ("test-cert.data", ios::binary);
+  
+  cis.seekg(0, ios::end);
+  ifstream::pos_type size = cis.tellg();
+
+  char * memblock = new char [size];
+  
+  cis.seekg(0, ios::beg);
+  cis.read (memblock, size);
+  cis.close();
+
+  Blob blob(memblock, size);
+
+  boost::iostreams::stream
+    <boost::iostreams::array_source> is (memblock, size);
+
+  try{
+  Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
+
+  der::PrintVisitor printVisitor;
+  node->accept(printVisitor, string(""));
+
+  der::CertificateDataVisitor certDataVisitor;
+  security::CertificateData certData;
+  node->accept(certDataVisitor, boost::any(&certData));
   }catch(der::DerException & e){
     cout << e.Msg() << endl;
   }

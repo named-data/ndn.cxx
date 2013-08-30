@@ -29,7 +29,10 @@ namespace der
     DerNodePtrList::const_iterator it = children.begin();
 
     while(it != children.end())
+      {
 	(*it)->accept(extnEntryVisitor, param);
+        it++;
+      }
   }
 
 }//der

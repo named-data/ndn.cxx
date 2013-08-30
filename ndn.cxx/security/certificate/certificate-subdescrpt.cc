@@ -9,7 +9,6 @@
  */
 
 #include "certificate-subdescrpt.h"
-#include "ndn.cxx/security/encoding/der.h"
 
 using namespace std;
 
@@ -29,27 +28,18 @@ namespace security
      m_value(value)
   {}
 
-  CertificateSubDescrypt::CertificateSubDescrypt (const Blob & blob)
-  {
-    DERendec endec;
-
-    Ptr<vector<Ptr<Blob> > > items = endec.decodeSequenceDER(blob);
-    
-    m_oid = OID(*(items->at(0)));
-    m_value = *(endec.decodePrintableStringDER(*(items->at(1))));
-  }
-
-  Ptr<Blob> 
+  Ptr<der::DerNode> 
   CertificateSubDescrypt::toDER()
   {
-    DERendec encoder;
+    Ptr<der::DerSequence> root = Ptr<der::DerSequence>::Create();
+    
+    Ptr<der::DerOid> oid = Ptr<der::DerOid>(new der::DerOid(m_oid));
+    Ptr<der::DerPrintableString> value = Ptr<der::DerPrintableString>(new der::DerPrintableString(m_value));
 
-    vector<Ptr<Blob> > seq;
+    root->addChild(oid);
+    root->addChild(value);
 
-    seq.push_back(m_oid.toDER());
-    seq.push_back(encoder.encodePrintableStringDER(m_value));
-
-    return encoder.encodeSequenceDER(seq);
+    return root;
   }
 
 }//ndn

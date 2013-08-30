@@ -46,7 +46,7 @@ namespace security
     
     // _LOG_DEBUG("Finish local copy: " << getContent().getContent().size());
 
-    m_certData = Ptr<CertificateData>(new CertificateData(getContent().getContent()));
+    m_certData = CertificateData::fromDER(content());
   }
 
   Certificate::~Certificate()

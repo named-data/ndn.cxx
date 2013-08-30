@@ -147,11 +147,11 @@ namespace der
 
 
   Ptr<DerNode>
-  DerNode::parseDer(InputIterator &start)
+  DerNode::parse(InputIterator &start)
   {
     int type = start.PeekU8();
 
-    _LOG_DEBUG("Type: " << hex << setw(2) << setfill('0') << type);
+    // _LOG_DEBUG("Type: " << hex << setw(2) << setfill('0') << type);
     switch(type)
       {
       case DER_BOOLEAN:

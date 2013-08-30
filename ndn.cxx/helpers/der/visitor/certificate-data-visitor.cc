@@ -14,9 +14,15 @@
 #include "cert-extension-visitor.h"
 #include "cert-validity-visitor.h"
 #include "cert-subject-visitor.h"
-#include "cert-
+#include "publickey-visitor.h"
+#include "simple-visitor.h"
 
 #include "../der-sequence.h"
+#include "ndn.cxx/security/certificate/certificate-data.h"
+
+#include "logging.h"
+
+INIT_LOGGER("ndn.der.CertificateDataVisitor");
 
 namespace ndn
 {
@@ -24,15 +30,24 @@ namespace ndn
 namespace der
 {
   void 
-  CertSubjectVisitor::visit(DerSequence& derSeq, boost::any param)
+  CertificateDataVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    const DerNodePtrList & children = derSeq.getChildren();
-    children[0]->accept(CertValidityVisitor());
-    children[1]->accept(CertSubDescryptVisitor());
-    children[2]->accept(
+    // _LOG_DEBUG("CertificateDataVisitor::visit");
 
-    DerNodePtrList::const_iterator it = children.begin();
-    
+    const DerNodePtrList & children = derSeq.getChildren();
+    CertValidityVisitor validityVisitor;
+    children[0]->accept(validityVisitor, param);
+    CertSubjectVisitor subjectVisitor;
+    children[1]->accept(subjectVisitor, param);
+    PublickeyVisitor pubkeyVisitor;
+    security::CertificateData* certData = boost::any_cast<security::CertificateData*>(param);
+    certData->setKey(*boost::any_cast<security::Publickey*>(children[2]->accept(pubkeyVisitor)));
+        
+    if(children.size() > 3)
+      {
+        CertExtensionVisitor extnVisitor;
+        children[3]->accept(extnVisitor, param);
+      }
   }
 
 }//der

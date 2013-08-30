@@ -67,7 +67,7 @@ Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
   security::CertificateData certData(notBefore, notAfter, *pubKey);
   certData.addSubjectDescription(security::CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
 
-  Ptr<Blob> certBlob = certData.toDER();
+  Ptr<Blob> certBlob = certData.toDERBlob();
 
   Content content(certBlob->buf(), certBlob->size());
   data->setContent(content);
@@ -105,37 +105,37 @@ BOOST_AUTO_TEST_CASE (Basic)
 
 BOOST_AUTO_TEST_CASE (Digest)
 {
-  string keyName = "/ndn/ucla/yingdi";
-  security::DERendec endec;
+  // string keyName = "/ndn/ucla/yingdi";
+  // security::DERendec endec;
 
-  security::OSXPrivatekeyStore keystore;
-  try{
-    Data data;
-    // //.../DNS/.../zsk-seq#(for key)/NDNCERT/certSeq#(for certificate)
-    // Name name = Name("/ndn/ucla/DNS/yingdi/zsk-1/NDNCERT/20130722");
+  // security::OSXPrivatekeyStore keystore;
+  // try{
+  //   Data data;
+  //   // //.../DNS/.../zsk-seq#(for key)/NDNCERT/certSeq#(for certificate)
+  //   // Name name = Name("/ndn/ucla/DNS/yingdi/zsk-1/NDNCERT/20130722");
 
-    // data.setName(name);
+  //   // data.setName(name);
     
-    // Ptr<Blob> keyPtr = readKey("out1.pub");
-    // Content content;
-    // content.setContent(*keyPtr);
-    // content.setTimeStamp();
-    // content.setType(Content::KEY);
+  //   // Ptr<Blob> keyPtr = readKey("out1.pub");
+  //   // Content content;
+  //   // content.setContent(*keyPtr);
+  //   // content.setTimeStamp();
+  //   // content.setType(Content::KEY);
     
-    // data.setContent(content);
+  //   // data.setContent(content);
     
-    // Signature sig;
-    // KeyLocator keyLocator;
-    // keyLocator.setType(KeyLocator::KEYNAME);
-    // keyLocator.setKeyName(name);
+  //   // Signature sig;
+  //   // KeyLocator keyLocator;
+  //   // keyLocator.setType(KeyLocator::KEYNAME);
+  //   // keyLocator.setKeyName(name);
 
-    // data.setSignature(sig);
+  //   // data.setSignature(sig);
     
 
-    // endec.PrintBlob(keystore.PublicKeyDigest(keyName, security::KEY_TYPE_RSA, security::KEY_PUBLIC_OPENSSL, security::DIGEST_SHA256), "");
-  }catch (security::SecException & e){
-    cerr << e.Msg() << endl;
-  }
+  //   // endec.PrintBlob(keystore.PublicKeyDigest(keyName, security::KEY_TYPE_RSA, security::KEY_PUBLIC_OPENSSL, security::DIGEST_SHA256), "");
+  // }catch (security::SecException & e){
+  //   cerr << e.Msg() << endl;
+  // }
 
 }
 
@@ -397,9 +397,9 @@ BOOST_AUTO_TEST_CASE(DumpCert)
 
   security::Certificate cert(*readData); 
 
-  DERendec endec;
+  // DERendec endec;
   
-  endec.printDecoded(cert.content(), "", 0);
+  // endec.printDecoded(cert.content(), "", 0);
 }
 
 BOOST_AUTO_TEST_CASE(PolicyManagerLoad)

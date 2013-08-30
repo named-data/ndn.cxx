@@ -24,7 +24,7 @@ namespace der
   void
   CertSubDescryptVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    security::CertificateData& certData = boost::any_cast<security::CertificateData&> (param); 
+    security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
     
     const DerNodePtrList & children = derSeq.getChildren();
     
@@ -35,7 +35,7 @@ namespace der
 
     security::CertificateSubDescrypt subDescrypt(oid, value);
 
-    certData.addSubjectDescription(subDescrypt);
+    certData->addSubjectDescription(subDescrypt);
   }
 
 }//der

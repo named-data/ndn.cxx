@@ -53,6 +53,9 @@ namespace der
       return m_nodeList;
     }
 
+    virtual Ptr<Blob>
+    getRaw();
+
   private:
     void
     updateSize ();

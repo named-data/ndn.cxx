@@ -12,7 +12,6 @@
 
 
 #include "publickey.h"
-#include "ndn.cxx/security/encoding/der.h"
 #include "ndn.cxx/security/exception.h"
 
 #include "logging.h"
@@ -26,19 +25,37 @@ namespace ndn
 
 namespace security
 {
-  Publickey::Publickey (const Blob & blob, bool pem)
-    :m_key(blob.buf(), blob.size())
-  {
-    if(pem)
-      fromPEM(blob);
-    else
-      fromDER(blob);
-  }
+  Publickey::Publickey (const OID & algorithm, const Blob & keyBlob)
+    : m_algorithm(algorithm)
+    , m_key(keyBlob.buf(), keyBlob.size())
+  {}
+
 
   Publickey::Publickey (const Publickey & publickey)
     :m_algorithm(publickey.m_algorithm),
      m_key(publickey.m_key.buf(), publickey.m_key.size())
   {}
+
+  Ptr<der::DerNode>
+  Publickey::toDER()
+  {
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (m_key.buf (), m_key.size ());
+
+    return der::DerNode::parse(reinterpret_cast<InputIterator &> (is));
+  }
+
+  Ptr<Publickey>
+  Publickey::fromDER(Ptr<Blob> blob)
+  {
+    return fromDER(*blob);
+  }
+
+  Ptr<Publickey>
+  Publickey::fromDER(const Blob& blob)
+  {
+    
+  }
 
   Ptr<const Blob> 
   Publickey::getDigest (DigestAlgorithm digestAlgo) const
@@ -56,25 +73,6 @@ namespace security
     else
       throw UnrecognizedDigestAlgoException("Wrong format!");
   }
-
-  void 
-  Publickey::fromDER (const Blob & blob)
-  {
-    Ptr<Blob>(new Blob(blob.buf(), blob.size()));
-
-    DERendec endec;
-    Ptr<vector<Ptr<Blob> > > sequence = endec.decodeSequenceDER(blob);
-
-    m_algorithm = *endec.decodeSequenceDER(*sequence->at(0))->at(0);
-  }
-    
-  void 
-  Publickey::fromPEM (const Blob & blob)
-  {
-    //TODO:
-    throw UnrecognizedKeyFormatException("PEM is not supported in Publickey");
-  }
-
 
 }//security
 

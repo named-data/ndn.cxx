@@ -20,6 +20,7 @@
 #include "ndn.cxx/data.h"
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/security/exception.h"
+#include "ndn.cxx/helpers/der/der.h"
 
 #include "certificate-subdescrpt.h"
 #include "certificate-extension.h"
@@ -43,87 +44,55 @@ namespace security
     CertificateData () {}
 
     CertificateData (Time m_notBefore, Time m_notAfter, const Publickey & publickey);
-    
-    CertificateData (const Blob & blob);
 
-    CertificateData (const Data & data);
+    static Ptr<CertificateData>
+    fromDER(Ptr<Blob> blob);
 
-    void 
-    addSubjectDescription (const CertificateSubDescrypt & descrypt);
+    static Ptr<CertificateData>
+    fromDER(const Blob & blob);
 
-    void 
-    addExtension (const CertificateExtension & extn);
-    
     Ptr<Blob> 
+    toDERBlob ();
+
+    Ptr<der::DerNode>
     toDER ();
+
+    void 
+    addSubjectDescription (const CertificateSubDescrypt & descrypt) 
+    { m_subjectList.push_back(descrypt); }
+
+    void 
+    addExtension (const CertificateExtension & extn) 
+    { m_extnList.push_back(extn); }
 
     void
     setNotBefore (const Time & notBefore)
-    {
-      m_notBefore = notBefore;
-    }
+    { m_notBefore = notBefore; }
 
     Time & 
     getNotBefore ()
-    {
-      return m_notBefore;
-    }
+    { return m_notBefore; } 
 
     void
     setNotAfter (const Time & notAfter)
-    {
-      m_notAfter = notAfter;
-    }
+    { m_notAfter = notAfter; }
     
     Time & 
     getNotAfter ()
-    {
-      return m_notAfter;
-    }
+    { return m_notAfter; }
 
     void
     setKey (const Publickey & key)
-    {
-      m_key = key;
-    }
+    { m_key = key; }
 
     Publickey & 
-    getKey ()
-    {
-      return m_key;
-    }
+    getKey () 
+    { return m_key; }
 
     const Publickey &
     getKey () const
-    {
-      return m_key;
-    }
+    { return m_key; }
 
-    void 
-    printCertificate ();
-
-    void 
-    printSubjectInfo ();
-
-  private:
-    Ptr<Blob> 
-    encodeExtn ();
-
-    void 
-    decodeExtn (const Blob & blob);
-
-    Ptr<Blob> 
-    encodeValidity ();
-
-    void 
-    decodeValidity (const Blob & blob);
-
-    Ptr<Blob> 
-    encodeSubject ();
-
-    void 
-    decodeSubject (const Blob & blob);
-    
   private:
     SubDescryptList m_subjectList;
     Time m_notBefore;

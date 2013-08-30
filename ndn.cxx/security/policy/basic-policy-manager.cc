@@ -11,7 +11,8 @@
 #include "basic-policy-manager.h"
 
 #include "identity-policy-rule.h"
-#include "ndn.cxx/security/encoding/der.h"
+
+#include "ndn.cxx/helpers/der/der.h"
 
 #include <boost/filesystem.hpp>
 #include <tinyxml.h>
@@ -79,17 +80,20 @@ namespace security
 
     Blob readData(memblock, size);
 
-    DERendec decoder;
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (memblock, size);
 
-    Ptr<vector<Ptr<Blob> > > derItemListPtr = decoder.decodeSequenceDER(readData);
-    string encryptKeyName = *decoder.decodePrintableStringDER(*derItemListPtr->at(0));
-    bool encryptSym = decoder.decodeBoolDER(*derItemListPtr->at(1));
-    Ptr<Blob> encryptedPolicy = decoder.decodeStringDER(*derItemListPtr->at(2));
+    Ptr<der::DerSequence> root = DynamicCast<der::DerSequence>(der::DerNode::parse(reinterpret_cast<InputIterator &>(is)));
+    const der::DerNodePtrList & children = root->getChildren();
+    der::SimpleVisitor simpleVisitor;
+    string encryptKeyName = boost::any_cast<string>(children[0]->accept(simpleVisitor));
+    bool encryptSym = boost::any_cast<bool>(children[1]->accept(simpleVisitor));
+    const Blob& encryptedPolicy = boost::any_cast<const Blob&>(children[2]->accept(simpleVisitor));
 
     m_defaultKeyName = encryptKeyName;
     m_defaultSym = encryptSym;
 
-    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, *encryptedPolicy, encryptSym);
+    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, encryptedPolicy, encryptSym);
     
     string decryptedStr(decrypted->buf(), decrypted->size());
     
@@ -228,15 +232,19 @@ namespace security
         
         ofstream fs(policyPath.c_str(), ofstream::binary | ofstream::trunc);
 
-        DERendec encoder;
+        der::DerSequence root;
+        Ptr<der::DerPrintableString> savedKeyName = Ptr<der::DerPrintableString>(new der::DerPrintableString(encryptKeyName));
+        Ptr<der::DerBool> savedSym = Ptr<der::DerBool>(new der::DerBool(encryptSym));
+        Ptr<der::DerOctetString> savedPolicy = Ptr<der::DerOctetString>(new der::DerOctetString(*encryptedPtr));
+        root.addChild(savedKeyName);
+        root.addChild(savedSym);
+        root.addChild(savedPolicy);
+
+        blob_stream blobStream;
+        root.encode(reinterpret_cast<OutputIterator &> (blobStream));  
+        Ptr<Blob> policyDER = blobStream.buf ();
         
-        vector<Ptr<Blob> > derItemList;
-        derItemList.push_back(encoder.encodePrintableStringDER(encryptKeyName));
-        derItemList.push_back(encoder.encodeBoolDER(encryptSym));
-        derItemList.push_back(encoder.encodeStringDER(*encryptedPtr));
-        Ptr<Blob> derBlobPtr = encoder.encodeSequenceDER(derItemList);
-        
-        fs.write(derBlobPtr->buf(), derBlobPtr->size());
+        fs.write(policyDER->buf(), policyDER->size());
 
         fs.close();
         delete xmlDoc;

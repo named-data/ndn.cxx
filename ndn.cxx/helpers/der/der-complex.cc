@@ -45,7 +45,7 @@ namespace der
     while(accSize < m_size)
       {
         // _LOG_DEBUG("accSize: " << accSize);
-        Ptr<DerNode> nodePtr = DerNode::parseDer(start);
+        Ptr<DerNode> nodePtr = DerNode::parse(start);
         accSize += nodePtr->getSize();
         addChild(nodePtr, false);
       }
@@ -64,6 +64,20 @@ namespace der
       }
 
     return m_size + m_header.size();
+  }
+
+  Ptr<Blob>
+  DerComplex::getRaw()
+  {
+    Ptr<Blob> blob = Ptr<Blob>::Create();
+    blob->insert(blob->end(), m_header.begin(), m_header.end());
+    DerNodePtrList::iterator it = m_nodeList.begin();
+    for(; it != m_nodeList.end(); it++)
+      {
+        Ptr<Blob> childBlob = (*it)->getRaw();
+        blob->insert(blob->end(), childBlob->begin(), childBlob->end());
+      }
+    return blob;
   }
 
   void

@@ -91,7 +91,7 @@ namespace der
     }
 
     static Ptr<DerNode>
-    parseDer(InputIterator & start);
+    parse(InputIterator & start);
 
     const Blob & 
     getHeader() const
@@ -115,6 +115,22 @@ namespace der
     getPayload() 
     {
       return m_payload;
+    }
+
+    const DerType &
+    getType()
+    {
+      return m_type;
+    }
+
+    virtual Ptr<Blob>
+    getRaw()
+    {
+      Ptr<Blob> blob = Ptr<Blob>::Create();
+      blob->insert(blob->end(), m_header.begin(), m_header.end());
+      blob->insert(blob->end(), m_payload.begin(), m_payload.end());
+
+      return blob;
     }
 
     virtual void accept(VoidNoArguVisitor & visitor) = 0;

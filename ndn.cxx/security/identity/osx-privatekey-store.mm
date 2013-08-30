@@ -12,7 +12,6 @@
 
 #include "osx-privatekey-store.h"
 
-#include "ndn.cxx/security/encoding/der.h"
 #include "ndn.cxx/wire/ccnb.h"
 
 #include <fstream>
@@ -146,7 +145,7 @@ namespace security
     
     Blob blob(CFDataGetBytePtr(exportedKey), CFDataGetLength(exportedKey));
 
-    return Ptr<Publickey>(new Publickey(blob));
+    return Publickey::fromDER(blob);
   }
 
   Ptr<Blob> OSXPrivatekeyStore::sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo)

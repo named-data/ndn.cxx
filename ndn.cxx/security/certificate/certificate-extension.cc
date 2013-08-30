@@ -11,8 +11,6 @@
 
 #include "certificate-extension.h"
 
-#include "ndn.cxx/security/encoding/der.h"
-
 namespace ndn
 {
 
@@ -31,30 +29,20 @@ namespace security
      m_extnValue(extnValue.buf(), extnValue.size())
   {}
 
-
-  CertificateExtension::CertificateExtension(const Blob & blob)
-  {
-    DERendec decoder;
-    
-    Ptr<vector<Ptr<Blob> > > items = decoder.decodeSequenceDER(blob);
-
-    m_extnID = OID(*(items->at(0)));
-    m_critical = decoder.decodeBoolDER(*(items->at(1)));
-    m_extnValue = *decoder.decodeStringDER(*(items->at(2)));
-  }
-
-  Ptr<Blob> 
+  Ptr<der::DerNode> 
   CertificateExtension::toDER()
   {
-    DERendec encoder;
+    Ptr<der::DerSequence> root = Ptr<der::DerSequence>::Create();
+    
+    Ptr<der::DerOid> extnID = Ptr<der::DerOid>(new der::DerOid(m_extnID));
+    Ptr<der::DerBool> critical = Ptr<der::DerBool>(new der::DerBool(m_critical));
+    Ptr<der::DerOctetString> extnValue = Ptr<der::DerOctetString>(new der::DerOctetString(m_extnValue));
 
-    vector<Ptr<Blob> >items;
+    root->addChild(extnID);
+    root->addChild(critical);
+    root->addChild(extnValue);
 
-    items.push_back(m_extnID.toDER());
-    items.push_back(encoder.encodeBoolDER(m_critical));
-    items.push_back(encoder.encodeStringDER(m_extnValue));
-
-    return encoder.encodeSequenceDER(items);
+    return root;
   }
 
 }//security

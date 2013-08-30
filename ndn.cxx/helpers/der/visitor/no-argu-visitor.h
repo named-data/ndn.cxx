@@ -22,15 +22,15 @@ namespace der
   class NoArguVisitor
   {
   public:
-    virtual boost::any visit (DerBool&           )=0;
-    virtual boost::any visit (DerInteger&        )=0;
-    virtual boost::any visit (DerPrintableString&)=0;
-    virtual boost::any visit (DerBitString&      )=0;
-    virtual boost::any visit (DerNull&           )=0;
-    virtual boost::any visit (DerOctetString&    )=0;
-    virtual boost::any visit (DerOid&            )=0;
-    virtual boost::any visit (DerSequence&       )=0;
-    virtual boost::any visit (DerGtime&          )=0;
+    virtual boost::any visit (DerBool&           );
+    virtual boost::any visit (DerInteger&        );
+    virtual boost::any visit (DerPrintableString&);
+    virtual boost::any visit (DerBitString&      );
+    virtual boost::any visit (DerNull&           );
+    virtual boost::any visit (DerOctetString&    );
+    virtual boost::any visit (DerOid&            );
+    virtual boost::any visit (DerSequence&       );
+    virtual boost::any visit (DerGtime&          );
   };
 
 }//der

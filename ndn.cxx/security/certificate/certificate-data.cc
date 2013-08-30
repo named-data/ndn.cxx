@@ -11,7 +11,6 @@
 
 #include "certificate-data.h"
 
-#include "ndn.cxx/security/encoding/der.h"
 
 #include "logging.h"
 
@@ -31,166 +30,69 @@ namespace security
      m_key(publickey)
   {}
 
-  CertificateData::CertificateData(const Blob & blob)
+  Ptr<CertificateData>
+  CertificateData::fromDER(const Blob & blob)
   {
-    DERendec decoder;
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (blob.buf(), blob.size());
 
-    Ptr<vector<Ptr<Blob> > > items = decoder.decodeSequenceDER(blob);
+    Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
 
-    decodeValidity(*items->at(0));
+    der::CertificateDataVisitor certDataVisitor;
+    Ptr<CertificateData> certData = Ptr<CertificateData>::Create();
+    node->accept(certDataVisitor, GetPointer(certData));
 
-    decodeSubject(*items->at(1));
-
-    m_key = Publickey(*items->at(2), false);
-
-    if(4 == items->size())
-      decodeExtn(*items->at(3));
+    return certData;
   }
 
-  CertificateData::CertificateData(const Data & data)
+  Ptr<CertificateData>
+  CertificateData::fromDER(Ptr<Blob> blob)
   {
-    //TODO
+    return fromDER(*blob);
   }
 
-  void 
-  CertificateData::addSubjectDescription(const CertificateSubDescrypt & descrypt)
+  Ptr<Blob>
+  CertificateData::toDERBlob ()
   {
-    m_subjectList.push_back(descrypt); 
+    blob_stream blobStream;
+
+    OutputIterator & start = reinterpret_cast<OutputIterator &> (blobStream);
+
+    toDER()->encode(start);
+
+    return blobStream.buf ();
   }
 
-  void 
-  CertificateData::addExtension(const CertificateExtension & extn)
+  Ptr<der::DerNode> 
+  CertificateData::toDER ()
   {
-    m_extnList.push_back(extn);
-  }
-
-  Ptr<Blob> 
-  CertificateData::toDER()
-  {
-    vector<Ptr<Blob> > certSeq;
-
-    certSeq.push_back(encodeValidity());
-    certSeq.push_back(encodeSubject());
-    certSeq.push_back(Ptr<Blob>(&m_key.getKeyBlob()));
-    if(0 != m_extnList.size())
-      certSeq.push_back(encodeExtn());
+    Ptr<der::DerSequence> root = Ptr<der::DerSequence>::Create();
     
-    DERendec encoder;
-    
-    return encoder.encodeSequenceDER(certSeq);
-  }
+    Ptr<der::DerSequence> validity = Ptr<der::DerSequence>::Create();
+    Ptr<der::DerGtime> notBefore = Ptr<der::DerGtime>(new der::DerGtime(m_notBefore));
+    Ptr<der::DerGtime> notAfter = Ptr<der::DerGtime>(new der::DerGtime(m_notAfter));
+    validity->addChild (notBefore);
+    validity->addChild (notAfter);
+    root->addChild (validity);
 
-  Ptr<Blob> 
-  CertificateData::encodeSubject()
-  {
-    vector<Ptr<Blob> > subjectSeq;
+    Ptr<der::DerSequence> subjectList = Ptr<der::DerSequence>::Create();
+    SubDescryptList::iterator it = m_subjectList.begin();
+    for(; it != m_subjectList.end(); it++)
+      subjectList->addChild (it->toDER());
+    root->addChild (subjectList);
 
-    vector<CertificateSubDescrypt>::iterator it = m_subjectList.begin();
-    for(; it < m_subjectList.end(); it++){
-      subjectSeq.push_back(it->toDER());
-    }
+    root->addChild (m_key.toDER());
 
-    DERendec encoder;
+    if(!m_extnList.empty())
+      {
+        Ptr<der::DerSequence> extnList = Ptr<der::DerSequence>::Create();
+        ExtensionList::iterator it = m_extnList.begin();
+        for(; it != m_extnList.end(); it++)
+          extnList->addChild (it->toDER());
+        root->addChild (extnList);
+      }
 
-    if(0 == m_subjectList.size())
-      return NULL;
-    else
-      return encoder.encodeSequenceDER(subjectSeq);
-  }
-
-  void 
-  CertificateData::decodeSubject(const Blob & blob)
-  {
-    DERendec endec;
-
-    int offset = 0;
-
-    Ptr<vector<Ptr<Blob> > > items = endec.decodeSequenceDER(blob);
-
-    vector<Ptr<Blob> >::iterator it = items->begin();
-    
-    for(; it < items->end(); it++){
-      m_subjectList.push_back(CertificateSubDescrypt(**it));
-    }
-  }
-
-  Ptr<Blob> 
-  CertificateData::encodeValidity()
-  {
-    vector<Ptr<Blob> > validSeq;
-    
-    DERendec encoder;
-
-    validSeq.push_back(encoder.encodeGTimeDER(m_notBefore));
-    validSeq.push_back(encoder.encodeGTimeDER(m_notAfter));
-
-    return encoder.encodeSequenceDER(validSeq);
-  }
-
-  void 
-  CertificateData::decodeValidity(const Blob & blob)
-  {
-    DERendec decoder;
-
-    Ptr<vector<Ptr<Blob> > > items = decoder.decodeSequenceDER(blob);
-    m_notBefore = decoder.decodeGTimeDER(*items->at(0));
-    m_notAfter  = decoder.decodeGTimeDER(*items->at(1));
-  }
-
-  Ptr<Blob> 
-  CertificateData::encodeExtn()
-  {
-    vector<Ptr<Blob> > extnSeq;
-
-    vector<CertificateExtension>::iterator it = m_extnList.begin();
-    for(; it < m_extnList.end(); it++){
-      extnSeq.push_back(it->toDER());
-    }
-
-    DERendec encoder;
-
-    if(0 == m_extnList.size())
-      return NULL;
-    else
-      return encoder.encodeSequenceDER(extnSeq);
-  }
-
-  void 
-  CertificateData::decodeExtn(const Blob & blob)
-  {
-    DERendec endec;
-
-    int offset = 0;
-
-    Ptr<vector<Ptr<Blob> > > items = endec.decodeSequenceDER(blob);
-
-    vector<Ptr<Blob> >::iterator it = items->begin();
-    
-    for(; it < items->end(); it++){
-      m_extnList.push_back(CertificateExtension(**it));
-    }
-  }
-
-  void 
-  CertificateData::printSubjectInfo()
-  {
-    cout << "Subject Info:" << endl;
-      
-    vector<CertificateSubDescrypt>::iterator it = m_subjectList.begin();
-    for(; it < m_subjectList.end(); it++){
-      cout << it->getOidStr() << "\t" << it->getValue() << endl;
-    }
-  }
-
-  void 
-  CertificateData::printCertificate()
-  {
-    DERendec decoder;
-
-    printSubjectInfo();
-    cout << "Validity:" << endl;
-    cout << getNotBefore() << "\t" << getNotAfter() << endl;
-    decoder.printDecoded(m_key.getKeyBlob(), "", 0);
+    return root;
   }
 
 }//security

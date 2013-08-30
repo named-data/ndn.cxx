@@ -17,6 +17,7 @@
 #include "ndn.cxx/fields/blob.h"
 
 #include "ndn.cxx/helpers/oid.h"
+#include "ndn.cxx/helpers/der/der.h"
 
 using namespace std;
 
@@ -32,9 +33,7 @@ namespace security
 
     CertificateSubDescrypt (OID oid, string value);
     
-    CertificateSubDescrypt (const Blob & blob);
-
-    Ptr<Blob> 
+    Ptr<der::DerNode> 
     toDER ();
 
     string
