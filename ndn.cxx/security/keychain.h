@@ -111,6 +111,9 @@ namespace security
     virtual void 
     installCertificate(Ptr<Certificate> certificatePtr);
 
+    virtual void
+    setDefaultCertificateForKey(const Name & certName);
+
 
     /**
      * @brief Get certificate for publishing

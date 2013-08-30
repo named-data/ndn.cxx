@@ -87,6 +87,12 @@ namespace security
     verifyData(certificatePtr, boost::bind(&IdentityManager::addCertificate, &*m_identityManager, certificatePtr), VerifyFailCallback());
   }
 
+  void
+  Keychain::setDefaultCertificateForKey(const Name & certName)
+  {
+    m_identityManager->setDefaultCertForKey (certName);
+  }
+
   Ptr<Certificate> 
   Keychain::getCertificate(const Name & certName)
   {
