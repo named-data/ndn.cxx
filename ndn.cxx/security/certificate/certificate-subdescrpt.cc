@@ -10,7 +10,11 @@
 
 #include "certificate-subdescrpt.h"
 
+#include "logging.h"
+
 using namespace std;
+
+INIT_LOGGER("ndn.security.CertificateSubDescrypt");
 
 namespace ndn
 {
@@ -32,9 +36,11 @@ namespace security
   CertificateSubDescrypt::toDER()
   {
     Ptr<der::DerSequence> root = Ptr<der::DerSequence>::Create();
-    
+
     Ptr<der::DerOid> oid = Ptr<der::DerOid>(new der::DerOid(m_oid));
     Ptr<der::DerPrintableString> value = Ptr<der::DerPrintableString>(new der::DerPrintableString(m_value));
+
+
 
     root->addChild(oid);
     root->addChild(value);

@@ -106,14 +106,16 @@ namespace security
     _LOG_DEBUG("Create a key record in public storage");
     Ptr<Publickey> pubKey = m_privateStorage->getPublickey(keyName.toUri());
     m_publicStorage->addKey(keyName, keyType, pubKey->getKeyBlob());
-    
+    _LOG_DEBUG("OK");
     return keyName;
   }
 
   Name 
   IdentityManager::generateRSAKeyPair (const Name & identity, bool ksk, int keySize)
   {
-    return generateKeyPair(identity, ksk, KEY_TYPE_RSA, keySize);
+    Name keyName = generateKeyPair(identity, ksk, KEY_TYPE_RSA, keySize);
+    _LOG_DEBUG("OK2");
+    return keyName;
   }
 
   Name

@@ -13,6 +13,7 @@
 
 #include "publickey.h"
 #include "ndn.cxx/security/exception.h"
+#include "ndn.cxx/helpers/der/visitor/publickey-visitor.h"
 
 #include "logging.h"
 
@@ -54,7 +55,12 @@ namespace security
   Ptr<Publickey>
   Publickey::fromDER(const Blob& blob)
   {
-    
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (blob.buf (), blob.size ());
+
+    Ptr<der::DerNode> root = der::DerNode::parse(reinterpret_cast<InputIterator &> (is));
+    der::PublickeyVisitor pubkeyVisitor;
+    return boost::any_cast<Ptr<Publickey> >(root->accept(pubkeyVisitor));
   }
 
   Ptr<const Blob> 

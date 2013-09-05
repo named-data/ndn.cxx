@@ -25,8 +25,9 @@ namespace der
 
     SimpleVisitor simpleVisitor;
     Ptr<DerSequence> algoSeq = DynamicCast<DerSequence>(children[0]); 
-    OID algorithm = boost::any_cast<OID>(algoSeq->getChildren()[0]->accept (simpleVisitor));    
-    return boost::any(Ptr<security::Publickey>(new security::Publickey(algorithm, *derSeq.getRaw())));    
+    OID algorithm = boost::any_cast<OID>(algoSeq->getChildren()[0]->accept (simpleVisitor));  
+    Ptr<Blob> raw = derSeq.getRaw();   
+    return boost::any(Ptr<security::Publickey>(new security::Publickey(algorithm, *raw)));    
   }
 
 }//der

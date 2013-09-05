@@ -56,7 +56,7 @@ namespace der
         char buf[sizeof(val) + 1];
         char *p = &(buf[sizeof(buf)-1]);
         int n = 0;
-        int mask = 1 << 8 - 1;
+        int mask = (1 << 8) - 1;
 
         while(val != 0)
           {
@@ -66,7 +66,7 @@ namespace der
             val >>= 8;
           }
 
-        p[0] = (char)(1<<7 | n);
+        p[0] = (char)((1<<7) | n);
         n++;
 
         m_header.insert(m_header.end(), p, p+n);
@@ -83,10 +83,12 @@ namespace der
   DerNode::decodeHeader(InputIterator & start)
   {
     uint8_t type = start.ReadU8();
+    // char type = start.get();
     m_header.push_back(type);
     m_type = static_cast<DerType>((int)type);
 
-    uint8_t sizeLen = start.ReadU8();    
+    uint8_t sizeLen = start.ReadU8(); 
+    // char sizeLen = start.get();
     m_header.push_back(sizeLen);
 
     bool longFormat = sizeLen & (1 << 7);
@@ -101,6 +103,7 @@ namespace der
       {
         // _LOG_DEBUG("Long Format");
         uint8_t byte;
+        // char byte;
         int lenCount = sizeLen & ((1<<7) - 1);
         // _LOG_DEBUG("sizeLen: " << (int)sizeLen);
         // _LOG_DEBUG("mask: " << (int)((1<<7) - 1));
@@ -108,6 +111,7 @@ namespace der
         int size = 0;
         do
           {
+            // byte = start.get();
             byte = start.ReadU8();
             m_header.push_back(byte);
             size = size * 256 + (int)byte;
@@ -195,7 +199,7 @@ namespace der
   {
     m_size = DerNode::decodeHeader(start);
     // _LOG_DEBUG("Size: " << m_size);
-    
+
     int accSize = 0;
     
     while(accSize < m_size)
@@ -219,6 +223,8 @@ namespace der
 	m_childChanged = false;
       }
 
+    m_header.clear();
+    DerNode::encodeHeader(m_size);
     return m_size + m_header.size();
   }
 
@@ -227,6 +233,7 @@ namespace der
   {
     Ptr<Blob> blob = Ptr<Blob>::Create();
     blob->insert(blob->end(), m_header.begin(), m_header.end());
+
     DerNodePtrList::iterator it = m_nodeList.begin();
     for(; it != m_nodeList.end(); it++)
       {
@@ -286,8 +293,26 @@ namespace der
   DerComplex::encode (OutputIterator & start)
   {
     updateSize();
+    m_header.clear();
 
     DerNode::encodeHeader(m_size);
+
+    {
+      string indent = "";
+      int offset = 0;
+      int count = 0;
+      for(int i = offset; i < m_header.size(); i++)
+        {
+          cout << " " << hex << setw(2) << setfill('0') << (int)(uint8_t)m_header[i];
+          count++;
+          if(8 == count)
+            {
+              count = 0;
+              cout << "\n" << indent;
+            }
+        }
+      cout << endl;
+    }
 
     start.write(m_header.buf(), m_header.size());
 
@@ -493,6 +518,7 @@ namespace der
       else
 	throw DerEncodingException("second integer of oid is out of range");
     }
+    
 
     encode128(firstNumber, os);
 
@@ -502,8 +528,10 @@ namespace der
 	encode128(value[i], os);
     }
 
-    DerNode::encodeHeader(os.str().size());
-    m_payload.insert(m_payload.end(), os.str().begin(), os.str().end());
+    string output = os.str();
+    DerNode::encodeHeader(output.size());
+
+    m_payload.insert(m_payload.end(), output.begin(), output.end());
   }
     
   void

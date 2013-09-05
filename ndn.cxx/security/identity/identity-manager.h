@@ -53,7 +53,6 @@ namespace security
     virtual Ptr<Publickey>
     getPublickey(const Name & keyName);
 
-
     virtual void
     addCertificate (Ptr<Certificate> certificate);
 
