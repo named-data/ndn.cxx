@@ -126,13 +126,51 @@ def build (bld):
         target = "ndn-keygen",
         features = "cxx cxxprogram",
         defines = "WAF",
-        source = bld.path.ant_glob(['security-tool/ndn-keygen.cc']),
-        use = ' LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
+        source = ['security-tools/ndn-keygen.cc'],
+        use = 'LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
         includes = ".",
         install_prefix = None,
         )
 
+    ndn_sign_req = bld.program (
+        target = "ndn-sign-req",
+        features = "cxx cxxprogram",
+        defines = "WAF",
+        source = ['security-tools/ndn-sign-req.cc'],
+        use = 'LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
+        includes = ".",
+        install_prefix = None,
+        )
+    
+    ndn_cert_gen = bld.program (
+        target = "ndn-certgen",
+        features = "cxx cxxprogram",
+        defines = "WAF",
+        source = ['security-tools/ndn-certgen.cc'],
+        use = 'LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS BOOST_REGEX',
+        includes = ".",
+        install_prefix = None,
+        )
 
+    ndn_install_cert = bld.program (
+        target = "ndn-install-cert",
+        features = "cxx cxxprogram",
+        defines = "WAF",
+        source = ['security-tools/ndn-install-cert.cc'],
+        use = 'LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
+        includes = ".",
+        install_prefix = None,
+        )
+
+    ndn_set_default = bld.program (
+        target = "ndn-set-default",
+        features = "cxx cxxprogram",
+        defines = "WAF",
+        source = ['security-tools/ndn-set-default.cc'],
+        use = 'LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
+        includes = ".",
+        install_prefix = None,
+        )
 
     headers = bld.path.ant_glob(['ndn.cxx.h', 'ndn.cxx/**/*.h'])
     bld.install_files("%s" % bld.env['INCLUDEDIR'], headers, relative_trick=True)
