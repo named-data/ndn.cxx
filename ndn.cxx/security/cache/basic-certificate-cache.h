@@ -8,6 +8,9 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
+#ifndef NDN_BASIC_CERTIFICATE_CACHE_H
+#define NDN_BASIC_CERTIFICATE_CACHE_H
+
 #include "certificate-cache.h"
 
 #include <map>
@@ -38,3 +41,5 @@ namespace security
 }//security
 
 }//ndn
+
+#endif
