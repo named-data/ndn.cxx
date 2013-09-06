@@ -32,13 +32,18 @@ NameVisitor::visit (Dtag &n, boost::any param/*should be Name* */)
   switch (n.m_dtag)
     {
     case NDN_DTAG_Component:
-      if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
-        throw CcnbDecodingException ();
-      components.append (
-                      boost::any_cast<std::string> ((*n.m_nestedTags.begin())->accept(
-                                                                                      stringVisitor
-                                                                                      )));
-      break;
+      {
+        if (n.m_nestedTags.size()!=1) // should be exactly one UDATA inside this tag
+          throw CcnbDecodingException ();
+        
+        std::string component = boost::any_cast<std::string> ((*n.m_nestedTags.begin())->accept(
+                                                                                                stringVisitor
+                                                                                                ));
+        ndn::name::Component componentBlob (component.c_str(), component.size());
+        components.appendBySwap (componentBlob);
+        
+        break;
+      }
     default:
       VoidDepthFirstVisitor::visit (n, param);
       break;
