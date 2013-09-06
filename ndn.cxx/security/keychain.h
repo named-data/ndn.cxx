@@ -22,13 +22,12 @@
 #include "ndn.cxx/fields/signature.h"
 #include "ndn.cxx/regex/regex.h"
 
-#include "cert-cache.h"
-
 #include "identity/identity-manager.h"
 #include "policy/policy-manager.h"
 #include "encryption/encryption-manager.h"
 #include "policy/policy-rule.h"
-#include "certificate/certificate.h"
+#include "cache/certificate-cache.h"
+// #include "certificate/certificate.h"
 
 #include "ndn.cxx/wrapper/closure.h"
 
@@ -202,6 +201,7 @@ namespace security
 
     virtual void 
     stepVerify(Ptr<Data> dataPtr, 
+               const bool isFirst,
                const int stepCount, 
                const RecursiveVerifiedCallback & recursiveVerifiedCallback, 
                const VerifyFailCallback & failureCallback);
@@ -225,7 +225,8 @@ namespace security
     Ptr<IdentityManager> m_identityManager;
     Ptr<PolicyManager> m_policyManager;
     Ptr<EncryptionManager> m_encryptionManager;
-    map<Name, Certificate> m_certCache;
+    Ptr<CertificateCache> m_certificateCache;
+    // map<Name, Certificate> m_certCache;
     const int m_maxStep;
     Wrapper* m_handler;
   };

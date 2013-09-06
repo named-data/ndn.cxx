@@ -20,6 +20,7 @@
 #include "policy/policy-rule.h"
 #include "policy/basic-policy-manager.h"
 #include "encryption/basic-encryption-manager.h"
+#include "cache/basic-certificate-cache.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
@@ -43,6 +44,7 @@ namespace security
     m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
     m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
     m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, encryptionPath));
+    m_certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
   }
 
   Name
@@ -189,7 +191,8 @@ namespace security
     _LOG_TRACE("Enter Verify");
 
     if(m_policyManager->requireVerify(*dataPtr))
-      stepVerify(dataPtr, 
+      stepVerify(dataPtr,
+                 true,
                  m_maxStep, 
                  verifiedCallback,
                  failureCallback);  
@@ -254,29 +257,23 @@ namespace security
                            const RecursiveVerifiedCallback &preRecurVerifyCallback, 
                            const VerifyFailCallback &failureCallback)
   {
-    Ptr<Certificate> cert = Ptr<Certificate>(new Certificate(*signCert));
-    m_certCache.insert(pair<const Name, const Certificate>(cert->getName(), *cert));
+    Ptr<Certificate> certificate = Ptr<Certificate>(new Certificate(*signCert));
 
-    if(verifySignature(*dataPtr, cert->getPublicKeyInfo()))
+    if(!certificate->isTooLate() && !certificate->isTooEarly())
+      m_certificateCache->insertCertificate(certificate);
+
+    if(verifySignature(*dataPtr, certificate->getPublicKeyInfo()))
       preRecurVerifyCallback(dataPtr);
     else
       failureCallback();
   }
 
-  // void
-  // Keychain::onOriginalCertVerified(Ptr<Data>data, 
-  //                                  const VerifiedCallback &verifiedCallback, 
-  //                                  const VerifyFailCallback &failureCallback)
-  // {
-  //   m_certCache.insert(pair<const Name, const Certificate>(cert->getName(), *cert));
-  //   if(verifySignature(*data, cert->getPublicKeyInfo()))
-  //     verifiedCallback();
-  //   else
-  //     failureCallback();
-  // }
-
   void 
-  Keychain::stepVerify(Ptr<Data> dataPtr, const int stepCount, const RecursiveVerifiedCallback & preRecurVerifyCallback, const VerifyFailCallback & failureCallback)
+  Keychain::stepVerify(Ptr<Data> dataPtr, 
+                       const bool isFirst, 
+                       const int stepCount, 
+                       const RecursiveVerifiedCallback & preRecurVerifyCallback, 
+                       const VerifyFailCallback & failureCallback)
   {
     _LOG_TRACE("Enter StepVerify");
 
@@ -290,12 +287,24 @@ namespace security
       _LOG_DEBUG("data does not comply with the policy");
       return failureCallback();
     }
+
+    if(!isFirst)
+      {
+        Certificate targetCertificate(*dataPtr);
+        if(targetCertificate.isTooLate() || targetCertificate.isTooEarly())
+          return failureCallback();
+      }
     
 
     _LOG_DEBUG("Check if keyLocator is trust anchor");
     Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (dataPtr->getSignature());
     
     Ptr<const Certificate> trustedCert = m_policyManager->getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
+    
+    if(NULL == trustedCert)
+      {
+        trustedCert = m_certificateCache->getCertificate(sha256sig->getKeyLocator().getKeyName());
+      }
 
     if(NULL != trustedCert){
       Ptr<CertificateData> certData = CertificateData::fromDER(trustedCert->content());
@@ -316,7 +325,7 @@ namespace security
       Ptr<Closure> closurePtr = Ptr<Closure> (new Closure(Closure::DataCallback(),
                                                           boost::bind(&Keychain::onCertInterestTimeout, this, _1, _2, 3, failureCallback),
                                                           Closure::VerifyFailCallback(), 
-                                                          boost::bind(&Keychain::stepVerify, this, _1, stepCount-1,  recursiveVerifiedCallback, failureCallback)
+                                                          boost::bind(&Keychain::stepVerify, this, _1, false, stepCount-1,  recursiveVerifiedCallback, failureCallback)
                                                           )
                                               );
 

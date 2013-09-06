@@ -11,6 +11,10 @@
 #ifndef NDN_CERTIFICATE_CACHE_H
 #define NDN_CERTIFICATE_CACHE_H
 
+#include "ndn.cxx/common.h"
+
+#include "ndn.cxx/security/certificate/certificate.h"
+
 namespace ndn
 {
 
@@ -20,10 +24,14 @@ namespace security
   class CertificateCache
   {
   public:
-    CertificateCache();
+    virtual
+    ~CertificateCache() {}
     
-    virtual bool CheckCertificate(const Name & certName) = 0;
-  private:
+    virtual void
+    insertCertificate(Ptr<Certificate> certificate) = 0;
+
+    virtual Ptr<Certificate> 
+    getCertificate(const Name & certificateName) = 0;
   };
 }
 

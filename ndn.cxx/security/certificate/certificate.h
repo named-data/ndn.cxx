@@ -61,6 +61,12 @@ namespace security
     const Publickey & 
     getPublicKeyInfo() const;
 
+    bool 
+    isTooEarly();
+
+    bool
+    isTooLate();
+
   private:
     Ptr<CertificateData> m_certData;
   };

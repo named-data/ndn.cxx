@@ -140,6 +140,8 @@ BOOST_AUTO_TEST_CASE(Real)
 
 
   wrapper->sendInterest(interestPtr, closure);
+  sleep(5);
+  wrapper->sendInterest(interestPtr, closure);
   while(true)
     {
       sleep(10);

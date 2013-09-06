@@ -104,6 +104,26 @@ namespace security
     return m_certData->getKey();
   }
 
+  bool
+  Certificate::isTooEarly()
+  {
+    Time now = time::Now();
+    if(now < getNotBefore())
+      return true;
+    else
+      return false;
+  }
+
+  bool 
+  Certificate::isTooLate()
+  {
+    Time now = time::Now();
+    if(now > getNotAfter())
+      return true;
+    else
+      return false;
+  }
+
 }//security
 
 }//ndn

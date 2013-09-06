@@ -39,27 +39,10 @@ namespace security
     boost::iostreams::stream
       <boost::iostreams::array_source> is (blob.buf(), blob.size());
 
-    {
-      string indent = "";
-      int offset = 0;
-      int count = 0;
-      for(int i = offset; i < blob.size(); i++)
-        {
-          cout << " " << hex << setw(2) << setfill('0') << (int)(uint8_t)blob[i];
-          count++;
-          if(8 == count)
-            {
-              count = 0;
-              cout << "\n" << indent;
-            }
-        }
-      cout << endl;
-    }
-
     Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
 
-    der::PrintVisitor printVisitor;
-    node->accept(printVisitor, string(""));
+    // der::PrintVisitor printVisitor;
+    // node->accept(printVisitor, string(""));
 
     der::CertificateDataVisitor certDataVisitor;
     Ptr<CertificateData> certData = Ptr<CertificateData>::Create();

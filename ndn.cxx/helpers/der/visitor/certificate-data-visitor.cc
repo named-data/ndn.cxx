@@ -35,7 +35,7 @@ namespace der
   void 
   CertificateDataVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    _LOG_DEBUG("CertificateDataVisitor::visit");
+    // _LOG_DEBUG("CertificateDataVisitor::visit");
 
     const DerNodePtrList & children = derSeq.getChildren();
     CertValidityVisitor validityVisitor;
@@ -59,7 +59,7 @@ namespace der
   void 
   CertValidityVisitor::visit (DerSequence& derSeq, boost::any param)
   {
-    _LOG_DEBUG("CertValidityVisitor::visit");
+    // _LOG_DEBUG("CertValidityVisitor::visit");
     
     security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
 
@@ -103,7 +103,7 @@ namespace der
   void 
   CertSubjectVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    _LOG_DEBUG("CertSubjectVisitor::visit");
+    // _LOG_DEBUG("CertSubjectVisitor::visit");
 
     const DerNodePtrList & children = derSeq.getChildren();
     
