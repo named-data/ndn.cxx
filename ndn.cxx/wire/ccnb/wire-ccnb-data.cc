@@ -128,7 +128,7 @@ namespace ccnb {
     if(data.getSignedBlob() == NULL)
       SerializeUnsigned (data, start);
     else
-      start.Write(reinterpret_cast<const unsigned char*>(data.getSignedBlob()->buf()), data.getSignedBlob()->size());
+      start.Write(reinterpret_cast<const unsigned char*>(data.getSignedBlob()->signed_buf()), data.getSignedBlob()->signed_size());
     
     Ccnb::AppendCloser(start);// </Data>
   }
