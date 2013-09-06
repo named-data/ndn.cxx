@@ -29,6 +29,9 @@
 #include "ndn.cxx/security/encryption/aes-cipher.h"
 #include "ndn.cxx/security/encryption/basic-encryption-manager.h"
 
+#include "ndn.cxx/helpers/der/der.h"
+#include "ndn.cxx/helpers/der/visitor/print-visitor.h"
+
 #include "ndn.cxx/security/tmp/dump-certificate.h"
 
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
@@ -175,6 +178,19 @@ BOOST_AUTO_TEST_CASE (IdentityStorage)
 {
   try{
     security::BasicIdentityStorage idStore;
+
+    Ptr<Data> dataPtr = idStore.getCertificate (Name("/ndn/ucla.edu/qiuhan/KSK-1378422677/ID-CERT/1378423300"), true);
+    
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (dataPtr->content().buf(), dataPtr->content().size());
+    
+    Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
+
+    der::PrintVisitor printVisitor;
+    node->accept(printVisitor, string(""));
+  
+    
+    
 
 
     // cout << boolalpha << idStore.doesIdentityExist(Name("/ndn/ucla.edu/yingdi")) << endl;

@@ -94,6 +94,7 @@ int main(int argc, char** argv)
   string certFileName;
   bool setAsKeyDefault = false;
   bool setAsIdDefault = false;
+  bool any = false;
 
   po::options_description desc("General options");
   desc.add_options()
@@ -101,6 +102,7 @@ int main(int argc, char** argv)
     ("cert_file,f", po::value<string>(&certFileName), "file name of the ceritificate")
     ("key_default,K", "set the certificate as the default certificate of the key")
     ("id_default,I", "set the certificate as the default certificate of the identity")
+    ("any,A", "add any certificate, NOT recommended!")
     ;
   
   po::variables_map vm;
@@ -129,11 +131,16 @@ int main(int argc, char** argv)
     {
       setAsIdDefault = true;
     }
+
+  if (vm.count("any"))
+    {
+      any = true;
+    }
   
   Ptr<Blob> certBlob = getCertBlob (certFileName);
   
   Ptr<ndn::Data> certData= Data::decodeFromWire (certBlob);
-  Ptr<security::Certificate> cert = (new security::Certificate(*certData));
+  security::Certificate cert(*certData);
 
   cout << "get cert" << endl;
   
@@ -144,17 +151,23 @@ int main(int argc, char** argv)
 
   if(setAsIdDefault)
     {
-      identityManager.addCertificateAsIdentityDefault(*cert);
+      identityManager.addCertificateAsIdentityDefault(cert);
       return 0;
     }
   else if(setAsKeyDefault)
     {
-      identityManager.addCertificateAsDefault(*cert);
+      identityManager.addCertificateAsDefault(cert);
+      return 0;
+    }
+  else if(any)
+    {
+      cerr << "here!" << endl;
+      publicStorage->addAnyCertificate(cert);
       return 0;
     }
   else
-    {
-      identityManager.addCertificate(cert);
+    { 
+      publicStorage->addCertificate(cert);
       return 0;
     }
 }

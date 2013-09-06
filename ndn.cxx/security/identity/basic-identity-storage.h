@@ -67,6 +67,9 @@ namespace security
     virtual bool 
     doesCertificateExist (const Name & certName);
 
+    virtual void
+    addAnyCertificate (const Certificate & certificate);
+
     virtual void 
     addCertificate (const Certificate & certificate);
 
