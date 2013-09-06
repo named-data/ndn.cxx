@@ -56,7 +56,7 @@ getCertBlob(const string& fileName)
               istreambuf_iterator<char>());
   
   string firstLine = "-----BEGIN NDN ID CERT-----\n";
-  string lastLine = "-----END NDN ID CERT-----\n";
+  string lastLine = "-----END NDN ID CERT-----";
 
   int fPos = str.find(firstLine) + firstLine.size();
   int lPos = str.rfind(lastLine);
