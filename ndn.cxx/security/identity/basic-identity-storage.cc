@@ -382,19 +382,62 @@ namespace security
     return certExist;
   }
 
-  void 
-  BasicIdentityStorage::addCertificate (const Certificate & certificate)
+  void
+  BasicIdentityStorage::addAnyCertificate (const Certificate & certificate)
   {
     const Name & certName = certificate.getName();
     Name keyName = getKeyNameForCert(certName);
 
+    string keyId = keyName.get(-1).toUri();
+    Name identity = keyName.getSubName(0, keyName.size() - 1);
+
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2 (m_db, 
+                        "INSERT INTO Certificate (cert_name, cert_issuer, identity_name, key_identifier, not_before, not_after, certificate_data)\
+                         values (?, ?, ?, ?, datetime(?, 'unixepoch'), datetime(?, 'unixepoch'), ?)",
+                        -1, &stmt, 0);
+
+    _LOG_DEBUG("certName: " << certName.toUri().c_str());
+    sqlite3_bind_text(stmt, 1, certName.toUri().c_str(), certName.toUri().size(),  SQLITE_TRANSIENT);
+
+    Ptr<const signature::Sha256WithRsa> signature = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(certificate.getSignature());
+    const Name & signerName = signature->getKeyLocator().getKeyName();
+    sqlite3_bind_text(stmt, 2, signerName.toUri().c_str(),  signerName.toUri().size (),  SQLITE_TRANSIENT);
+
+    sqlite3_bind_text(stmt, 3, identity.toUri().c_str(),  identity.toUri().size (), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, keyId.c_str(),  keyId.size (), SQLITE_TRANSIENT);
+
+    sqlite3_bind_int64(stmt, 5, (sqlite3_int64)(certificate.getNotBefore() - time::UNIX_EPOCH_TIME).total_seconds());
+    sqlite3_bind_int64(stmt, 6, (sqlite3_int64)(certificate.getNotAfter() - time::UNIX_EPOCH_TIME).total_seconds());
+
+    Ptr<Blob> certBlob = certificate.encodeToWire();
+
+    sqlite3_bind_blob(stmt, 7, certBlob->buf(), certBlob->size(), SQLITE_TRANSIENT);
+
+    int res = sqlite3_step (stmt);
+
+    sqlite3_finalize (stmt);
+  }
+
+  void 
+  BasicIdentityStorage::addCertificate (const Certificate & certificate)
+  {
+    _LOG_DEBUG("1");
+    const Name & certName = certificate.getName();
+    Name keyName = getKeyNameForCert(certName);
+
+    _LOG_DEBUG("2");
     if(!doesKeyExist(keyName))
-      throw SecException("No corresponding Key record for certificaite!");
-    
+      {
+        _LOG_DEBUG("here wrong");
+        throw SecException("No corresponding Key record for certificaite!");
+      }
+
     // Check if certificate has already existed!
     if(doesCertificateExist(certName))
       throw SecException("Certificate has already been installed!");
 
+    _LOG_DEBUG("3");
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
     
@@ -405,6 +448,7 @@ namespace security
     if(keyBlob == NULL or (*keyBlob) != (certificate.getPublicKeyInfo().getKeyBlob()))
       throw SecException("Certificate does not match public key!");
 
+    _LOG_DEBUG("4");
     // Insert the certificate
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, 
