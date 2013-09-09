@@ -13,44 +13,75 @@
 
 #include "certificate-cache.h"
 
+#include <boost/thread/locks.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
+
+#include <unistd.h>
+#include <map>
 
 namespace ndn
 {
 
 namespace security
 {
-
-  class 
-
   class TTLCertificateCache
   {
-  // public:
-  //   TTLCertificateCache();
+  protected:
+    typedef std::list<Name> TrackerList;
     
-  //   virtual
-  //   ~TTLCertificateCache();
+    class TTLCacheEntry
+    {
+    public:
+      TTLCacheEntry(const Time & timestamp, const Certificate & certificate, TrackerList::iterator it)
+        : m_timestamp(timestamp)
+        , m_certificate(certificate)
+        , m_it(it)
+      {}
 
-  //   void
-  //   start();
+      Time m_timestamp;
+      Certificate m_certificate;
+      TrackerList::iterator m_it;
+    };
     
-  //   void
-  //   end();
-    
-  //   virtual void
-  //   insertCertificate(Ptr<Certificate> certificate) = 0;
+    typedef boost::recursive_mutex RecLock;
+    typedef boost::unique_lock<RecLock> UniqueRecLock;
+    typedef std::map<Name, TTLCacheEntry> Cache;
 
-  //   virtual Ptr<Certificate> 
-  //   getCertificate(const Name & certificateName) = 0;
+  public:
+    TTLCertificateCache(int maxSize = 1000, int interval = 60);
     
+    virtual
+    ~TTLCertificateCache();
+
+    void
+    start();
     
-  // private:
-  //   void
-  //   cleanLoop();
+    void
+    shutdown();
     
-  // private:
-  //   std::map<Name, Certificate> m_cache;
-  //   boost::thread m_thread;
+    virtual void
+    insertCertificate(Ptr<Certificate> certificate);
+
+    virtual Ptr<Certificate> 
+    getCertificate(const Name & certificateName);
+
+    void
+    printContent();
+    
+  private:
+    void
+    cleanLoop();
+    
+  protected:
+
+    int m_maxSize;
+    Cache m_cache;
+    TrackerList m_lruList;
+    RecLock m_mutex;
+    boost::thread m_thread;
+    bool m_running;
+    int m_interval;
   };
 }
 
