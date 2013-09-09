@@ -68,7 +68,7 @@ namespace ndn
             string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
             ifstream file (publicKeyName.c_str(), ios::in|ios::binary|ios::ate);
             if (file.is_open())
-  					{
+            {
                 ifstream::pos_type size = file.tellg();
                 char * memblock = new char [size];
                 file.seekg (0, ios::beg);
@@ -83,8 +83,7 @@ namespace ndn
                 OID oid(str);
                 delete [] memblock;
                 return new Publickey (oid, b);
-    				}
-            
+            }
             return 0;
         }
         
@@ -109,14 +108,13 @@ namespace ndn
             RSA::PrivateKey privateKey;
             privateKey.Load(bytes);
             //Sign message
-  				  if (digestAlgo == DIGEST_SHA256)
-   				  {
-   				  	RSASS<PSS, SHA256>::Signer signer(privateKey);
-    		    	size_t length = signer.MaxSignatureLength();
-    					SecByteBlock signature(length);
-				    	signer.SignMessage(rng, (const byte*) strContents.c_str(),
+            if (digestAlgo == DIGEST_SHA256)
+            {
+                RSASS<PSS, SHA256>::Signer signer(privateKey);
+                size_t length = signer.MaxSignatureLength();
+                SecByteBlock signature(length);
+                signer.SignMessage(rng, (const byte*) strContents.c_str(),
                        strContents.length(), signature);
-                       
             	Ptr<Blob> ret = Ptr<Blob>(new Blob(signature, signature.size()));
             	return ret;
             }
@@ -142,7 +140,6 @@ namespace ndn
                 bytes.MessageEnd();
                 RSA::PrivateKey privateKey;
                 privateKey.Load(bytes);
-                
                 string recovered;
                 
                 RSAES_OAEP_SHA_Decryptor d( privateKey );
@@ -155,8 +152,8 @@ namespace ndn
                 
                 Ptr<Blob> ret = Ptr<Blob>(new Blob(recovered.c_str (), recovered.size()));
                 return ret;
- 						}
- 						return 0;
+            }
+            return 0;
         }
         
         Ptr<Blob>
@@ -166,7 +163,7 @@ namespace ndn
             {
                 AutoSeededRandomPool rng;
                 CryptoPP::ByteQueue bytes;
-		            string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
+                string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
                 FileSource file(publicKeyName.c_str(), true, new Base64Decoder);
                 file.TransferTo(bytes);
                 bytes.MessageEnd();
@@ -211,21 +208,21 @@ namespace ndn
     	
         std::string SimpleKeyStore::nameTransform(const string &keyName)
         {
-			    std::string digest;
-   				CryptoPP::SHA256 hash;  
-    			CryptoPP::StringSource foo(keyName, true,
-                               new CryptoPP::HashFilter(hash,
-                                                        new CryptoPP::Base64Encoder (new CryptoPP::StringSink(digest))));
-			    char * cstr = new char [digest.length()+1];
-    			std::strcpy (cstr, digest.c_str());
-  			  for (int i = 0; i < digest.length(); i++)
-   				{
+            std::string digest;
+            CryptoPP::SHA256 hash;
+            CryptoPP::StringSource foo(keyName, true,
+            new CryptoPP::HashFilter(hash,
+            new CryptoPP::Base64Encoder (new CryptoPP::StringSink(digest))));
+            char * cstr = new char [digest.length()+1];
+            std::strcpy (cstr, digest.c_str());
+            for (int i = 0; i < digest.length(); i++)
+            {
        			if (cstr[i] == '/')
         		{
            		 cstr[i] = '%';
         		}
-    			}
-					return string(cstr);
+            }
+            return string(cstr);
         }
         
     } //ndn
