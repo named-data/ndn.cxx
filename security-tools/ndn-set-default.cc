@@ -87,8 +87,8 @@ int main(int argc, char** argv)
   if (vm.count("default_cert"))
     {
       Name certName(name);
-      Name keyName = publicStorage->getKeyNameForCert(certName);
-      publicStorage->setDefaultCertName (keyName, certName);
+      Name keyName = publicStorage->getKeyNameForCertificate(certName);
+      publicStorage->setDefaultCertificateNameForKey (keyName, certName);
       return 0;
     }
 }

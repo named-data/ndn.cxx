@@ -25,7 +25,9 @@ namespace ndn
 
 namespace security
 {
-
+  /**
+   * @brief IdentityManager class, it is the interface of operation related to identity, keys, and certificate
+   */
   class IdentityManager
   {
   public:
