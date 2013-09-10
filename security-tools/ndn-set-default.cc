@@ -17,7 +17,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <cryptopp/base64.h>
 
-#include "ndn.cxx/security/identity/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/helpers/der/der.h"
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
   if (vm.count("id_default"))
     {
       Name keyName(name);
-      publicStorage->setDefaultKeyName(keyName);
+      publicStorage->setDefaultKeyNameForIdentity(keyName);
       return 0;
     }
   

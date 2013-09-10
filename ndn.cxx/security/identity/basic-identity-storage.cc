@@ -617,10 +617,13 @@ namespace security
   }
 
   void 
-  BasicIdentityStorage::setDefaultKeyName (const Name & keyName)
+  BasicIdentityStorage::setDefaultKeyNameForIdentity (const Name & keyName, const Name & identityName)
   {
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
+
+    if(identityName != Name() && identityName != identity)
+      throw SecException("Specified identity name does not match the key name");
 
     sqlite3_stmt *stmt;
 

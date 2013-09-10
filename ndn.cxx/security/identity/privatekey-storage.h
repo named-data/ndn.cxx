@@ -26,19 +26,19 @@ namespace ndn
 namespace security
 {
   
-  class PrivatekeyStore{
+  class PrivatekeyStorage{
 
   public:
     /**
      * @brief constructor of PrivateKeyStore
      */
-    PrivatekeyStore() {};
+    PrivatekeyStorage() {};
 
     /**
      * @brief destructor of PrivateKeyStore
      */    
     virtual 
-    ~PrivatekeyStore() {};
+    ~PrivatekeyStorage() {};
 
     /**
      * @brief generate a pair of asymmetric keys

@@ -56,9 +56,18 @@ namespace security
    * decryption), and etc.
    */
   class Keychain{
-  public:    
-    Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & encryptionPath);
+  public:
+    /**
+     * @brief Constructor
+     * @param privateStorage the storage for private keys and some secret keys
+     * @param policyPath the path to the policy file
+     * @param encryptionPath the path to the encryption database
+     */
+    Keychain(Ptr<PrivatekeyStorage> privateStorage, const string & policyPath, const string & encryptionPath);
 
+    /**
+     * @brief Destructor
+     */
     virtual
     ~Keychain(){};
 
@@ -67,27 +76,37 @@ namespace security
      *****************************************/
 
     /**
-     * @brief Create identity, by default it will create a pair of key for this identity
+     * @brief Create identity, by default it will create a pair of Key-Signing-Key (KSK) for this identity and a self-signed certificate of the KSK
      * @param identity the name of the identity
+     * @return the key name of the auto-generated KSK of the identity 
      */
     virtual Name 
     createIdentity(const Name & identity);
 
+    /**
+     * @brief get the default identity name
+     * @return the name of the default identity
+     */
     virtual Name
     getDefaultIdentity ();
 
     /**
-     * @brief Generate a pair of RSA keys
+     * @brief Generate a pair of RSA keys for the specified identity
      * @param identity the name of the identity
-     * @param keyName on return the identifier of the key 
+     * @param ksk create a KSK or not, true for KSK, false for DSK 
      * @param keySize the size of the key
-     * @returns pointer to the keyName, NULL if key generation fails
+     * @return the key name 
      */
     virtual Name
     generateRSAKeyPair (const Name & identity, bool ksk = false, int keySize = 2048);
 
+    /**
+     * @brief Set a key as the default key of an identity
+     * @param keyName the name of the key
+!!!  * @param identity the name of the identity, if not specified the identity name can be inferred from the keyName
+     */
     virtual void
-    setDefaultKeyForIdentity (const Name & keyName);
+    setDefaultKeyForIdentity (const Name & keyName, const Name & identity = Name());
 
     virtual Name
     generateRSAKeyPairAsDefault (const Name & identity, bool ksk = false, int keySize = 2048);

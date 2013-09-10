@@ -92,7 +92,7 @@ namespace security
     setDefaultIdentity (const Name & identity);
 
     virtual void 
-    setDefaultKeyName (const Name & keyName);
+    setDefaultKeyNameForIdentity (const Name & keyName, const Name & identity = Name());
 
     virtual void 
     setDefaultCertName (const Name & keyName, const Name & certName);

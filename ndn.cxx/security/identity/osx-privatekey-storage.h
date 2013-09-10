@@ -13,7 +13,7 @@
 
 #include "ndn.cxx/common.h"
 
-#include "privatekey-store.h"
+#include "privatekey-storage.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
@@ -24,21 +24,21 @@ namespace ndn
 
 namespace security
 {
-  class OSXPrivatekeyStore : public PrivatekeyStore
+  class OSXPrivatekeyStorage : public PrivatekeyStorage
   {
   public:
 
     /**
-     * @brief constructor of OSXPrivatekeyStore
+     * @brief constructor of OSXPrivatekeyStorage
      * @param keychainName the name of keychain
      */
-    OSXPrivatekeyStore(const string & keychainName = "");
+    OSXPrivatekeyStorage(const string & keychainName = "");
 
     /**
      * @brief destructor of OSXPrivateKeyStore
      */    
     virtual 
-    ~OSXPrivatekeyStore();
+    ~OSXPrivatekeyStorage();
 
     /**
      * @brief generate a pair of asymmetric keys

@@ -38,7 +38,7 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & encryptionPath)
+  Keychain::Keychain(Ptr<PrivatekeyStorage> privateStorage, const string & policyPath, const string & encryptionPath)
     :m_maxStep(100)
   {
     m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
@@ -66,9 +66,9 @@ namespace security
   }
 
   void
-  Keychain::setDefaultKeyForIdentity (const Name & keyName)
+  Keychain::setDefaultKeyForIdentity (const Name & keyName, const Name & identity)
   {
-    return m_identityManager->setDefaultKeyForIdentity(keyName);
+    return m_identityManager->setDefaultKeyForIdentity(keyName, identity);
   }
 
   Name

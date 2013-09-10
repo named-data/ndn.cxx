@@ -18,7 +18,7 @@
 #include "ndn.cxx/security/security-common.h"
 
 #include "ndn.cxx/security/identity/identity-storage.h"
-#include "ndn.cxx/security/identity/privatekey-store.h"
+#include "ndn.cxx/security/identity/privatekey-storage.h"
 
 namespace ndn
 {
@@ -29,7 +29,7 @@ namespace security
   class IdentityManager
   {
   public:
-    IdentityManager(Ptr<IdentityStorage> publicStorage, Ptr<PrivatekeyStore> privateStorage);
+    IdentityManager(Ptr<IdentityStorage> publicStorage, Ptr<PrivatekeyStorage> privateStorage);
 
     virtual 
     ~IdentityManager() {};
@@ -45,7 +45,7 @@ namespace security
     generateRSAKeyPair (const Name & identity, bool ksk = false, int keySize = 2048);
 
     virtual void
-    setDefaultKeyForIdentity (const Name & keyName);
+    setDefaultKeyForIdentity (const Name & keyName, const Name & identity = Name());
 
     virtual Name
     generateRSAKeyPairAsDefault (const Name & identity, bool ksk = false, int keySize = 2048);
@@ -105,7 +105,7 @@ namespace security
     
   private:
     Ptr<IdentityStorage> m_publicStorage;
-    Ptr<PrivatekeyStore> m_privateStorage;
+    Ptr<PrivatekeyStorage> m_privateStorage;
   };
 
 }//security

@@ -16,7 +16,7 @@
 #include <boost/program_options/parsers.hpp>
 #include <cryptopp/base64.h>
 
-#include "ndn.cxx/security/identity/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/security/exception.h"
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     }
 
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
-  Ptr<security::OSXPrivatekeyStore> privateStorage = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
 

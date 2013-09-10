@@ -32,7 +32,7 @@ namespace ndn
 
 namespace security
 {
-  IdentityManager::IdentityManager (Ptr<IdentityStorage> publicStorage, Ptr<PrivatekeyStore> privateStorage)
+  IdentityManager::IdentityManager (Ptr<IdentityStorage> publicStorage, Ptr<PrivatekeyStorage> privateStorage)
     :m_publicStorage(publicStorage),
      m_privateStorage(privateStorage)
   {}
@@ -123,15 +123,15 @@ namespace security
   {
     Name keyName = generateKeyPair(identity, ksk, KEY_TYPE_RSA, keySize);
 
-    m_publicStorage->setDefaultKeyName(keyName);
+    m_publicStorage->setDefaultKeyNameForIdentity(keyName, identity);
     
     return keyName;
   }
 
   void
-  IdentityManager::setDefaultKeyForIdentity (const Name & keyName)
+  IdentityManager::setDefaultKeyForIdentity (const Name & keyName, const Name & identity)
   {
-    m_publicStorage->setDefaultKeyName(keyName);
+    m_publicStorage->setDefaultKeyNameForIdentity(keyName, identity);
   }
 
   Ptr<Publickey>
