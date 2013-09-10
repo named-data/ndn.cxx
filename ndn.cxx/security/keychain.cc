@@ -92,7 +92,7 @@ namespace security
   void
   Keychain::setDefaultCertificateForKey(const Name & certName)
   {
-    m_identityManager->setDefaultCertForKey (certName);
+    m_identityManager->setDefaultCertificateForKey (certName);
   }
 
   Ptr<Certificate> 
@@ -155,11 +155,11 @@ namespace security
     Name signingCertName;
     
     if(Name() == signerName)
-      signingCertName = m_identityManager->getDefaultCertNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));
+      signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));
     else
       {
         if(byID)
-          signingCertName = m_identityManager->getDefaultCertNameByIdentity(signerName);
+          signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(signerName);
         else
           signingCertName = signerName;
       }
@@ -170,7 +170,7 @@ namespace security
     if(!m_policyManager->checkSigningPolicy (data.getName (), signingCertName))
       throw SecException("Signing Cert name does not comply with signing policy");
 
-    m_identityManager->signByCert(data, signingCertName);
+    m_identityManager->signByCertificate(data, signingCertName);
 
   }
 
@@ -180,7 +180,7 @@ namespace security
     if(byID)
       return m_identityManager->signByIdentity(blob, signerName);
     else
-      return m_identityManager->signByCert(blob, signerName);
+      return m_identityManager->signByCertificate(blob, signerName);
   }
 
   void 

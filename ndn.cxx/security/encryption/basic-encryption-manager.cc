@@ -11,6 +11,7 @@
 #include "basic-encryption-manager.h"
 
 #include "ndn.cxx/security/encryption/aes-cipher.h"
+#include "ndn.cxx/security/exception.h"
 
 #include <boost/filesystem.hpp>
 #include <sstream>

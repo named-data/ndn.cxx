@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerSetDefault)
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
   
-  identityManager.loadDefaultIdentity();
+  // identityManager.loadDefaultIdentity();
 }
 
 BOOST_AUTO_TEST_CASE(PrivateStore)
