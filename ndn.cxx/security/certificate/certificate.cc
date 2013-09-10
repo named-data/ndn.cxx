@@ -54,20 +54,6 @@ namespace security
     //TODO:
   }
 
-  Name 
-  Certificate::getCertName()
-  {
-    //TODO:
-    return Name();
-  }
-
-  int 
-  Certificate::getSeqNumber()
-  {
-    //TODO:
-    return -1;
-  }
-
   Time & 
   Certificate::getNotBefore()
   {

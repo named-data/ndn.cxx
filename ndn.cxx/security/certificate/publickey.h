@@ -26,23 +26,45 @@ namespace security
   class Publickey
   {
   public:
-
+    
+    /**
+     * @brief Constructor
+     */
     Publickey () {}
 
+    /**
+     * @brief Constructor
+     * @param algorithm algorithm of public key
+     * @param keyBlob the blob of PublicKeyInfo in terms of DER
+     */
     Publickey (const OID & algorithm, const Blob & keyBlob);
 
     /*
      * @brief copy Constructor of Publickey
-     * @param publickey 
+     * @param publickey
      */    
     Publickey (const Publickey & publickey);
 
+    /**
+     * @brief encode the public key into DER
+     * @return the encoded DER syntax tree
+     */
     Ptr<der::DerNode>
     toDER();
 
+    /**
+     * @brief decode the public key from DER blob
+     * @param blob the DER blob
+     * @return the decoded public key
+     */
     static Ptr<Publickey>
     fromDER(Ptr<Blob> blob);
 
+    /**
+     * @brief decode the public key from DER blob
+     * @param blob the DER blob
+     * @return the decoded public key
+     */
     static Ptr<Publickey>
     fromDER(const Blob& blob);
 
@@ -54,14 +76,17 @@ namespace security
     getDigest (DigestAlgorithm digestAlgo = DIGEST_SHA256) const;
 
     /*
-     * @brief get the raw bytes
+     * @brief get the raw bytes of the public key in DER format
      */
     Blob & 
     getKeyBlob ()
     {
       return m_key; 
     }
-    
+
+    /*
+     * @brief get the raw bytes of the public key in DER format
+     */ 
     const Blob & 
     getKeyBlob () const
     {

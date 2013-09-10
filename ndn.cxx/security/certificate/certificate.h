@@ -22,7 +22,12 @@ namespace ndn
 
 namespace security
 {
-
+  /**
+   * @brief Certificate class, certificate in terms of data
+   *
+   * Certificate is expressed as a signed data packet. This class
+   * is a helper wrapper to decode the certificate data packet.
+   */
   class Certificate : public Data
   {
   public:
@@ -31,17 +36,21 @@ namespace security
     };
 
   public:
+    /**
+     * @brief constructor
+     */
     Certificate() {}
 
+    /**
+     * @brief constructor
+     * @param the data packet to be decoded
+     */
     Certificate(const Data & data);
     
+    /**
+     * @brief destructor
+     */
     virtual ~Certificate();
-
-    Name 
-    getCertName();
-
-    int 
-    getSeqNumber();
 
     Time & 
     getNotBefore();
@@ -61,9 +70,17 @@ namespace security
     const Publickey & 
     getPublicKeyInfo() const;
 
+    /**
+     * @brief check if the certificate is valid
+     * @return true if current time is early than notBefore
+     */
     bool 
     isTooEarly();
 
+    /**
+     * @brief check if the certificate is valid
+     * @return true if current time is late than notAfter
+     */
     bool
     isTooLate();
 
