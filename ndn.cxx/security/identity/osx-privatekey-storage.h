@@ -8,8 +8,8 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_OSX_PRIVATEKEY_STORE_H
-#define NDN_OSX_PRIVATEKEY_STORE_H
+#ifndef NDN_OSX_PRIVATEKEY_STORAGE_H
+#define NDN_OSX_PRIVATEKEY_STORAGE_H
 
 #include "ndn.cxx/common.h"
 
@@ -47,7 +47,7 @@ namespace security
      * @param keySize the size of the key pair
      * @returns true if keys have been successfully generated
      */
-    virtual bool 
+    virtual void 
     generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 
     /**

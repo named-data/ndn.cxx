@@ -14,6 +14,8 @@
 
 #include "ndn.cxx/wire/ccnb.h"
 
+#include "ndn.cxx/security/exception.h"
+
 #include <fstream>
 #include <sstream>
 
@@ -61,11 +63,12 @@ namespace security
     //TODO: implement
   }
 
-  bool OSXPrivatekeyStorage::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
+  void 
+  OSXPrivatekeyStorage::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
   { 
     if(doesKeyExist(keyName, KEY_CLASS_PUBLIC)){
       _LOG_DEBUG("keyName has existed");
-      return false;
+      throw SecException("keyName has existed");
     }
 
     SecKeyRef publicKey, privateKey;
@@ -90,12 +93,12 @@ namespace security
 
     if (res != errSecSuccess){
       _LOG_DEBUG ("Fail to create a key pair: " << res);
-      return false;
+      throw SecException("Fail to create a key pair");
     }
-    return true;
   }
 
-  void OSXPrivatekeyStorage::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
+  void 
+  OSXPrivatekeyStorage::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
   {
     string keyName = prependSymKeyName(externalKeyName);
 
