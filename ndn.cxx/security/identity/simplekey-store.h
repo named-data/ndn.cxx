@@ -85,11 +85,11 @@ namespace ndn
             std::string 
             nameTransform(const string &keyName);
             
-            std::string
+            Ptr<Blob>
             readSymetricKey(const string &filename);
             
             void
-            writeSymetricKey(const string &filename, const string &key_content);
+            writeSymetricKey(const string &filename, const Blob & pData);
         private:
         	  std::string currentDir;
         };
