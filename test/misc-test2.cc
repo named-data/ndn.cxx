@@ -7,11 +7,12 @@
 #include <cryptopp/rsa.h>
 #include <cryptopp/files.h>
 #include <cryptopp/base64.h>
+#include <cryptopp/hex.h>
 #include <cryptopp/osrng.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/pssr.h>
-
+#include <cryptopp/modes.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -70,6 +71,40 @@ BOOST_AUTO_TEST_CASE (Read)
 //	readCert("_xingyu_pub.txt");
 	
 }
+BOOST_AUTO_TEST_CASE (ReadKey)
+{
+    ifstream file ("_sym.txt", ios::in|ios::binary|ios::ate);
+    if (file.is_open())
+    {
+        ifstream::pos_type size = file.tellg();
+        char * memblock = new char [size];
+        file.seekg (0, ios::beg);
+        file.read (memblock, size);
+        file.close();
+        cout<<string(memblock,size)<<endl;
+        string decoded;
+  			CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(memblock), size, true,
+			    new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
+        cout<<decoded<<endl;
+        
+       cout <<reinterpret_cast<const unsigned char *>(decoded.c_str())<<endl;
+//        cout<<bytes<<endl;
+        delete []memblock;
+       
+//        cout << "key: " << encoded << endl;
+    }
+}
+
+BOOST_AUTO_TEST_CASE (WriteKey)
+{
+	  ofstream file ("_sym.txt", ios::out|ios::binary|ios::ate);
+    if (file.is_open())
+    {
+    	string dd = "dsfasfsaf";
+    	file.write(dd.c_str(), dd.size());
+    	file.close();
+  	}
+}
 
 BOOST_AUTO_TEST_CASE (Sign)
 {
@@ -82,7 +117,8 @@ BOOST_AUTO_TEST_CASE (Sign)
 	
    //Read public key
   CryptoPP::ByteQueue bytes;
-    string publicKeyName = sp.nameTransform("/ndn/xingyu") + "_pub.txt";
+  string publicKeyName = sp.nameTransform("/ndn/xingyu") + "_pub.txt";
+  cout<<publicKeyName<<endl;
   FileSource file(publicKeyName.c_str(), true, new Base64Decoder);
   file.TransferTo(bytes);
   bytes.MessageEnd();
@@ -178,6 +214,138 @@ BOOST_AUTO_TEST_CASE (Encrypt)
 		  cout<<string(rec->buf(),rec->size())<<endl;
 }
 
+
+BOOST_AUTO_TEST_CASE (AES)
+{
+    using CryptoPP::AES;
+    AutoSeededRandomPool rnd;
+    
+    // Generate a random key
+//    cout<< AES::DEFAULT_KEYLENGTH <<endl;
+    SecByteBlock key(0x00, 256);
+    rnd.GenerateBlock( key, key.size() );
+    
+    Ptr<Blob> ret = Ptr<Blob>(new Blob(key, key.size()));
+    cout<<endl;
+    cout<<string(string(ret->buf(),ret->size()))<<endl;
+    // Generate a random IV
+    byte iv[AES::BLOCKSIZE];
+    rnd.GenerateBlock(iv, AES::BLOCKSIZE);
+    
+	  string plain = "ADF Mode Test";
+	  string cipher, encoded, recovered;
+    
+    encoded.clear();
+	  StringSource(key, key.size(), true,
+                 new HexEncoder(
+                                new StringSink(encoded)
+                                ) // HexEncoder
+                 ); // StringSource
+	  cout << "key: " << encoded << endl;
+ //   unsigned char *key2 = new unsigned char [encoded.length()+1];
+ //   std::strcpy (key2, encoded.c_str());
+//    unsigned char key2[encoded.size()] = reinterpret_cast<const unsigned char *>(encoded.c_str());
+    
+    
+    
+    string decoded;
+    CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(encoded.c_str()), encoded.size(), true,
+		new CryptoPP::HexDecoder(new CryptoPP::StringSink(decoded)));
+        cout<<"here  "<<decoded<<endl;
+/*    //////////////////////////////////////////////////////////////////////////
+    // Encrypt
+    
+    CFB_Mode<AES>::Encryption cfbEncryption(key, key.size(), iv);
+    cfbEncryption.ProcessData((byte*)plainText, (byte*)plainText, messageLen);
+    
+    //////////////////////////////////////////////////////////////////////////
+    // Decrypt
+    
+    CFB_Mode<AES>::Decryption cfbDecryption(key, key.size(), iv);
+    cfbDecryption.ProcessData((byte*)plainText, (byte*)plainText, messageLen);
+ */
+    
+/*    string cipher;
+    StringSink* sink = new StringSink(cipher);
+    Base64Encoder* base64_enc = new Base64Encoder(sink);
+    CBC_Mode<AES>::Encryption aes(key, sizeof(key), iv);
+    StreamTransformationFilter* aes_enc = new StreamTransformationFilter(aes, base64_enc);
+    StringSource source(plainText, true, aes_enc);
+ */
+    try
+	{
+		cout << "plain text: " << plain << endl;
+        
+		CFB_Mode< AES >::Encryption e;
+		e.SetKeyWithIV(reinterpret_cast<const unsigned char *>(decoded.c_str()), sizeof(decoded.c_str()), iv);
+        
+		// CFB mode must not use padding. Specifying
+		//  a scheme will result in an exception
+		StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)
+                                                    ) // StreamTransformationFilter
+                     ); // StringSource
+	}
+	catch(const CryptoPP::Exception& e)
+	{
+		cerr << e.what() << endl;
+		exit(1);
+	}
+    
+ 	// Pretty print
+	encoded.clear();
+	StringSource(cipher, true,
+                 new Base64Encoder(
+                                new StringSink(encoded)
+                                ) // HexEncoder
+                 ); // StringSource
+    cout << "cipher text: " << encoded << endl;
+  
+//    cout<<"  dfa: "<<key<<endl;
+	/*********************************\
+     \*********************************/
+    
+	try
+	{
+		CFB_Mode< AES >::Decryption d;
+		d.SetKeyWithIV(key, sizeof(key), iv);
+        
+		// The StreamTransformationFilter removes
+		//  padding as required.
+		StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                       new StringSink(recovered)
+                       ) // StreamTransformationFilter
+     ); // StringSource
+        
+		cout << "recovered text: " << recovered << endl;
+	}
+	catch(const CryptoPP::Exception& e)
+	{
+		cerr << e.what() << endl;
+		exit(1);
+	}
+    
+//    cout<<cipher<<endl;
+}
+
+BOOST_AUTO_TEST_CASE (SYM_GEN)
+{
+	SimpleKeyStore sp;
+	sp.generateKey("/ndn/xingyu");
+}
+
+BOOST_AUTO_TEST_CASE (SYM_EN)
+{
+			SimpleKeyStore sp,sp2;
+			string str1("SYM Encryption");
+ 			Blob blob1(str1.c_str(), str1.size());
+			Ptr<Blob> enc = sp.encrypt("/ndn/xingyu", blob1,false);
+			Blob cipher(enc->buf(),enc->size());
+		  Ptr<Blob> rec = sp2.decrypt("/ndn/xingyu",cipher,false);
+		  cout<<"recover:  "<<string(rec->buf(),rec->size())<<endl;
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()

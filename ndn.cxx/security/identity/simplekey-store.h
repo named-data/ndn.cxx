@@ -29,7 +29,7 @@ namespace ndn
         public:
             
             
-            SimpleKeyStore() {};
+            SimpleKeyStore(const string & dir = "./") {currentDir = dir;};
             
             /**
              * @brief destructor of PrivateKeyStore
@@ -85,7 +85,14 @@ namespace ndn
             
             std::string 
             nameTransform(const string &keyName);
+            
+            std::string
+            readSymetricKey(const string &filename);
+            
+            void
+            writeSymetricKey(const string &filename, const string &key_content);
         private:
+        	  std::string currentDir;
         };
         
     }//security

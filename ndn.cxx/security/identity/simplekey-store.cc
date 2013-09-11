@@ -14,10 +14,13 @@
 #include <cryptopp/rsa.h>
 #include <cryptopp/files.h>
 #include <cryptopp/base64.h>
+#include <cryptopp/hex.h>
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/pssr.h>
+#include <cryptopp/modes.h>
 
+#include <boost/filesystem.hpp>
 
 #include "simplekey-store.h"
 using namespace CryptoPP;
@@ -40,9 +43,19 @@ namespace ndn
          * @brief destructor of PrivateKeyStore
          */
         
-		bool
+				bool
         SimpleKeyStore::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
         {
+        	  if (SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
+        	  { 
+        	  	throw SecException("public key exist");
+        	  	return false;
+        	  }
+        	  if ( SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
+        	  { 
+        	  	throw SecException("private key  exist");
+        	  	return false;
+        	  }
             if (keyType == KEY_TYPE_RSA) {
                 AutoSeededRandomPool rng;
                 InvertibleRSAFunction privkey;
@@ -57,6 +70,11 @@ namespace ndn
                 Base64Encoder pubkeysink(new FileSink( publicKeyName.c_str()));
                 pubkey.DEREncode(pubkeysink);
                 pubkeysink.MessageEnd();
+                
+                /*set file permission*/
+                using namespace boost::filesystem;
+							  permissions(privateKeyName.c_str(), owner_read);
+							  permissions(publicKeyName.c_str(), others_read|owner_read);
                 return true;
             }
             return false;
@@ -65,6 +83,11 @@ namespace ndn
         Ptr<Publickey>
         SimpleKeyStore::getPublickey(const string & keyName)
         {
+        	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
+        	  { 
+        	  	throw SecException("public key doesn't exist");
+        	  	return 0;
+        	  }
             string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
             ifstream file (publicKeyName.c_str(), ios::in|ios::binary|ios::ate);
             if (file.is_open())
@@ -79,10 +102,11 @@ namespace ndn
                 CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(encoded.c_str()), encoded.size(), true,
                                            new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
 			  				Blob b(decoded.c_str(), decoded.size());
-                string str("1.2.840.113549.1.1.1");
-                OID oid(str);
-                delete [] memblock;
-                return new Publickey (oid, b);
+			  				return Publickey::fromDER(b);
+//                string str("1.2.840.113549.1.1.1");
+//                OID oid(str);
+//                delete [] memblock;
+//                return new Publickey (oid, b);
             }
             return 0;
         }
@@ -97,6 +121,11 @@ namespace ndn
         Ptr<Blob>
         SimpleKeyStore::sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo)
         {
+        	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
+        	  { 
+        	  	throw SecException("private key doesn't exist");
+        	  	return 0;
+        	  }
             AutoSeededRandomPool rng;
             string strContents = string(pData.buf(),pData.size());
             //Read private key
@@ -132,6 +161,11 @@ namespace ndn
         {
             if (!sym)
             {
+            	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
+        	  		{ 
+        	  			throw SecException("private key doesn't exist");
+        	  			return 0;
+        	  		}
                 AutoSeededRandomPool rng;
                 CryptoPP::ByteQueue bytes;
                 string privateKeyName = SimpleKeyStore::nameTransform(keyName) + "_priv.txt";
@@ -153,14 +187,55 @@ namespace ndn
                 Ptr<Blob> ret = Ptr<Blob>(new Blob(recovered.c_str (), recovered.size()));
                 return ret;
             }
+            else
+            {
+            	  string symKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+    						string cipher, decoded, recovered;
+    						string key = SimpleKeyStore::readSymetricKey(symKeyName);
+  						  CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(key.c_str()), key.size(), true,
+									new CryptoPP::HexDecoder(new CryptoPP::StringSink(decoded)));
+            	  
+            	  using CryptoPP::AES;
+    						AutoSeededRandomPool rnd;   
+            	 
+            	  byte iv[AES::BLOCKSIZE];
+    						rnd.GenerateBlock(iv, AES::BLOCKSIZE);
+            	  try
+								{
+										CFB_Mode< AES >::Decryption d;
+//										d.SetKeyWithIV(key, sizeof(key), iv);
+  									d.SetKeyWithIV(reinterpret_cast<const unsigned char *>(decoded.c_str()), 
+										sizeof(decoded.c_str()), iv);
+										StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                       new StringSink(recovered)
+                       ) // StreamTransformationFilter
+  								   ); // StringSource
+                    Ptr<Blob> ret = Ptr<Blob>(new Blob(recovered.c_str (), recovered.size()));
+                	  return ret;
+
+            		}
+            		catch(const CryptoPP::Exception& e)
+								{
+										cerr << e.what() << endl;
+										exit(1);
+								}
+							}
             return 0;
         }
         
         Ptr<Blob>
         SimpleKeyStore::encrypt(const string & keyName, const Blob & pData, bool sym)
         {
+        	  string plain = string(pData.buf(),pData.size());
+
             if (!sym)
             {
+            	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
+        	  		{ 
+        	  			throw SecException("public key doesn't exist");
+        	  			return 0;
+        	  		}
                 AutoSeededRandomPool rng;
                 CryptoPP::ByteQueue bytes;
                 string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
@@ -171,7 +246,6 @@ namespace ndn
                 publicKey.Load(bytes);
                 
                 string cipher;
-                string plain = string(pData.buf(),pData.size());
                 RSAES_OAEP_SHA_Encryptor e( publicKey );
                 
                 StringSource( plain, true,
@@ -182,6 +256,40 @@ namespace ndn
                 Ptr<Blob> ret = Ptr<Blob>(new Blob(cipher.c_str (), cipher.size()));
                 return ret;
             }
+            else
+            {
+            	  string symKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+    						string cipher, decoded;
+    						string key = SimpleKeyStore::readSymetricKey(symKeyName);
+  						  CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(key.c_str()), key.size(), true,
+									new CryptoPP::HexDecoder(new CryptoPP::StringSink(decoded)));
+            	  
+            	  using CryptoPP::AES;
+    						AutoSeededRandomPool rnd;   
+            	 
+            	  byte iv[AES::BLOCKSIZE];
+    						rnd.GenerateBlock(iv, AES::BLOCKSIZE);
+            	  try
+								{
+										CFB_Mode< AES >::Encryption e;
+//										e.SetKeyWithIV(key, sizeof(key), iv);       
+										e.SetKeyWithIV(reinterpret_cast<const unsigned char *>(decoded.c_str()), 
+										sizeof(decoded.c_str()), iv);
+										StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)
+                                                    ) // StreamTransformationFilter
+                     ); // StringSource
+                    Ptr<Blob> ret = Ptr<Blob>(new Blob(cipher.c_str (), cipher.size()));
+                	  return ret;
+								}
+								catch(const CryptoPP::Exception& e)
+								{
+									cerr << e.what() << endl;
+									exit(1);
+								}   
+            }
+            
             return 0;
         }
         
@@ -197,35 +305,129 @@ namespace ndn
         void 
         SimpleKeyStore::generateKey(const string & keyName, KeyType keyType, int keySize)
         {
-            return;
+        	  if ( SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_SYMMETRIC))
+        	  { 
+//        	  	cout<<"here"<<endl;
+        	  	throw SecException("symmetric key exist");
+        	  	return ;
+        	  }
+
+         	 if (keyType == KEY_TYPE_AES)
+        	 {
+        	 	  AutoSeededRandomPool rnd;
+        	 		SecByteBlock key(0x00, keySize);
+   					  rnd.GenerateBlock( key, keySize );
+   					  string encoded;
+					    encoded.clear();
+							StringSource(key, key.size(), true,
+                 								new HexEncoder(
+                                new StringSink(encoded)
+                                ) // HexEncoder
+                 ); // StringSource
+              string symKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+//              cout<<symKeyName<<endl;
+//              cout<<encoded<<endl;
+							SimpleKeyStore::writeSymetricKey(symKeyName, encoded);
+						  using namespace boost::filesystem;
+							permissions(symKeyName.c_str(), others_read|owner_read);
+        	 }
+           return;
         }
         
         bool
         SimpleKeyStore::doesKeyExist(const string & keyName, KeyClass keyClass)
         {
-            return 0;
-    	}
+//        	return false;
+        	if (keyClass == KEY_CLASS_PUBLIC)
+        	{
+	        	 	string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
+  	      	  fstream fin(publicKeyName.c_str(),ios::in);
+  	        	if (fin)
+  	        		return true;
+  	        	else 
+  	        		return false;
+					}
+        	if (keyClass == KEY_CLASS_PRIVATE)
+        	{
+  	      	string privateKeyName = SimpleKeyStore::nameTransform(keyName) + "_priv.txt";
+  	      	fstream fin(privateKeyName.c_str(),ios::in);
+  	      	if (fin)
+  	      		return true;
+  	      	else
+  	      		return false;
+	        }
+	        if (keyClass == KEY_CLASS_SYMMETRIC)
+        	{
+  	      	string symmetricKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+  	      	fstream fin(symmetricKeyName.c_str(),ios::in);
+  	      	if (fin)
+  	      		return true;
+  	      	else
+  	      		return false;
+	        }    
+	        return false;
+    		}
     	
         std::string SimpleKeyStore::nameTransform(const string &keyName)
         {
-            std::string digest;
+/*            std::string digest;
             CryptoPP::SHA256 hash;
             CryptoPP::StringSource foo(keyName, true,
-            new CryptoPP::HashFilter(hash,
-            new CryptoPP::Base64Encoder (new CryptoPP::StringSink(digest))));
+            new CryptoPP::HashFilter(hash, new CryptoPP::Base64Encoder (new CryptoPP::StringSink(digest))));
             char * cstr = new char [digest.length()+1];
             std::strcpy (cstr, digest.c_str());
             for (int i = 0; i < digest.length(); i++)
             {
-       			if (cstr[i] == '/')
-        		{
-           		 cstr[i] = '%';
-        		}
+       				if (cstr[i] == '/')
+        			{
+           			 cstr[i] = '%';
+        			}
             }
-            return string(cstr);
+  */
+  					char *cstr = new char[keyName.length()+1];
+  					std::strcpy(cstr,keyName.c_str());
+  					for (int i = 0; i < keyName.length(); i++)
+  					{
+  						if (cstr[i] == '/')
+  						{
+  							cstr[i] = '~';
+  						}
+  					}
+  					string ret = currentDir;
+  					ret.append(string(cstr));
+//  					cout<<ret<<endl;
+            return ret;
         }
         
+        std::string
+        SimpleKeyStore::readSymetricKey(const string &filename)
+        {
+        	ifstream file (filename.c_str(), ios::in|ios::binary|ios::ate);
+				  if (file.is_open())
+  				{
+   					 ifstream::pos_type size = file.tellg();
+    				 char * memblock = new char [size];
+					   file.seekg (0, ios::beg);
+    				 file.read (memblock, size);
+    				 file.close();
+    				 return string(memblock,size);
+    				 delete []memblock;
+    			}
+    			else return "";
+        }
+        
+        void 
+        SimpleKeyStore::writeSymetricKey(const string &filename, const string &key_content)
+        {
+   					  ofstream file (filename.c_str());
+//   					  cout<<"file name:  "<<filename.c_str()<<endl;
+    					if (file.is_open())
+   						{
+    						file<<(key_content.c_str());
+    						file.close();
+  						}
+ 						  return;
+        }
     } //ndn
-    
     
 }
