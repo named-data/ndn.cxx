@@ -30,6 +30,11 @@ using namespace ndn::security;
 
 BOOST_AUTO_TEST_SUITE(MiscTests2)
 
+BOOST_AUTO_TEST_CASE (MKDIR)
+{
+    SimpleKeyStore sp(".//keystore//");
+    sp.generateKeyPair("/ndn/xingyu");
+}
 BOOST_AUTO_TEST_CASE (hash)
 {
     std::string digest;

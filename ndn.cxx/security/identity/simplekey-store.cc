@@ -20,6 +20,7 @@
 #include <cryptopp/pssr.h>
 #include <cryptopp/modes.h>
 
+
 #include <boost/filesystem.hpp>
 
 #include "simplekey-store.h"
@@ -31,6 +32,15 @@ namespace ndn
     
     namespace security
     {
+				SimpleKeyStore::SimpleKeyStore(const string & _dir ) 
+				{
+					  currentDir = _dir;
+					  boost::filesystem::path dir(_dir.c_str());
+						if(boost::filesystem::create_directory(dir)) {
+								std::cout << "Success" << "\n";
+						}
+				};
+
         /**
          * @brief generate a pair of asymmetric keys
          * @param keyName the name of the key pair
