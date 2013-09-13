@@ -18,7 +18,7 @@
 #include <boost/regex.hpp>
 #include <cryptopp/base64.h>
 
-#include "ndn.cxx/security/identity/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/helpers/der/der.h"
@@ -241,6 +241,7 @@ int main(int argc, char** argv)
   cout<<"here 8"<<endl;
 
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
+
   Ptr<security::OSXPrivatekeyStore> privateStorage = Ptr<security::OSXPrivatekeyStore>::Create();
   cout<<"here 9"<<endl;
 

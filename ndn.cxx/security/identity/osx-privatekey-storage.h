@@ -8,12 +8,12 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_OSX_PRIVATEKEY_STORE_H
-#define NDN_OSX_PRIVATEKEY_STORE_H
+#ifndef NDN_OSX_PRIVATEKEY_STORAGE_H
+#define NDN_OSX_PRIVATEKEY_STORAGE_H
 
 #include "ndn.cxx/common.h"
 
-#include "privatekey-store.h"
+#include "privatekey-storage.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
@@ -24,21 +24,21 @@ namespace ndn
 
 namespace security
 {
-  class OSXPrivatekeyStore : public PrivatekeyStore
+  class OSXPrivatekeyStorage : public PrivatekeyStorage
   {
   public:
 
     /**
-     * @brief constructor of OSXPrivatekeyStore
+     * @brief constructor of OSXPrivatekeyStorage
      * @param keychainName the name of keychain
      */
-    OSXPrivatekeyStore(const string & keychainName = "");
+    OSXPrivatekeyStorage(const string & keychainName = "");
 
     /**
      * @brief destructor of OSXPrivateKeyStore
      */    
     virtual 
-    ~OSXPrivatekeyStore();
+    ~OSXPrivatekeyStorage();
 
     /**
      * @brief generate a pair of asymmetric keys
@@ -47,7 +47,7 @@ namespace security
      * @param keySize the size of the key pair
      * @returns true if keys have been successfully generated
      */
-    virtual bool 
+    virtual void 
     generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 
     /**

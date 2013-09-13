@@ -35,7 +35,7 @@ namespace ndn
 
 namespace security
 {
-  BasicPolicyManager::BasicPolicyManager(const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore)
+  BasicPolicyManager::BasicPolicyManager(const string & policyPath, Ptr<PrivatekeyStorage> privatekeyStore)
     :m_policyPath(policyPath),
      m_policyChanged(false),
      m_policyLoaded(false),

@@ -26,13 +26,31 @@ namespace ndn
 
 namespace security
 {
+
+  /**
+   * @brief CertificateSubDescrypt class, SubjectDescryption entry in certificate 
+   */
   class CertificateSubDescrypt
   {
   public:
+    /**
+     * @brief constructor
+     * @param oid the oid of subject description entry
+     * @param value the value of subject description entry
+     */
     CertificateSubDescrypt (string oid, string value);
 
+    /**
+     * @brief constructor
+     * @param oid the oid of subject description entry
+     * @param value the value of subject description entry
+     */
     CertificateSubDescrypt (OID oid, string value);
     
+    /**
+     * @brief encode the object into DER syntax tree
+     * @return the encoded DER syntax tree
+     */
     Ptr<der::DerNode> 
     toDER ();
 

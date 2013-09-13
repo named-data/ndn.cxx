@@ -189,6 +189,9 @@ namespace security
   void 
   BasicIdentityStorage::addIdentity (const Name & identity)
   {
+    if(doesIdentityExist(identity))
+      throw SecException("Identity has already existed");
+
     sqlite3_stmt *stmt;
 
     sqlite3_prepare_v2 (m_db, "INSERT INTO Identity (identity_name) values (?)", -1, &stmt, 0);
@@ -258,7 +261,7 @@ namespace security
   }
 
   Name 
-  BasicIdentityStorage::getKeyNameForCert (const Name & certName)
+  BasicIdentityStorage::getKeyNameForCertificate (const Name & certName)
   {
     int i = certName.size() - 1;
 
@@ -386,7 +389,7 @@ namespace security
   BasicIdentityStorage::addAnyCertificate (const Certificate & certificate)
   {
     const Name & certName = certificate.getName();
-    Name keyName = getKeyNameForCert(certName);
+    Name keyName = getKeyNameForCertificate(certName);
 
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
@@ -424,7 +427,7 @@ namespace security
   {
     _LOG_DEBUG("1");
     const Name & certName = certificate.getName();
-    Name keyName = getKeyNameForCert(certName);
+    Name keyName = getKeyNameForCertificate(certName);
 
     _LOG_DEBUG("2");
     if(!doesKeyExist(keyName))
@@ -542,7 +545,7 @@ namespace security
   }
 
   Name 
-  BasicIdentityStorage::getDefaultKeyName (const Name & identity)
+  BasicIdentityStorage::getDefaultKeyNameForIdentity (const Name & identity)
   {
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, "SELECT key_identifier FROM Key WHERE identity_name=? AND default_key=1", -1, &stmt, 0);
@@ -562,15 +565,15 @@ namespace security
   }
     
   Name 
-  BasicIdentityStorage::getDefaultCertNameForIdentity (const Name & identity)
+  BasicIdentityStorage::getDefaultCertificateNameForIdentity (const Name & identity)
   {
-    Name keyName = getDefaultKeyName(identity);
+    Name keyName = getDefaultKeyNameForIdentity(identity);
 
-    return getDefaultCertNameForKey(keyName);
+    return getDefaultCertificateNameForKey(keyName);
   }
 
   Name 
-  BasicIdentityStorage::getDefaultCertNameForKey (const Name & keyName)
+  BasicIdentityStorage::getDefaultCertificateNameForKey (const Name & keyName)
   {
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
@@ -617,10 +620,13 @@ namespace security
   }
 
   void 
-  BasicIdentityStorage::setDefaultKeyName (const Name & keyName)
+  BasicIdentityStorage::setDefaultKeyNameForIdentity (const Name & keyName, const Name & identityName)
   {
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
+
+    if(identityName != Name() && identityName != identity)
+      throw SecException("Specified identity name does not match the key name");
 
     sqlite3_stmt *stmt;
 
@@ -646,7 +652,7 @@ namespace security
   }
 
   void 
-  BasicIdentityStorage::setDefaultCertName (const Name & keyName, const Name & certName)
+  BasicIdentityStorage::setDefaultCertificateNameForKey (const Name & keyName, const Name & certName)
   {
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);

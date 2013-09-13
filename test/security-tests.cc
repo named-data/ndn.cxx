@@ -25,7 +25,7 @@
 #include "ndn.cxx/security/policy/basic-policy-manager.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
-#include "ndn.cxx/security/identity/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/encryption/aes-cipher.h"
 #include "ndn.cxx/security/encryption/basic-encryption-manager.h"
 
@@ -80,7 +80,7 @@ Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
 BOOST_AUTO_TEST_CASE (Basic)
 {
   string keyName = "/ndn/ucla/yingdi";
-  security::OSXPrivatekeyStore keystore;
+  security::OSXPrivatekeyStorage keystore;
   //  keystore.GenerateKeyPair(keyName);
   
   string testData = "testDataTestData";
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE (Digest)
   // string keyName = "/ndn/ucla/yingdi";
   // security::DERendec endec;
 
-  // security::OSXPrivatekeyStore keystore;
+  // security::OSXPrivatekeyStorage keystore;
   // try{
   //   Data data;
   //   // //.../DNS/.../zsk-seq#(for key)/NDNCERT/certSeq#(for certificate)
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE (IdentityStorage)
 BOOST_AUTO_TEST_CASE (IdentityManager)
 {
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
-  Ptr<security::OSXPrivatekeyStore> privateStorage = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
 
@@ -313,16 +313,16 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
 BOOST_AUTO_TEST_CASE (IdentityManagerSetDefault)
 {
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
-  Ptr<security::OSXPrivatekeyStore> privateStorage = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
   
-  identityManager.loadDefaultIdentity();
+  // identityManager.loadDefaultIdentity();
 }
 
 BOOST_AUTO_TEST_CASE(PrivateStore)
 {
-  security::OSXPrivatekeyStore privateStorage;
+  security::OSXPrivatekeyStorage privateStorage;
   try{
   string keyName = "/ndn/ucla.edu/yingdi/app/0";
   // privateStorage.generateKey(keyName);
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(PrivateStore)
 
 BOOST_AUTO_TEST_CASE(PolicyManager)
 {
-  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::BasicIdentityStorage identityStorage;
 
   security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr);
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(DumpCert)
 
 BOOST_AUTO_TEST_CASE(PolicyManagerLoad)
 {
-  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   cerr << "GET privateStore" << endl;
   security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr);
   cerr << "GET policyManager" << endl;
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(AES_CIPHER)
 
 BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
 {
-  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::BasicEncryptionManager encryptionManager(privateStoragePtr, "/Users/yuyingdi/Test/encryption.db");
 
   cerr << "create encryptionManager" << endl;
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
 
 BOOST_AUTO_TEST_CASE(KeyChain)
 {
-  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::Keychain keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db");
   
   Data data;

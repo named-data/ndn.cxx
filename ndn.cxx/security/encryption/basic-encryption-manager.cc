@@ -11,6 +11,7 @@
 #include "basic-encryption-manager.h"
 
 #include "ndn.cxx/security/encryption/aes-cipher.h"
+#include "ndn.cxx/security/exception.h"
 
 #include <boost/filesystem.hpp>
 #include <sstream>
@@ -52,7 +53,7 @@ namespace security
   CREATE INDEX blockcipher_index ON BlockCipher(key_name);             \n \
   ";
 
-  BasicEncryptionManager::BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage, const string & encryptionPath)
+  BasicEncryptionManager::BasicEncryptionManager(Ptr<PrivatekeyStorage> privateStorage, const string & encryptionPath)
     :m_privateStorage(privateStorage)
   {
     

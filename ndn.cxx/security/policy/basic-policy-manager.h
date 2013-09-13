@@ -19,7 +19,7 @@
 #include "policy-manager.h"
 
 #include "ndn.cxx/regex/regex.h"
-#include "ndn.cxx/security/identity/privatekey-store.h"
+#include "ndn.cxx/security/identity/privatekey-storage.h"
 
 namespace ndn
 {
@@ -29,7 +29,7 @@ namespace security
   class BasicPolicyManager : public PolicyManager
   {
   public:
-    BasicPolicyManager (const string & policyPath, Ptr<PrivatekeyStore> privatekeyStore);
+    BasicPolicyManager (const string & policyPath, Ptr<PrivatekeyStorage> privatekeyStore);
 
     virtual
     ~BasicPolicyManager();
@@ -107,7 +107,7 @@ namespace security
     const string m_policyPath;
     bool m_policyChanged;
     bool m_policyLoaded;
-    Ptr<PrivatekeyStore> m_privatekeyStore;
+    Ptr<PrivatekeyStorage> m_privatekeyStore;
     vector< Ptr<PolicyRule> > m_mustFailVerify;
     vector< Ptr<PolicyRule> > m_verifyPolicies;
     vector< Ptr<Regex> > m_verifyExempt;

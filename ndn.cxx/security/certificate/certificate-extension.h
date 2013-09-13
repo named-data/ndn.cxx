@@ -25,13 +25,32 @@ namespace ndn
 
 namespace security
 {
+  /**
+   * @brief CertificateExtension class, Extension entry in certificate 
+   */
   class CertificateExtension
   {
   public:
-    CertificateExtension (const string & oid, const bool & critical, const Blob & extnValue);
+    /**
+     * @brief constructor
+     * @param oid the oid of subject description entry
+     * @param critical if true, the entension must be handled
+     * @param value the extension value
+     */
+    CertificateExtension (const string & oid, const bool & critical, const Blob & value);
 
-    CertificateExtension (const OID & oid, const bool & critical, const Blob & extnValue);
+    /**
+     * @brief constructor
+     * @param oid the oid of subject description entry
+     * @param critical if true, the entension must be handled
+     * @param value the extension value
+     */
+    CertificateExtension (const OID & oid, const bool & critical, const Blob & value);
 
+    /**
+     * @brief encode the object into DER syntax tree
+     * @return the encoded DER syntax tree
+     */
     Ptr<der::DerNode> 
     toDER();
       

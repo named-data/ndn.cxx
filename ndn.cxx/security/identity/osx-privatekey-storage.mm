@@ -10,9 +10,11 @@
 
 #include "logging.h"
 
-#include "osx-privatekey-store.h"
+#include "osx-privatekey-storage.h"
 
 #include "ndn.cxx/wire/ccnb.h"
+
+#include "ndn.cxx/security/exception.h"
 
 #include <fstream>
 #include <sstream>
@@ -21,7 +23,7 @@
 
 using namespace std;
 
-INIT_LOGGER ("ndn.security.OSXPrivatekeyStore");
+INIT_LOGGER ("ndn.security.OSXPrivatekeyStorage");
 
 namespace ndn
 {
@@ -29,7 +31,7 @@ namespace ndn
 namespace security
 {
 
-  OSXPrivatekeyStore::OSXPrivatekeyStore (const string & keychainName)
+  OSXPrivatekeyStorage::OSXPrivatekeyStorage (const string & keychainName)
     : m_keychainName("" == keychainName ?  "NDN.keychain" : keychainName)
   {
     OSStatus res = SecKeychainCreate (m_keychainName.c_str (), //Keychain path
@@ -57,15 +59,16 @@ namespace security
     }
   }
 
-  OSXPrivatekeyStore::~OSXPrivatekeyStore (){
+  OSXPrivatekeyStorage::~OSXPrivatekeyStorage (){
     //TODO: implement
   }
 
-  bool OSXPrivatekeyStore::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
+  void 
+  OSXPrivatekeyStorage::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
   { 
     if(doesKeyExist(keyName, KEY_CLASS_PUBLIC)){
       _LOG_DEBUG("keyName has existed");
-      return false;
+      throw SecException("keyName has existed");
     }
 
     SecKeyRef publicKey, privateKey;
@@ -90,12 +93,12 @@ namespace security
 
     if (res != errSecSuccess){
       _LOG_DEBUG ("Fail to create a key pair: " << res);
-      return false;
+      throw SecException("Fail to create a key pair");
     }
-    return true;
   }
 
-  void OSXPrivatekeyStore::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
+  void 
+  OSXPrivatekeyStorage::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
   {
     string keyName = prependSymKeyName(externalKeyName);
 
@@ -124,14 +127,14 @@ namespace security
         throw SecException("Fail to create a symmetric key");
   }
 
-  string OSXPrivatekeyStore::prependSymKeyName(const string & keyName)
+  string OSXPrivatekeyStorage::prependSymKeyName(const string & keyName)
   {
     return string("SYMMETRIC-")+keyName;
   }
 
-  Ptr<Publickey> OSXPrivatekeyStore::getPublickey(const string & keyName)
+  Ptr<Publickey> OSXPrivatekeyStorage::getPublickey(const string & keyName)
   {
-    _LOG_TRACE("OSXPrivatekeyStore::getPublickey");
+    _LOG_TRACE("OSXPrivatekeyStorage::getPublickey");
 
     SecKeychainItemRef publicKey = getKey(keyName, KEY_CLASS_PUBLIC);
 
@@ -148,9 +151,9 @@ namespace security
     return Publickey::fromDER(blob);
   }
 
-  Ptr<Blob> OSXPrivatekeyStore::sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo)
+  Ptr<Blob> OSXPrivatekeyStorage::sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo)
   {
-    _LOG_TRACE("OSXPrivatekeyStore::Sign");
+    _LOG_TRACE("OSXPrivatekeyStorage::Sign");
     
     CFDataRef dataRef = CFDataCreate (NULL,
                                       reinterpret_cast<const unsigned char*>(pData.buf()),
@@ -196,9 +199,9 @@ namespace security
     return sigPtr;
   }
 
-  Ptr<Blob> OSXPrivatekeyStore::decrypt(const string & externalKeyName, const Blob & pData, bool sym)
+  Ptr<Blob> OSXPrivatekeyStorage::decrypt(const string & externalKeyName, const Blob & pData, bool sym)
   {
-    _LOG_TRACE("OSXPrivatekeyStore::Decrypt");
+    _LOG_TRACE("OSXPrivatekeyStorage::Decrypt");
 
     string keyName;
     KeyClass keyClass;
@@ -248,7 +251,7 @@ namespace security
 
   }
 
-  bool OSXPrivatekeyStore::setACL(const string & keyName, KeyClass keyClass, int acl, const string & appPath)
+  bool OSXPrivatekeyStorage::setACL(const string & keyName, KeyClass keyClass, int acl, const string & appPath)
   {
     SecKeychainItemRef privateKey = getKey(keyName, keyClass);
     
@@ -297,9 +300,9 @@ namespace security
     return true;
   }
 
-  bool OSXPrivatekeyStore::verifyData (const string & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo)
+  bool OSXPrivatekeyStorage::verifyData (const string & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo)
   {
-    _LOG_TRACE("OSXPrivatekeyStore::Verify");
+    _LOG_TRACE("OSXPrivatekeyStorage::Verify");
     
     CFDataRef dataRef = CFDataCreate (NULL,
                                       reinterpret_cast<const unsigned char*>(pData.buf()),
@@ -343,9 +346,9 @@ namespace security
       return false;
   }
 
-  Ptr<Blob> OSXPrivatekeyStore::encrypt(const string & externalKeyName, const Blob & pData, bool sym)
+  Ptr<Blob> OSXPrivatekeyStorage::encrypt(const string & externalKeyName, const Blob & pData, bool sym)
   {
-    _LOG_TRACE("OSXPrivatekeyStore::Encrypt");
+    _LOG_TRACE("OSXPrivatekeyStorage::Encrypt");
 
     string keyName;
     KeyClass keyClass;
@@ -387,9 +390,9 @@ namespace security
     return outputPtr;
   }
 
-  bool OSXPrivatekeyStore::doesKeyExist(const string & keyName, KeyClass keyClass)
+  bool OSXPrivatekeyStorage::doesKeyExist(const string & keyName, KeyClass keyClass)
   {
-    _LOG_TRACE("OSXPrivatekeyStore::NameUsed");
+    _LOG_TRACE("OSXPrivatekeyStorage::NameUsed");
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
                                                       keyName.c_str (), 
@@ -414,7 +417,7 @@ namespace security
 
   }
 
-  SecKeychainItemRef OSXPrivatekeyStore::getKey(string keyName, KeyClass keyClass)
+  SecKeychainItemRef OSXPrivatekeyStorage::getKey(string keyName, KeyClass keyClass)
   {
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
                                                       keyName.c_str (), 
@@ -442,7 +445,7 @@ namespace security
       return keyItem;
   }
 
-  const CFTypeRef OSXPrivatekeyStore::getAsymKeyType(KeyType keyType)
+  const CFTypeRef OSXPrivatekeyStorage::getAsymKeyType(KeyType keyType)
   {
     switch(keyType){
     case KEY_TYPE_RSA:
@@ -453,7 +456,7 @@ namespace security
     }
   }
 
-  const CFTypeRef OSXPrivatekeyStore::getSymKeyType(KeyType keyType)
+  const CFTypeRef OSXPrivatekeyStorage::getSymKeyType(KeyType keyType)
   {
     switch(keyType){
     case KEY_TYPE_AES:
@@ -464,7 +467,7 @@ namespace security
     }
   }
 
-  const CFTypeRef OSXPrivatekeyStore::getKeyClass(KeyClass keyClass)
+  const CFTypeRef OSXPrivatekeyStorage::getKeyClass(KeyClass keyClass)
   {
     switch(keyClass){
     case KEY_CLASS_PRIVATE:
@@ -479,7 +482,7 @@ namespace security
     }
   }
 
-  SecExternalFormat OSXPrivatekeyStore::getFormat(KeyFormat format)
+  SecExternalFormat OSXPrivatekeyStorage::getFormat(KeyFormat format)
   {
     switch(format){
     case KEY_PUBLIC_OPENSSL:
@@ -490,7 +493,7 @@ namespace security
     }
   }
 
-  const CFStringRef OSXPrivatekeyStore::getDigestAlgorithm(DigestAlgorithm digestAlgo)
+  const CFStringRef OSXPrivatekeyStorage::getDigestAlgorithm(DigestAlgorithm digestAlgo)
   {
     switch(digestAlgo){
     // case DIGEST_MD2:
@@ -507,7 +510,7 @@ namespace security
     }
   }
 
-  long OSXPrivatekeyStore::getDigestSize(DigestAlgorithm digestAlgo)
+  long OSXPrivatekeyStorage::getDigestSize(DigestAlgorithm digestAlgo)
   {
     switch(digestAlgo){
     case DIGEST_SHA256:

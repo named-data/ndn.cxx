@@ -13,7 +13,7 @@
 #include "ndn.cxx/wrapper/wrapper.h"
 #include "ndn.cxx/wrapper/closure.h"
 #include "ndn.cxx/security/keychain.h"
-#include "ndn.cxx/security/identity/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/regex/regex.h"
 #include <sqlite3.h>
 #include <boost/bind.hpp>
@@ -97,7 +97,7 @@ publishAllCert(Ptr<Wrapper> wrapper)
 BOOST_AUTO_TEST_CASE(Fake)
 {
 
-  // Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  // Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   // Ptr<security::Keychain> keychain = Ptr<security::Keychain>(new security::Keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db"));
   
   // try{
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(Fake)
 
 BOOST_AUTO_TEST_CASE(Real)
 {
-  Ptr<security::OSXPrivatekeyStore> privateStoragePtr = Ptr<security::OSXPrivatekeyStore>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   Ptr<security::Keychain> keychain = Ptr<security::Keychain>(new security::Keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db"));
   
   Ptr<Wrapper> wrapper = Ptr<Wrapper>(new Wrapper(keychain));

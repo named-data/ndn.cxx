@@ -16,7 +16,7 @@
 #include <sqlite3.h>
 
 #include "ndn.cxx/security/encryption/symmetric-key.h"
-#include "ndn.cxx/security/identity/privatekey-store.h"
+#include "ndn.cxx/security/identity/privatekey-storage.h"
 
 namespace ndn
 {
@@ -26,7 +26,7 @@ namespace security
   class BasicEncryptionManager : public EncryptionManager
   {
   public:
-    BasicEncryptionManager(Ptr<PrivatekeyStore> privateStorage, const string & encryptionPath);
+    BasicEncryptionManager(Ptr<PrivatekeyStorage> privateStorage, const string & encryptionPath);
     
     virtual ~BasicEncryptionManager() {}
 
@@ -54,7 +54,7 @@ namespace security
 
   private:
     sqlite3 * m_db;
-    Ptr<PrivatekeyStore> m_privateStorage;
+    Ptr<PrivatekeyStorage> m_privateStorage;
     string m_defaultKeyName;
     bool m_defaultSym;
   };

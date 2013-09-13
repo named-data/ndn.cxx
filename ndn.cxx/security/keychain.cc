@@ -38,7 +38,7 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain(Ptr<PrivatekeyStore> privateStorage, const string & policyPath, const string & encryptionPath)
+  Keychain::Keychain(Ptr<PrivatekeyStorage> privateStorage, const string & policyPath, const string & encryptionPath)
     :m_maxStep(100)
   {
     m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
@@ -66,9 +66,9 @@ namespace security
   }
 
   void
-  Keychain::setDefaultKeyForIdentity (const Name & keyName)
+  Keychain::setDefaultKeyForIdentity (const Name & keyName, const Name & identity)
   {
-    return m_identityManager->setDefaultKeyForIdentity(keyName);
+    return m_identityManager->setDefaultKeyForIdentity(keyName, identity);
   }
 
   Name
@@ -92,7 +92,7 @@ namespace security
   void
   Keychain::setDefaultCertificateForKey(const Name & certName)
   {
-    m_identityManager->setDefaultCertForKey (certName);
+    m_identityManager->setDefaultCertificateForKey (certName);
   }
 
   Ptr<Certificate> 
@@ -107,18 +107,16 @@ namespace security
     return m_identityManager->getAnyCertificate(certName);
   }
 
-  Ptr<Blob> 
+  void 
   Keychain::revokeKey(const Name & keyName)
   {
     //TODO: Implement
-    return NULL;
   }
 
-  Ptr<Blob> 
+  void
   Keychain::revokeCertificate(const Name & certName)
   {
     //TODO: Implement
-    return NULL;
   }
 
   void 
@@ -157,11 +155,11 @@ namespace security
     Name signingCertName;
     
     if(Name() == signerName)
-      signingCertName = m_identityManager->getDefaultCertNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));
+      signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));
     else
       {
         if(byID)
-          signingCertName = m_identityManager->getDefaultCertNameByIdentity(signerName);
+          signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(signerName);
         else
           signingCertName = signerName;
       }
@@ -172,7 +170,7 @@ namespace security
     if(!m_policyManager->checkSigningPolicy (data.getName (), signingCertName))
       throw SecException("Signing Cert name does not comply with signing policy");
 
-    m_identityManager->signByCert(data, signingCertName);
+    m_identityManager->signByCertificate(data, signingCertName);
 
   }
 
@@ -182,7 +180,7 @@ namespace security
     if(byID)
       return m_identityManager->signByIdentity(blob, signerName);
     else
-      return m_identityManager->signByCert(blob, signerName);
+      return m_identityManager->signByCertificate(blob, signerName);
   }
 
   void 
@@ -236,12 +234,12 @@ namespace security
   }
 
   void
-  Keychain::onCertInterestTimeout(Ptr<Closure> closurePtr, Ptr<Interest> interestPtr, int retry, const VerifyFailCallback & failureCallback)
+  Keychain::onCertificateInterestTimeout(Ptr<Closure> closurePtr, Ptr<Interest> interestPtr, int retry, const VerifyFailCallback & failureCallback)
   {
     if(retry > 0)
       {
         Ptr<Closure> newClosurePtr = Ptr<Closure>(new Closure(closurePtr->m_dataCallback,
-                                                              boost::bind(&Keychain::onCertInterestTimeout, this, _1, _2, retry - 1, failureCallback),
+                                                              boost::bind(&Keychain::onCertificateInterestTimeout, this, _1, _2, retry - 1, failureCallback),
                                                               closurePtr->m_verifyFailCallback,
                                                               closurePtr->m_unverifiedDataCallback
                                                               ));
@@ -252,7 +250,7 @@ namespace security
   }
 
   void 
-  Keychain::onCertVerified(Ptr<Data>signCert, 
+  Keychain::onCertificateVerified(Ptr<Data>signCert, 
                            Ptr<Data>dataPtr, 
                            const RecursiveVerifiedCallback &preRecurVerifyCallback, 
                            const VerifyFailCallback &failureCallback)
@@ -318,12 +316,12 @@ namespace security
     else{
       _LOG_DEBUG("KeyLocator is not trust anchor");
 
-      RecursiveVerifiedCallback recursiveVerifiedCallback = boost::bind(&Keychain::onCertVerified, this, _1, dataPtr, preRecurVerifyCallback, failureCallback);
+      RecursiveVerifiedCallback recursiveVerifiedCallback = boost::bind(&Keychain::onCertificateVerified, this, _1, dataPtr, preRecurVerifyCallback, failureCallback);
 
       Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(sha256sig->getKeyLocator().getKeyName()));
 
       Ptr<Closure> closurePtr = Ptr<Closure> (new Closure(Closure::DataCallback(),
-                                                          boost::bind(&Keychain::onCertInterestTimeout, this, _1, _2, 3, failureCallback),
+                                                          boost::bind(&Keychain::onCertificateInterestTimeout, this, _1, _2, 3, failureCallback),
                                                           Closure::VerifyFailCallback(), 
                                                           boost::bind(&Keychain::stepVerify, this, _1, false, stepCount-1,  recursiveVerifiedCallback, failureCallback)
                                                           )
@@ -331,35 +329,7 @@ namespace security
 
       m_handler->sendInterest(interestPtr, closurePtr);
     }
-  }
-
-
-  Ptr<Data> 
-  Keychain::fetchData(const Name & name)
-  {
-    return fakeFecthData(name);
-  }
-
-  Ptr<Data>
-  Keychain::fakeFecthData(const Name & name)
-  {
-    sqlite3 * fakeDB;
-    int res = sqlite3_open("/Users/yuyingdi/Test/fake-data.db", &fakeDB);
-
-    sqlite3_stmt *stmt;
-    sqlite3_prepare_v2 (fakeDB, "SELECT data_blob FROM data WHERE data_name=?", -1, &stmt, 0);
-    
-    sqlite3_bind_text(stmt, 1, name.toUri().c_str(), name.toUri().size(), SQLITE_TRANSIENT);
-
-    res = sqlite3_step(stmt);
-
-    if(res == SQLITE_ROW)
-      return Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0))));    
-
-
-    return NULL;
-  }
-  
+  }  
 
   void 
   Keychain::generateSymmetricKey(const Name & keyName, KeyType keyType)

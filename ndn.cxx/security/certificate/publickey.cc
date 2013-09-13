@@ -8,12 +8,12 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#include <cryptopp/sha.h>
-
-
 #include "publickey.h"
+
 #include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/helpers/der/visitor/publickey-visitor.h"
+
+#include <cryptopp/sha.h>
 
 #include "logging.h"
 

@@ -32,7 +32,7 @@ namespace ndn
 
 namespace security
 {
-  IdentityManager::IdentityManager (Ptr<IdentityStorage> publicStorage, Ptr<PrivatekeyStore> privateStorage)
+  IdentityManager::IdentityManager (Ptr<IdentityStorage> publicStorage, Ptr<PrivatekeyStorage> privateStorage)
     :m_publicStorage(publicStorage),
      m_privateStorage(privateStorage)
   {}
@@ -61,34 +61,34 @@ namespace security
       throw SecException("Identity has already been created!");
   }
 
-  void
-  IdentityManager::loadDefaultIdentity()
-  {
-    fs::path identityDir = fs::path(getenv("HOME")) / ".ndn-identity";
-    ifstream ifs( (identityDir / "default-identity").c_str());
+  // void
+  // IdentityManager::loadDefaultIdentity()
+  // {
+  //   fs::path identityDir = fs::path(getenv("HOME")) / ".ndn-identity";
+  //   ifstream ifs( (identityDir / "default-identity").c_str());
     
-    ifs.seekg (0, ios::end);
-    ifstream::pos_type size = ifs.tellg();
-    // _LOG_DEBUG("Size: " << size);
-    char * memblock = new char [size];
+  //   ifs.seekg (0, ios::end);
+  //   ifstream::pos_type size = ifs.tellg();
+  //   // _LOG_DEBUG("Size: " << size);
+  //   char * memblock = new char [size];
 
-    ifs.seekg (0, ios::beg);
-    ifs.getline(memblock, size);
+  //   ifs.seekg (0, ios::beg);
+  //   ifs.getline(memblock, size);
     
-    Name defaultIdName(memblock);
+  //   Name defaultIdName(memblock);
 
-    if(!m_publicStorage->doesIdentityExist(defaultIdName))
-      throw SecException("Identity does not exist!");
-    setDefaultIdentity(defaultIdName);
+  //   if(!m_publicStorage->doesIdentityExist(defaultIdName))
+  //     throw SecException("Identity does not exist!");
+  //   setDefaultIdentity(defaultIdName);
 
-    // _LOG_DEBUG("Default ID: " << default_identity);
-  }
+  //   // _LOG_DEBUG("Default ID: " << default_identity);
+  // }
 
-  void
-  IdentityManager::setDefaultIdentity (const Name & identity)
-  {
-    m_publicStorage->setDefaultIdentity (identity); 
-  }
+  // void
+  // IdentityManager::setDefaultIdentity (const Name & identity)
+  // {
+  //   m_publicStorage->setDefaultIdentity (identity); 
+  // }
   
   Name
   IdentityManager::generateKeyPair (const Name & identity, bool ksk, KeyType keyType, int keySize)
@@ -97,11 +97,7 @@ namespace security
     Name keyName = m_publicStorage->getNewKeyName(identity, ksk);
 
     _LOG_DEBUG("Generate key pair in private storage");
-    if(!m_privateStorage->generateKeyPair(keyName.toUri(), keyType, keySize))
-      {
-        _LOG_DEBUG("Fail to create a pair of keys!");
-        throw SecException("Fail to create a pair of keys!");
-      }
+    m_privateStorage->generateKeyPair(keyName.toUri(), keyType, keySize);
 
     _LOG_DEBUG("Create a key record in public storage");
     Ptr<Publickey> pubKey = m_privateStorage->getPublickey(keyName.toUri());
@@ -123,15 +119,15 @@ namespace security
   {
     Name keyName = generateKeyPair(identity, ksk, KEY_TYPE_RSA, keySize);
 
-    m_publicStorage->setDefaultKeyName(keyName);
+    m_publicStorage->setDefaultKeyNameForIdentity(keyName, identity);
     
     return keyName;
   }
 
   void
-  IdentityManager::setDefaultKeyForIdentity (const Name & keyName)
+  IdentityManager::setDefaultKeyForIdentity (const Name & keyName, const Name & identity)
   {
-    m_publicStorage->setDefaultKeyName(keyName);
+    m_publicStorage->setDefaultKeyNameForIdentity(keyName, identity);
   }
 
   Ptr<Publickey>
@@ -157,7 +153,7 @@ namespace security
   {
     m_publicStorage->addCertificate(certificate);
     
-    setDefaultCertForKey(certificate.getName());
+    setDefaultCertificateForKey(certificate.getName());
   }
 
   void
@@ -165,11 +161,11 @@ namespace security
   {
     m_publicStorage->addCertificate(certificate);
 
-    Name keyName = m_publicStorage->getKeyNameForCert(certificate.getName());
+    Name keyName = m_publicStorage->getKeyNameForCertificate(certificate.getName());
     
     setDefaultKeyForIdentity(keyName);
 
-    setDefaultCertForKey(certificate.getName());
+    setDefaultCertificateForKey(certificate.getName());
   }
 
   Ptr<Certificate>
@@ -185,44 +181,44 @@ namespace security
   }
 
   void
-  IdentityManager::setDefaultCertForKey (const Name & certName)
+  IdentityManager::setDefaultCertificateForKey (const Name & certName)
   {
-    Name keyName = m_publicStorage->getKeyNameForCert(certName);
+    Name keyName = m_publicStorage->getKeyNameForCertificate(certName);
     
     if(!m_publicStorage->doesKeyExist(keyName))
       throw SecException("No corresponding Key record for certificaite!");
 
-    m_publicStorage->setDefaultCertName (keyName, certName);
+    m_publicStorage->setDefaultCertificateNameForKey (keyName, certName);
   }
 
   Name
-  IdentityManager::getDefaultCertNameByIdentity (const Name & identity)
+  IdentityManager::getDefaultCertificateNameByIdentity (const Name & identity)
   {
-    return m_publicStorage->getDefaultCertNameForIdentity(identity);
+    return m_publicStorage->getDefaultCertificateNameForIdentity(identity);
   }
     
   Name
-  IdentityManager::getDefaultCertName ()
+  IdentityManager::getDefaultCertificateName ()
   {
-    return m_publicStorage->getDefaultCertNameForIdentity(getDefaultIdentity());
+    return m_publicStorage->getDefaultCertificateNameForIdentity(getDefaultIdentity());
   }
 
   Ptr<Signature>
   IdentityManager::signByIdentity (const Blob & blob, const Name & identity)
   {
-    return signByCert(blob, m_publicStorage->getDefaultCertNameForIdentity(identity));
+    return signByCertificate(blob, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
   }
 
   void
   IdentityManager::signByIdentity (Data & data, const Name & identity)
   {
-    signByCert(data, m_publicStorage->getDefaultCertNameForIdentity(identity));
+    signByCertificate(data, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
   }
 
   Ptr<Signature>
-  IdentityManager::signByCert (const Blob & blob, const Name & certName)
+  IdentityManager::signByCertificate (const Blob & blob, const Name & certName)
   {    
-    Name keyName = m_publicStorage->getKeyNameForCert(certName);
+    Name keyName = m_publicStorage->getKeyNameForCertificate(certName);
     
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
 
@@ -243,9 +239,9 @@ namespace security
   }
 
   void
-  IdentityManager::signByCert (Data & data, const Name & certName)
+  IdentityManager::signByCertificate (Data & data, const Name & certName)
   { 
-    Name keyName = m_publicStorage->getKeyNameForCert(certName);
+    Name keyName = m_publicStorage->getKeyNameForCertificate(certName);
     
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
 
