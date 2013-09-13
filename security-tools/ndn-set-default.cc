@@ -77,7 +77,7 @@ int main(int argc, char** argv)
       return 0;
     }
 
-  if (vm.count("id_default"))
+  if (vm.count("default_key"))
     {
       Name keyName(name);
       publicStorage->setDefaultKeyName(keyName);

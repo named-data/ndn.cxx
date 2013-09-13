@@ -21,9 +21,8 @@
 #include "ndn.cxx/security/identity/osx-privatekey-store.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
 #include "ndn.cxx/security/identity/identity-manager.h"
-#include "ndn.cxx/helpers/der/der.h"
-#include "ndn.cxx/helpers/der/exception.h"
 #include "ndn.cxx/security/exception.h"
+#include "ndn.cxx/helpers/der/der.h"
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
 #include "ndn.cxx/helpers/der/visitor/publickey-visitor.h"
 
@@ -52,14 +51,13 @@ getOutputFileName(const string& certName)
 }
 
 Ptr<Blob> 
-getKeyBlob(const string& fileName)
+getKeyBlob(const string& key_str)
 {
-  ifstream ifs (fileName.c_str());
-  string str((istreambuf_iterator<char>(ifs)),
-              istreambuf_iterator<char>());
+//  ifstream ifs (fileName.c_str());
+  string str = key_str;
   
-  string firstLine = "-----BEGIN PUBLIC KEY-----\n";
-  string lastLine = "-----END PUBLIC KEY-----\n";
+  string firstLine = "-----BEGIN CERTIFICATE-----\n";
+  string lastLine = "-----END CERTIFICATE-----\n";
 
   int fPos = str.find(firstLine) + firstLine.size();
   int lPos = str.rfind(lastLine);
@@ -102,7 +100,6 @@ int main(int argc, char** argv)
   char certType;
   string signId;
 
-  cout<<"here: 1"<<endl;
   po::options_description desc("General options");
   desc.add_options()
     ("help,h", "produce help message")
@@ -110,7 +107,7 @@ int main(int argc, char** argv)
     ("not_before,S", po::value<string>(&notBeforeStr), "certificate starting date, YYYYMMDDhhmmss")
     ("not_after,E", po::value<string>(&notAfterStr), "certificate ending date, YYYYMMDDhhmmss")
     ("subject_name,N", po::value<string>(&sName), "subject name")
-    ("request,r", po::value<string>(&reqFile), "request file name")
+    ("request,r", po::value<string>(&reqFile), "request keybit")
     ("cert_type,t", po::value<char>(&certType)->default_value('i'), "certificate type, 'i' for identity certificate")
     ("sign_id,s", po::value<string>(&signId), "signing Identity")
     ;
@@ -152,7 +149,8 @@ int main(int argc, char** argv)
 
   TimeInterval ti = time::NowUnixTimestamp();
   ostringstream oss;
-  oss << ti.total_seconds();  certName.append(oss.str());
+  oss << ti.total_seconds();
+  certName.append(oss.str());
 
   Time notBefore;
   Time notAfter;
@@ -191,79 +189,45 @@ int main(int argc, char** argv)
       cout << "request file must be specified" << endl;
       return 1;
     }
-    
-    cout<<"here: 2"<<endl;
 
   Ptr<Blob> keyBlob = getKeyBlob(reqFile);
-    
-//	printBlob(*keyBlob, "", 0);
 
   boost::iostreams::stream<boost::iostreams::array_source> is (keyBlob->buf (), keyBlob->size ());
-    
-    
-    cout<<"here: 4"<<endl;
-	 
-	 Ptr<der::DerNode> node;
-	 try
-	 {
-	 	node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
-	}
-	catch (der::DerException &e)
-	{
-		cout<<e.Msg()<<endl;
-	}
-	cout<<"here: 5"<<endl;
-	 
-   
-    
+  Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
   der::PublickeyVisitor pubkeyVisitor;
   Ptr<security::Publickey> publickey = boost::any_cast<Ptr<security::Publickey> >(node->accept(pubkeyVisitor));
-    
+
   security::CertificateData certData(notBefore, notAfter, *publickey);
-  cout<<"here 6"<<endl;    
+  
   if (0 == vm.count("subject_name"))
     {
       cout << "subject_name must be specified" << endl;
       return 1;
     }
 
-
   security::CertificateSubDescrypt subDescryptName("2.5.4.41", sName);
   certData.addSubjectDescription(subDescryptName);
-  cout<<"here 7"<<endl;
-  Ptr<Blob> derEncodedBlob = certData.toDERBlob();
 
+  Ptr<Blob> derEncodedBlob = certData.toDERBlob();
+  
 
   Ptr<Data> data = Create<Data>();
   data->setName(certName);
   Content content(derEncodedBlob->buf(), derEncodedBlob->size());
   data->setContent(content);
-  cout<<"here 8"<<endl;
 
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStore> privateStorage = Ptr<security::OSXPrivatekeyStore>::Create();
-  cout<<"here 9"<<endl;
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
-  cout<<"here 10"<<endl;
 
-  try
-  {
   identityManager.signByIdentity(*data, Name(signId));
-	}
-	catch (security::SecException & e)
-	{
-		    cout<<"sdfsa"<<endl;
-				cout<<e.Msg()<<endl;
-	}
-	cout<<"here 11"<<endl;
+
   Ptr<Blob> dataBlob = data->encodeToWire();
-  cout<<"here 12"<<endl;
 
   string outputFileName = getOutputFileName(certName.toUri());
   ofstream ofs(outputFileName.c_str());
-    cout<<outputFileName<<endl;
-    
+
   ofs << "-----BEGIN NDN ID CERT-----\n";
   string encoded;
   CryptoPP::StringSource ss(reinterpret_cast<const unsigned char *>(dataBlob->buf()), 

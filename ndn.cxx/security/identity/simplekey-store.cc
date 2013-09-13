@@ -362,7 +362,7 @@ namespace ndn
                  Blob blob(encoded.c_str(), encoded.size());
 							SimpleKeyStore::writeSymetricKey(symKeyName, blob);
 						  using namespace boost::filesystem;
-							permissions(symKeyName.c_str(), others_read|owner_read);
+							permissions(symKeyName.c_str(), owner_read);
         	 }
            return;
         }
