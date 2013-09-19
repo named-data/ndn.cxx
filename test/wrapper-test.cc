@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(Real)
 {
   Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   Ptr<security::Keychain> keychain = Ptr<security::Keychain>(new security::Keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db"));
-  
+
   Ptr<Wrapper> wrapper = Ptr<Wrapper>(new Wrapper(keychain));
 
   // Name prefix("/ndn");

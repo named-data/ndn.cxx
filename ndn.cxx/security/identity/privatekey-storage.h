@@ -48,7 +48,7 @@ namespace security
      * @param keySize the size of the key pair
      */
     virtual void 
-    generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048) = 0;
+    generateKeyPair(const Name & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048) = 0;
 
     /**
      * @brief get the public key
@@ -56,7 +56,7 @@ namespace security
      * @return the public key
      */
     virtual Ptr<Publickey> 
-    getPublickey(const string & keyName) = 0;
+    getPublickey(const Name & keyName) = 0;
 
     /**
      * @brief sign data blob
@@ -66,7 +66,7 @@ namespace security
      * @returns signature, NULL if signing fails
      */
     virtual Ptr<Blob> 
-    sign(const Blob & blob, const string & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256) = 0;
+    sign(const Blob & blob, const Name & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256) = 0;
     
     /**
      * @brief decrypt data
@@ -76,7 +76,7 @@ namespace security
      * @returns decrypted data
      */
     virtual Ptr<Blob> 
-    decrypt(const string & keyName, const Blob & data, bool sym = false) = 0;
+    decrypt(const Name & keyName, const Blob & data, bool sym = false) = 0;
 
     /**
      * @brief encrypt data
@@ -86,7 +86,7 @@ namespace security
      * @returns encrypted data
      */
     virtual Ptr<Blob> 
-    encrypt(const string & keyName, const Blob & pData, bool sym = false) = 0;
+    encrypt(const Name & keyName, const Blob & pData, bool sym = false) = 0;
 
 
     /**
@@ -96,7 +96,7 @@ namespace security
      * @param keySize the size of the key
      */
     virtual void 
-    generateKey(const string & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256) = 0;
+    generateKey(const Name & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256) = 0;
 
     /**
      * @brief check if a particular key exist
@@ -105,7 +105,7 @@ namespace security
      * @return true if the key exists, otherwise false
      */
     virtual bool
-    doesKeyExist(const string & keyName, KeyClass keyClass) = 0;
+    doesKeyExist(const Name & keyName, KeyClass keyClass) = 0;
 
 
   private:

@@ -34,7 +34,7 @@ namespace security
      *
      */
     virtual void 
-    createSymKey(const Name & keyName, KeyType keyType, const string & signkeyName = "", bool sym = true);
+    createSymKey(const Name & keyName, KeyType keyType, const Name & signkeyName = Name(), bool sym = true);
     
     virtual Ptr<Blob>
     encrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
@@ -55,7 +55,7 @@ namespace security
   private:
     sqlite3 * m_db;
     Ptr<PrivatekeyStorage> m_privateStorage;
-    string m_defaultKeyName;
+    Name m_defaultKeyName;
     bool m_defaultSym;
   };
 

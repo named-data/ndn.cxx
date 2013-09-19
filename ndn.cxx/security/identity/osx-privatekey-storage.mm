@@ -64,18 +64,21 @@ namespace security
   }
 
   void 
-  OSXPrivatekeyStorage::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
+  OSXPrivatekeyStorage::generateKeyPair(const Name & keyName, KeyType keyType, int keySize)
   { 
+    
     if(doesKeyExist(keyName, KEY_CLASS_PUBLIC)){
       _LOG_DEBUG("keyName has existed");
       throw SecException("keyName has existed");
     }
 
+    string keyNameUri = toInternalKeyName(keyName, KEY_CLASS_PUBLIC);
+
     SecKeyRef publicKey, privateKey;
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
-                                                      keyName.c_str (), 
-                                                      keyName.size ());
+                                                      keyNameUri.c_str (), 
+                                                      keyNameUri.size ());
     
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(NULL,
                                                              3,
@@ -98,12 +101,13 @@ namespace security
   }
 
   void 
-  OSXPrivatekeyStorage::generateKey(const string & externalKeyName, KeyType keyType, int keySize)
+  OSXPrivatekeyStorage::generateKey(const Name & keyName, KeyType keyType, int keySize)
   {
-    string keyName = prependSymKeyName(externalKeyName);
 
     if(doesKeyExist(keyName, KEY_CLASS_SYMMETRIC))
         throw SecException("keyName has existed!");
+
+    string keyNameUri =  toInternalKeyName(keyName, KEY_CLASS_SYMMETRIC);
 
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(kCFAllocatorDefault,
                                                                 0,
@@ -111,8 +115,8 @@ namespace security
                                                                 &kCFTypeDictionaryValueCallBacks);
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
-                                                      keyName.c_str (), 
-                                                      keyName.size ());
+                                                      keyNameUri.c_str (), 
+                                                      keyNameUri.size ());
 
     CFDictionaryAddValue(attrDict, kSecAttrKeyType, getSymKeyType(keyType));
     CFDictionaryAddValue(attrDict, kSecAttrKeySizeInBits, CFNumberCreate (kCFAllocatorDefault, kCFNumberSInt32Type, &keySize));
@@ -127,12 +131,12 @@ namespace security
         throw SecException("Fail to create a symmetric key");
   }
 
-  string OSXPrivatekeyStorage::prependSymKeyName(const string & keyName)
-  {
-    return string("SYMMETRIC-")+keyName;
-  }
+  // string OSXPrivatekeyStorage::prependSymKeyName(const string & keyName)
+  // {
+  //   return string("SYMMETRIC-")+keyName;
+  // }
 
-  Ptr<Publickey> OSXPrivatekeyStorage::getPublickey(const string & keyName)
+  Ptr<Publickey> OSXPrivatekeyStorage::getPublickey(const Name & keyName)
   {
     _LOG_TRACE("OSXPrivatekeyStorage::getPublickey");
 
@@ -151,7 +155,7 @@ namespace security
     return Publickey::fromDER(blob);
   }
 
-  Ptr<Blob> OSXPrivatekeyStorage::sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo)
+  Ptr<Blob> OSXPrivatekeyStorage::sign(const Blob & pData, const Name & keyName, DigestAlgorithm digestAlgo)
   {
     _LOG_TRACE("OSXPrivatekeyStorage::Sign");
     
@@ -199,22 +203,15 @@ namespace security
     return sigPtr;
   }
 
-  Ptr<Blob> OSXPrivatekeyStorage::decrypt(const string & externalKeyName, const Blob & pData, bool sym)
+  Ptr<Blob> OSXPrivatekeyStorage::decrypt(const Name & keyName, const Blob & pData, bool sym)
   {
     _LOG_TRACE("OSXPrivatekeyStorage::Decrypt");
 
-    string keyName;
     KeyClass keyClass;
     if(sym)
-      {
-        keyName = prependSymKeyName(externalKeyName);
         keyClass = KEY_CLASS_SYMMETRIC;
-      }
     else
-      {
-        keyName = externalKeyName;
         keyClass = KEY_CLASS_PRIVATE;
-      }
 
     CFDataRef dataRef = CFDataCreate (NULL,
                                       reinterpret_cast<const unsigned char*>(pData.buf()),
@@ -251,7 +248,7 @@ namespace security
 
   }
 
-  bool OSXPrivatekeyStorage::setACL(const string & keyName, KeyClass keyClass, int acl, const string & appPath)
+  bool OSXPrivatekeyStorage::setACL(const Name & keyName, KeyClass keyClass, int acl, const string & appPath)
   {
     SecKeychainItemRef privateKey = getKey(keyName, keyClass);
     
@@ -300,7 +297,7 @@ namespace security
     return true;
   }
 
-  bool OSXPrivatekeyStorage::verifyData (const string & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo)
+  bool OSXPrivatekeyStorage::verifyData (const Name & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo)
   {
     _LOG_TRACE("OSXPrivatekeyStorage::Verify");
     
@@ -346,22 +343,15 @@ namespace security
       return false;
   }
 
-  Ptr<Blob> OSXPrivatekeyStorage::encrypt(const string & externalKeyName, const Blob & pData, bool sym)
+  Ptr<Blob> OSXPrivatekeyStorage::encrypt(const Name & keyName, const Blob & pData, bool sym)
   {
     _LOG_TRACE("OSXPrivatekeyStorage::Encrypt");
 
-    string keyName;
     KeyClass keyClass;
     if(sym)
-      {
-        keyName = prependSymKeyName(externalKeyName);
         keyClass = KEY_CLASS_SYMMETRIC;
-      }
     else
-      {
-        keyName = externalKeyName;
         keyClass = KEY_CLASS_PUBLIC;
-      }
     
     CFDataRef dataRef = CFDataCreate (NULL,
                                       reinterpret_cast<const unsigned char*>(pData.buf()),
@@ -390,13 +380,15 @@ namespace security
     return outputPtr;
   }
 
-  bool OSXPrivatekeyStorage::doesKeyExist(const string & keyName, KeyClass keyClass)
+  bool OSXPrivatekeyStorage::doesKeyExist(const Name & keyName, KeyClass keyClass)
   {
-    _LOG_TRACE("OSXPrivatekeyStorage::NameUsed");
+    _LOG_TRACE("OSXPrivatekeyStorage::doesKeyExist");
+
+    string keyNameUri = toInternalKeyName(keyName, keyClass);
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
-                                                      keyName.c_str (), 
-                                                      keyName.size ());
+                                                      keyNameUri.c_str (), 
+                                                      keyNameUri.size ());
     
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(NULL,
                                                                 3,
@@ -417,11 +409,13 @@ namespace security
 
   }
 
-  SecKeychainItemRef OSXPrivatekeyStorage::getKey(string keyName, KeyClass keyClass)
+  SecKeychainItemRef OSXPrivatekeyStorage::getKey (const Name & keyName, KeyClass keyClass)
   {
+    string keyNameUri = toInternalKeyName(keyName, keyClass);
+
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
-                                                      keyName.c_str (), 
-                                                      keyName.size ());
+                                                      keyNameUri.c_str (), 
+                                                      keyNameUri.size ());
     
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(NULL,
                                                              5,
@@ -443,6 +437,16 @@ namespace security
     }
     else
       return keyItem;
+  }
+
+  string OSXPrivatekeyStorage::toInternalKeyName(const Name & keyName, KeyClass keyClass)
+  {
+    string keyUri = keyName.toUri();
+
+    if(KEY_CLASS_SYMMETRIC == keyClass)
+      return keyUri + "/symmetric";
+    else
+      return keyUri;
   }
 
   const CFTypeRef OSXPrivatekeyStorage::getAsymKeyType(KeyType keyType)

@@ -44,10 +44,10 @@ namespace security
     loadTrustAnchor(TiXmlElement * element);
 
     virtual void 
-    setDefaultEncryptionKey(const string & keyName, bool sym);
+    setDefaultEncryptionKey(const Name & keyName, bool sym);
     
     virtual void
-    savePolicy(const string & keyName = "", bool sym = true);
+    savePolicy(const Name & keyName = Name(), bool sym = true);
 
     virtual void 
     setSigningPolicyRule (Ptr<PolicyRule> policy);

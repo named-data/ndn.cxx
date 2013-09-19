@@ -48,7 +48,7 @@ namespace security
      * @returns true if keys have been successfully generated
      */
     virtual void 
-    generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+    generateKeyPair(const Name & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 
     /**
      * @brief get public key by key name
@@ -56,7 +56,7 @@ namespace security
      * @returns public key
      */
     virtual Ptr<Publickey> 
-    getPublickey(const string & keyName);
+    getPublickey(const Name & keyName);
 
     /**
      * @brief sign data
@@ -66,7 +66,7 @@ namespace security
      * @returns signature, NULL if signing fails
      */
     virtual Ptr<Blob> 
-    sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256);
+    sign(const Blob & pData, const Name & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256);
     
     /**
      * @brief decrypt data
@@ -75,10 +75,10 @@ namespace security
      * @returns decrypted data
      */
     virtual Ptr<Blob> 
-    decrypt (const string & keyName, const Blob & pData, bool sym = false);
+    decrypt (const Name & keyName, const Blob & pData, bool sym = false);
 
     virtual Ptr<Blob> 
-    encrypt (const string & keyName, const Blob & pData, bool sym = false);
+    encrypt (const Name & keyName, const Blob & pData, bool sym = false);
 
     //TODO Symmetrical key stuff.
     /**
@@ -89,7 +89,7 @@ namespace security
      * @returns true if key have been successfully generated
      */
     virtual void 
-    generateKey(const string & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256);
+    generateKey(const Name & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256);
 
     /**
      * @brief check if a keyname has existed
@@ -98,7 +98,7 @@ namespace security
      * @returns true if the keyname exists
      */
     virtual bool 
-    doesKeyExist(const string & keyName, KeyClass keyClass);
+    doesKeyExist(const Name & keyName, KeyClass keyClass);
 
 
 
@@ -111,21 +111,28 @@ namespace security
      * @returns true if setting succeeds
      */
     bool 
-    setACL (const string & keyName, KeyClass keyClass, int acl, const string & appPath);
+    setACL (const Name & keyName, KeyClass keyClass, int acl, const string & appPath);
 
     bool 
-    verifyData (const string & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo = DIGEST_SHA256);
+    verifyData (const Name & keyName, const Blob & pData, const Blob & pSig, DigestAlgorithm digestAlgo = DIGEST_SHA256);
 
 
   private:
-    
+    /**
+     * @brief convert NDN name of a key to internal name of the key
+     * @param keyName the NDN name of the key
+     * @param keyClass the class of the key
+     * @return the internal key name
+     */
+    string toInternalKeyName(const Name & keyName, KeyClass keyClass);
+
     /**
      * @brief Get key
      * @param keyName the name of the key
      * @param keyClass the class of the key
      * @returns pointer to the key
      */
-    SecKeychainItemRef getKey(string keyName, KeyClass keyClass);
+    SecKeychainItemRef getKey (const Name & keyName, KeyClass keyClass);
       
     /**
      * @brief convert keyType to MAC OS key type
@@ -157,7 +164,7 @@ namespace security
      */
     SecExternalFormat getFormat(KeyFormat format);
 
-    string prependSymKeyName(const string & externalKeyName);
+    // string prependSymKeyName(const string & externalKeyName);
 
     long getDigestSize(DigestAlgorithm digestAlgo);
 

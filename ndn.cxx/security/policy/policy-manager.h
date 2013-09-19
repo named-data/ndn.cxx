@@ -43,10 +43,10 @@ namespace security
     loadPolicy() = 0;
 
     virtual void 
-    setDefaultEncryptionKey(const string & keyName, bool sym) = 0;
+    setDefaultEncryptionKey(const Name & keyName, bool sym) = 0;
 
     virtual void
-    savePolicy(const string & keyName = "", bool sym = true) = 0;
+    savePolicy(const Name & keyName = Name(), bool sym = true) = 0;
 
     // virtual void 
     // setSigningPolicyRule(const string & policy) = 0;
@@ -94,7 +94,7 @@ namespace security
     displayPolicy () = 0;
 
   protected:
-    string m_defaultKeyName;
+    Name m_defaultKeyName;
     bool m_defaultSym;
   };
 

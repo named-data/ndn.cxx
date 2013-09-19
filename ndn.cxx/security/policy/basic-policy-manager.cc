@@ -62,7 +62,7 @@ namespace security
       {
         ostringstream oss;
         oss << time::NowUnixTimestamp().total_seconds();
-        string masterKeyName = "local-" + oss.str();
+        Name masterKeyName("/local-key/" + oss.str());
         m_defaultKeyName = masterKeyName;
         m_defaultSym = true;
 
@@ -108,10 +108,10 @@ namespace security
     Ptr<Blob> encryptedPolicy = boost::any_cast<Ptr<Blob> >(children[2]->accept(simpleVisitor));
     // _LOG_DEBUG("policy size: " << encryptedPolicy->size());
 
-    m_defaultKeyName = encryptKeyName;
+    m_defaultKeyName = Name(encryptKeyName);
     m_defaultSym = encryptSym;
 
-    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(encryptKeyName, *encryptedPolicy, encryptSym);
+    Ptr<Blob> decrypted = m_privatekeyStore->decrypt(m_defaultKeyName, *encryptedPolicy, m_defaultSym);
     
     string decryptedStr(decrypted->buf(), decrypted->size());
     
@@ -212,23 +212,23 @@ namespace security
   }
 
   void 
-  BasicPolicyManager::setDefaultEncryptionKey(const string & keyName, bool sym)
+  BasicPolicyManager::setDefaultEncryptionKey(const Name & keyName, bool sym)
   {
     m_defaultKeyName = keyName;
     m_defaultSym = sym;
   }
 
   void 
-  BasicPolicyManager::savePolicy(const string & keyName, bool sym)
+  BasicPolicyManager::savePolicy(const Name & keyName, bool sym)
   {
     _LOG_DEBUG("savePolicy");
     if(m_policyChanged)
       {
-        string encryptKeyName;
+        Name encryptKeyName;
         bool encryptSym;
-        if(keyName == string(""))
+        if(0 == keyName.size())
           {
-            if(m_defaultKeyName.empty())
+            if(0 == m_defaultKeyName.size())
               throw SecException("No key for encryption");
             encryptKeyName = m_defaultKeyName;
             encryptSym = m_defaultSym;
@@ -251,7 +251,7 @@ namespace security
         ofstream fs(policyPath.c_str(), ofstream::binary | ofstream::trunc);
 
         der::DerSequence root;
-        Ptr<der::DerPrintableString> savedKeyName = Ptr<der::DerPrintableString>(new der::DerPrintableString(encryptKeyName));
+        Ptr<der::DerPrintableString> savedKeyName = Ptr<der::DerPrintableString>(new der::DerPrintableString(encryptKeyName.toUri()));
         Ptr<der::DerBool> savedSym = Ptr<der::DerBool>(new der::DerBool(encryptSym));
         Ptr<der::DerOctetString> savedPolicy = Ptr<der::DerOctetString>(new der::DerOctetString(*encryptedPtr));
         root.addChild(savedKeyName);
