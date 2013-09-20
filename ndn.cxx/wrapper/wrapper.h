@@ -63,22 +63,42 @@ namespace ndn {
     sendInterest (Ptr<Interest> interest, Ptr<Closure> closurePtr);
 
     int
-    publishDataByCert (const Name &name, const unsigned char *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &certName=Name());
+    publishDataByCert (const Name &name, 
+                       const unsigned char *buf, 
+                       size_t len, 
+                       const security::Certificate & certificate, 
+                       int freshness = DEFAULT_FRESHNESS);
 
     inline int
-    publishDataByCert (const Name &name, const Blob &content, int freshness = DEFAULT_FRESHNESS, const Name &certName=Name());
+    publishDataByCert (const Name &name, 
+                       const Blob &content, 
+                       const security::Certificate & certificate, 
+                       int freshness = DEFAULT_FRESHNESS);
 
     inline int
-    publishDataByCert (const Name &name, const std::string &content, int freshness = DEFAULT_FRESHNESS, const Name &certName=Name());
+    publishDataByCert (const Name &name, 
+                       const std::string &content, 
+                       const security::Certificate & certificate, 
+                       int freshness = DEFAULT_FRESHNESS);
 
     int
-    publishDataByIdentity (const Name &name, const unsigned char *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &identityName=Name());
+    publishDataByIdentity (const Name &name, 
+                           const unsigned char *buf, 
+                           size_t len, 
+                           const Name &identityName=Name(), 
+                           int freshness = DEFAULT_FRESHNESS);
 
     inline int
-    publishDataByIdentity (const Name &name, const Blob &content, int freshness = DEFAULT_FRESHNESS, const Name &identityName=Name());
+    publishDataByIdentity (const Name &name, 
+                           const Blob &content, 
+                           const Name &identityName=Name(), 
+                           int freshness = DEFAULT_FRESHNESS);
 
     inline int
-    publishDataByIdentity (const Name &name, const std::string &content, int freshness = DEFAULT_FRESHNESS, const Name &identityName=Name());
+    publishDataByIdentity (const Name &name, 
+                           const std::string &content, 
+                           const Name &identityName=Name(), 
+                           int freshness = DEFAULT_FRESHNESS);
 
     // static Name
     // getLocalPrefix ();
@@ -99,7 +119,7 @@ namespace ndn {
     Wrapper(const Wrapper &other) {}
 
     int
-    publishDataByCert (Data &data, const Name &certName);
+    publishDataByCert (Data &data, const security::Certificate & certificate);
 
     int
     publishDataByIdentity (Data &data, const Name &identityName);
@@ -143,27 +163,27 @@ struct ndnOperation : boost::exception, std::exception { };
 }
 
 inline int
-Wrapper::publishDataByCert (const Name &name, const Blob &content, int freshness, const Name &certName)
+Wrapper::publishDataByCert (const Name &name, const Blob &content, const security::Certificate & certificate, int freshness)
 {
-  return publishDataByCert (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), freshness, certName);
+  return publishDataByCert (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), certificate, freshness);
 }
 
 inline int
-Wrapper::publishDataByIdentity (const Name &name, const Blob &content, int freshness, const Name &identityName)
+Wrapper::publishDataByIdentity (const Name &name, const Blob &content, const Name &identityName, int freshness)
 {
-  return publishDataByIdentity (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), freshness, identityName);
+  return publishDataByIdentity (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), identityName, freshness);
 }
 
 inline int
-Wrapper::publishDataByCert (const Name &name, const std::string &content, int freshness, const Name &certName)
+Wrapper::publishDataByCert (const Name &name, const std::string &content, const security::Certificate & certificate, int freshness)
 {
-  return publishDataByCert (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), freshness, certName);
+  return publishDataByCert (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), certificate, freshness);
 }
 
 inline int
-Wrapper::publishDataByIdentity (const Name &name, const std::string &content, int freshness, const Name &identityName)
+Wrapper::publishDataByIdentity (const Name &name, const std::string &content, const Name &identityName, int freshness)
 {
-  return publishDataByIdentity (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), freshness, identityName);
+  return publishDataByIdentity (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), identityName, freshness);
 }
 
 } // ndn

@@ -149,38 +149,43 @@ namespace security
     m_policyManager->setTrustAnchor(certificate);
   }
 
-  void 
-  Keychain::sign(Data & data, const Name & signerName, bool byID)
+  void
+  Keychain::sign (Data & data, const Certificate & certificate)
   {
-    Name signingCertName;
-    
-    if(Name() == signerName)
-      signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));
+    m_identityManager->signByCertificate(data, certificate.getName());
+  }
+
+  Ptr<Signature>
+  Keychain::sign (const Blob & blob, const Certificate & certificate)
+  {
+    return m_identityManager->signByCertificate(blob, certificate.getName());
+  }
+
+  void 
+  Keychain::signByIdentity(Data & data, const Name & identity)
+  {
+    Name signingCertificateName;
+    if(0 == identity.size())
+      signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));    
     else
       {
-        if(byID)
-          signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(signerName);
-        else
-          signingCertName = signerName;
+        signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(identity);
       }
 
-    if(signingCertName.size() == 0)
+    if(signingCertificateName.size() == 0)
       throw SecException("No qualified certificate name found!");
 
-    if(!m_policyManager->checkSigningPolicy (data.getName (), signingCertName))
+    if(!m_policyManager->checkSigningPolicy (data.getName (), signingCertificateName))
       throw SecException("Signing Cert name does not comply with signing policy");
 
-    m_identityManager->signByCertificate(data, signingCertName);
+    m_identityManager->signByCertificate(data, signingCertificateName);
 
   }
 
   Ptr<Signature> 
-  Keychain::sign (const Blob & blob, const Name & signerName, bool byID)
+  Keychain::signByIdentity (const Blob & blob, const Name & identity)
   {
-    if(byID)
-      return m_identityManager->signByIdentity(blob, signerName);
-    else
-      return m_identityManager->signByCertificate(blob, signerName);
+    return m_identityManager->signByIdentity(blob, identity);
   }
 
   void 

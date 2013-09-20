@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(KeyChain)
 
   
   try{
-  keychain.sign(data, Name("/ndn/ucla.edu/yingdi"), true);
+  keychain.signByIdentity(data, Name("/ndn/ucla.edu/yingdi"));
   
   // cout << boolalpha << keychain.verifyData(data) << endl;
   }catch(security::SecException & e){
