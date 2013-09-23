@@ -204,17 +204,17 @@ namespace security
     return m_publicStorage->getDefaultCertificateNameForIdentity(getDefaultIdentity());
   }
 
-  Ptr<Signature>
-  IdentityManager::signByIdentity (const Blob & blob, const Name & identity)
-  {
-    return signByCertificate(blob, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
-  }
+  // Ptr<Signature>
+  // IdentityManager::signByIdentity (const Blob & blob, const Name & identity)
+  // {
+  //   return signByCertificate(blob, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
+  // }
 
-  void
-  IdentityManager::signByIdentity (Data & data, const Name & identity)
-  {
-    signByCertificate(data, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
-  }
+  // void
+  // IdentityManager::signByIdentity (Data & data, const Name & identity)
+  // {
+  //   signByCertificate(data, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
+  // }
 
   Ptr<Signature>
   IdentityManager::signByCertificate (const Blob & blob, const Name & certName)

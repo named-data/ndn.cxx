@@ -163,8 +163,8 @@ namespace security
      * @param identity
      * @return the default certificate name
      */
-    virtual Name 
-    getDefaultCertificateNameForIdentity (const Name & identity) = 0;
+    inline Name 
+    getDefaultCertificateNameForIdentity (const Name & identity);
 
     /**
      * @brief get default certificate name of specified key
@@ -196,8 +196,16 @@ namespace security
      */
     virtual void 
     setDefaultCertificateNameForKey (const Name & keyName, const Name & certificateName) = 0;
+
   };
 
+  inline Name 
+  IdentityStorage::getDefaultCertificateNameForIdentity (const Name & identity)
+  {
+    Name keyName = getDefaultKeyNameForIdentity(identity);
+    
+    return getDefaultCertificateNameForKey(keyName);
+  }
 
 }//security
 

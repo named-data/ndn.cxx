@@ -66,19 +66,19 @@ namespace ndn {
     publishDataByCert (const Name &name, 
                        const unsigned char *buf, 
                        size_t len, 
-                       const security::Certificate & certificate, 
+                       const Name & certificateName, 
                        int freshness = DEFAULT_FRESHNESS);
 
     inline int
     publishDataByCert (const Name &name, 
                        const Blob &content, 
-                       const security::Certificate & certificate, 
+                       const Name & certificateName, 
                        int freshness = DEFAULT_FRESHNESS);
 
     inline int
     publishDataByCert (const Name &name, 
                        const std::string &content, 
-                       const security::Certificate & certificate, 
+                       const Name & certificateName, 
                        int freshness = DEFAULT_FRESHNESS);
 
     int
@@ -119,7 +119,7 @@ namespace ndn {
     Wrapper(const Wrapper &other) {}
 
     int
-    publishDataByCert (Data &data, const security::Certificate & certificate);
+    publishDataByCert (Data &data, const Name & certificateName);
 
     int
     publishDataByIdentity (Data &data, const Name &identityName);
@@ -163,9 +163,9 @@ struct ndnOperation : boost::exception, std::exception { };
 }
 
 inline int
-Wrapper::publishDataByCert (const Name &name, const Blob &content, const security::Certificate & certificate, int freshness)
+Wrapper::publishDataByCert (const Name &name, const Blob &content, const Name & certificateName, int freshness)
 {
-  return publishDataByCert (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), certificate, freshness);
+  return publishDataByCert (name, reinterpret_cast<const unsigned char*>(content.buf()), content.size(), certificateName, freshness);
 }
 
 inline int
@@ -175,9 +175,9 @@ Wrapper::publishDataByIdentity (const Name &name, const Blob &content, const Nam
 }
 
 inline int
-Wrapper::publishDataByCert (const Name &name, const std::string &content, const security::Certificate & certificate, int freshness)
+Wrapper::publishDataByCert (const Name &name, const std::string &content, const Name & certificateName, int freshness)
 {
-  return publishDataByCert (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), certificate, freshness);
+  return publishDataByCert (name, reinterpret_cast<const unsigned char *> (content.c_str ()), content.size (), certificateName, freshness);
 }
 
 inline int

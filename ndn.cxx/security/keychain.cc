@@ -150,15 +150,15 @@ namespace security
   }
 
   void
-  Keychain::sign (Data & data, const Certificate & certificate)
+  Keychain::sign (Data & data, const Name & certificateName)
   {
-    m_identityManager->signByCertificate(data, certificate.getName());
+    m_identityManager->signByCertificate(data, certificateName);
   }
 
   Ptr<Signature>
-  Keychain::sign (const Blob & blob, const Certificate & certificate)
+  Keychain::sign (const Blob & blob, const Name & certificateName)
   {
-    return m_identityManager->signByCertificate(blob, certificate.getName());
+    return m_identityManager->signByCertificate(blob, certificateName);
   }
 
   void 
@@ -185,7 +185,12 @@ namespace security
   Ptr<Signature> 
   Keychain::signByIdentity (const Blob & blob, const Name & identity)
   {
-    return m_identityManager->signByIdentity(blob, identity);
+    Name signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(identity);
+    
+    if(signingCertificateName.size() == 0)
+      throw SecException("No qualified certificate name found!");
+
+    return m_identityManager->signByCertificate(blob, signingCertificateName);
   }
 
   void 

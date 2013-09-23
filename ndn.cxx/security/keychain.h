@@ -219,7 +219,7 @@ namespace security
      * @param certificate the certificate whose name will be put into KeyLocator
      */
     virtual void 
-    sign(Data & data, const Certificate & certificate);
+    sign(Data & data, const Name & certificateName);
     
     /**
      * @brief Sign blob 
@@ -228,7 +228,7 @@ namespace security
      * @return the Signature
      */
     virtual Ptr<Signature> 
-    sign(const Blob & buf, const Certificate & certificate);
+    sign(const Blob & buf, const Name & certificateName);
 
     /**
      * @brief Sign data 

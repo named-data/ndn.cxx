@@ -226,12 +226,11 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_DSK_Name);
   Ptr<Data> ndn_DSK_unsign_cert = generateCertificate(ndn_DSK_Name, signingRequest);
 
-  identityManager.signByIdentity(*ndn_DSK_unsign_cert, Name("/ndn"));
+  Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn"));
+  identityManager.signByCertificate(*ndn_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_DSK_cert(*ndn_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_DSK_cert);
-
-
 
   identityManager.createIdentity(Name("/ndn/ucla.edu"));
   Name ndn_UCLA_KSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu"), true);
@@ -240,8 +239,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_UCLA_KSK_name);
   Ptr<Data> ndn_UCLA_KSK_unsign_cert = generateCertificate(ndn_UCLA_KSK_name, signingRequest);
 
-
-  identityManager.signByIdentity(*ndn_UCLA_KSK_unsign_cert, Name("/ndn"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn"));
+  identityManager.signByCertificate(*ndn_UCLA_KSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_UCLA_KSK_cert(*ndn_UCLA_KSK_unsign_cert);
 
 
@@ -251,7 +250,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_UCLA_DSK_name);
   Ptr<Data> ndn_UCLA_DSK_unsign_cert = generateCertificate(ndn_UCLA_DSK_name, signingRequest);
   
-  identityManager.signByIdentity(*ndn_UCLA_DSK_unsign_cert, Name("/ndn/ucla.edu"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu"));
+  identityManager.signByCertificate(*ndn_UCLA_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_UCLA_DSK_cert(*ndn_UCLA_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_UCLA_DSK_cert);
@@ -264,9 +264,9 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
 
   signingRequest = identityManager.getPublickey(ndn_Yingdi_KSK_name);
   Ptr<Data> ndn_Yingdi_KSK_unsign_cert = generateCertificate(ndn_Yingdi_KSK_name, signingRequest);
-
-
-  identityManager.signByIdentity(*ndn_Yingdi_KSK_unsign_cert, Name("/ndn/ucla.edu"));
+  
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu"));
+  identityManager.signByCertificate(*ndn_Yingdi_KSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_Yingdi_KSK_cert(*ndn_Yingdi_KSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_KSK_cert);
@@ -276,7 +276,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_Yingdi_DSK_name);
   Ptr<Data> ndn_Yingdi_DSK_unsign_cert = generateCertificate(ndn_Yingdi_DSK_name, signingRequest);
   
-  identityManager.signByIdentity(*ndn_Yingdi_DSK_unsign_cert, Name("/ndn/ucla.edu/yingdi"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi"));
+  identityManager.signByCertificate(*ndn_Yingdi_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_Yingdi_DSK_cert(*ndn_Yingdi_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_DSK_cert);
@@ -290,8 +291,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_APP_KSK_name);
   Ptr<Data> ndn_APP_KSK_unsign_cert = generateCertificate(ndn_APP_KSK_name, signingRequest);
 
-
-  identityManager.signByIdentity(*ndn_APP_KSK_unsign_cert, Name("/ndn/ucla.edu/yingdi"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi"));
+  identityManager.signByCertificate(*ndn_APP_KSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_APP_KSK_cert(*ndn_APP_KSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_APP_KSK_cert);
@@ -300,8 +301,9 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   Name ndn_APP_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi/app"));
   signingRequest = identityManager.getPublickey(ndn_APP_DSK_name);
   Ptr<Data> ndn_APP_DSK_unsign_cert = generateCertificate(ndn_APP_DSK_name, signingRequest);
-  
-  identityManager.signByIdentity(*ndn_APP_DSK_unsign_cert, Name("/ndn/ucla.edu/yingdi/app"));
+
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi/app"));
+  identityManager.signByCertificate(*ndn_APP_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_APP_DSK_cert(*ndn_APP_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_APP_DSK_cert);

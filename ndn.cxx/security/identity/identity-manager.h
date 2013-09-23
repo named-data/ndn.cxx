@@ -154,22 +154,22 @@ namespace security
     virtual Name
     getDefaultCertificateName ();
     
-    /**
-     * @brief Sign blob based on identity
-     * @param blob the blob to be signed
-     * @param identity the signing identity name
-     * @return the generated signature
-     */
-    virtual Ptr<Signature>
-    signByIdentity (const Blob & blob, const Name & identity);
+    // /**
+    //  * @brief Sign blob based on identity
+    //  * @param blob the blob to be signed
+    //  * @param identity the signing identity name
+    //  * @return the generated signature
+    //  */
+    // virtual Ptr<Signature>
+    // signByIdentity (const Blob & blob, const Name & identity);
 
-    /**
-     * @brief Sign data based on identity
-     * @param data the data packet to be signed, on return the Signature inside the data packet will be set
-     * @param identity the signing identity name
-     */
-    virtual void
-    signByIdentity (Data & data, const Name & identity);
+    // /**
+    //  * @brief Sign data based on identity
+    //  * @param data the data packet to be signed, on return the Signature inside the data packet will be set
+    //  * @param identity the signing identity name
+    //  */
+    // virtual void
+    // signByIdentity (Data & data, const Name & identity);
 
     /**
      * @brief sign blob based on certificate name

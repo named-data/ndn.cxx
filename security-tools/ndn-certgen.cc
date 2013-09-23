@@ -218,7 +218,8 @@ int main(int argc, char** argv)
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
 
-  identityManager.signByIdentity(*certificate, Name(signId));
+  Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name(signId));
+  identityManager.signByCertificate(*certificate, signingCertificateName);
 
   Ptr<Blob> dataBlob = certificate->encodeToWire();
 
