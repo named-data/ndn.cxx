@@ -12,6 +12,9 @@
 
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
+#include "ndn.cxx/helpers/der/visitor/certificate-data-visitor.h"
+#include "ndn.cxx/helpers/der/visitor/print-visitor.h"
+
 #include "logging.h"
 
 INIT_LOGGER("ndn.security.Certificate");
@@ -21,7 +24,12 @@ namespace ndn
 
 namespace security
 {
-  Certificate::Certificate(const Data & data)
+  Certificate::Certificate ()
+    : m_notBefore(boost::date_time::pos_infin)
+    , m_notAfter(boost::date_time::neg_infin)
+  {}
+
+  Certificate::Certificate (const Data & data)
   {
     //TODO: Copy data to local;
     Ptr<const signature::Sha256WithRsa> dataSig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa>(data.getSignature());
@@ -46,7 +54,7 @@ namespace security
     
     // _LOG_DEBUG("Finish local copy: " << getContent().getContent().size());
 
-    m_certData = CertificateData::fromDER(content());
+    decode();
   }
 
   Certificate::~Certificate()
@@ -54,47 +62,11 @@ namespace security
     //TODO:
   }
 
-  Time & 
-  Certificate::getNotBefore()
-  {
-    return m_certData->getNotBefore();
-  }
-
-  const Time & 
-  Certificate::getNotBefore() const
-  {
-    return m_certData->getNotBefore();
-  }
-
-  Time & 
-  Certificate::getNotAfter()
-  {
-    return m_certData->getNotAfter();
-  }
-  
-  const Time & 
-  Certificate::getNotAfter() const
-  {
-    return m_certData->getNotAfter();
-  }
-
-  Publickey & 
-  Certificate::getPublicKeyInfo()
-  {
-    return m_certData->getKey();
-  }
-
-  const Publickey & 
-  Certificate::getPublicKeyInfo() const
-  {
-    return m_certData->getKey();
-  }
-
   bool
   Certificate::isTooEarly()
   {
     Time now = time::Now();
-    if(now < getNotBefore())
+    if(now < m_notBefore)
       return true;
     else
       return false;
@@ -104,10 +76,91 @@ namespace security
   Certificate::isTooLate()
   {
     Time now = time::Now();
-    if(now > getNotAfter())
+    if(now > m_notAfter)
       return true;
     else
       return false;
+  }
+
+  void
+  Certificate::encode()
+  {
+    Ptr<der::DerSequence> root = Ptr<der::DerSequence>::Create();
+    
+    Ptr<der::DerSequence> validity = Ptr<der::DerSequence>::Create();
+    Ptr<der::DerGtime> notBefore = Ptr<der::DerGtime>(new der::DerGtime(m_notBefore));
+    Ptr<der::DerGtime> notAfter = Ptr<der::DerGtime>(new der::DerGtime(m_notAfter));
+    validity->addChild (notBefore);
+    validity->addChild (notAfter);
+    root->addChild (validity);
+
+    Ptr<der::DerSequence> subjectList = Ptr<der::DerSequence>::Create();
+    SubDescryptList::iterator it = m_subjectList.begin();
+    for(; it != m_subjectList.end(); it++)
+      {
+        Ptr<der::DerNode> child = it->toDER();
+        subjectList->addChild (child);
+      }
+    root->addChild (subjectList);
+
+    root->addChild (m_key.toDER());
+
+    if(!m_extnList.empty())
+      {
+        Ptr<der::DerSequence> extnList = Ptr<der::DerSequence>::Create();
+        ExtensionList::iterator it = m_extnList.begin();
+        for(; it != m_extnList.end(); it++)
+          extnList->addChild (it->toDER());
+        root->addChild (extnList);
+      }
+
+    blob_stream blobStream;
+    OutputIterator & start = reinterpret_cast<OutputIterator &> (blobStream);
+
+    root->encode(start);
+
+    Ptr<Blob> blob = blobStream.buf ();
+    Content content (blob->buf(), blob->size());
+    setContent (content);
+  }
+
+  void 
+  Certificate::decode()
+  {
+    const Blob & blob = content();
+
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (blob.buf(), blob.size());
+
+    Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
+
+    // der::PrintVisitor printVisitor;
+    // node->accept(printVisitor, string(""));
+
+    der::CertificateDataVisitor certDataVisitor;
+    node->accept(certDataVisitor, this);
+  }
+
+  void 
+  Certificate::printCertificate()
+  {
+    cout << "Validity:" << endl;
+    cout << m_notBefore << endl;
+    cout << m_notAfter << endl;
+
+    cout << "Subject Info:" << endl;  
+    vector<CertificateSubDescrypt>::iterator it = m_subjectList.begin();
+    for(; it < m_subjectList.end(); it++){
+      cout << it->getOidStr() << "\t" << it->getValue() << endl;
+    }
+
+    boost::iostreams::stream
+      <boost::iostreams::array_source> is (m_key.getKeyBlob().buf (), m_key.getKeyBlob().size ());
+
+    Ptr<der::DerNode> keyRoot = der::DerNode::parse(reinterpret_cast<InputIterator &> (is));
+
+    der::PrintVisitor printVisitor;
+    keyRoot->accept(printVisitor, string(""));
   }
 
 }//security

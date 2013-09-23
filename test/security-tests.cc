@@ -51,14 +51,12 @@ BOOST_AUTO_TEST_SUITE(SecurityTests)
 
 Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
 {
-  Ptr<Data> data = Create<Data>();
+  Ptr<Certificate> certificate = Create<Certificate>();
   
-  Name certName;
-  certName.append(keyName).append("ID-CERT").append("0");
-  data->setName(certName);
+  Name certificateName;
+  certificateName.append(keyName).append("ID-CERT").append("0");
+  certificate->setName(certificateName);
 
-  vector< Ptr<security::CertificateSubDescrypt> > subject;
-  subject.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.41", keyName.toUri())));
   tm current = boost::posix_time::to_tm(time::Now());
   current.tm_hour = 0;
   current.tm_min  = 0;
@@ -66,15 +64,14 @@ Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
   Time notBefore = boost::posix_time::ptime_from_tm(current);
   current.tm_year = current.tm_year + 20;
   Time notAfter = boost::posix_time::ptime_from_tm(current);
-  security::CertificateData certData(notBefore, notAfter, *pubKey);
-  certData.addSubjectDescription(security::CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
+  certificate->setNotBefore(notBefore);
+  certificate->setNotAfter(notBefore);
+  certificate->setPublicKeyInfo(*pubKey);
+  certificate->addSubjectDescription(security::CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
 
-  Ptr<Blob> certBlob = certData.toDERBlob();
-
-  Content content(certBlob->buf(), certBlob->size());
-  data->setContent(content);
+  certificate->encode();
   
-  return data;
+  return certificate;
 }
 
 BOOST_AUTO_TEST_CASE (Basic)

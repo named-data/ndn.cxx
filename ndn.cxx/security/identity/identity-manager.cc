@@ -13,6 +13,7 @@
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
+#include "ndn.cxx/security/exception.h"
 
 #include <ctime>
 #include <boost/filesystem.hpp>
@@ -273,21 +274,15 @@ namespace security
   Ptr<Data>
   IdentityManager::selfSign (const Name & keyName)
   {
-    Ptr<Data> data = Create<Data>();
+    Ptr<Certificate> certificate = Create<Certificate>();
     
-    // _LOG_DEBUG("Create self-signed cert name");
-    Name certName;
-    certName.append(keyName).append("ID-CERT").append("0");
-    data->setName(certName);
+    Name certificateName;
+    certificateName.append(keyName).append("ID-CERT").append("0");
+    certificate->setName(certificateName);
 
-    // _LOG_DEBUG("Get key blob");
     Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
-    // _LOG_DEBUG("Extract key blob");
     Ptr<Publickey> publickey = Publickey::fromDER(keyBlob);
 
-    // _LOG_DEBUG("Generate CertificateData");
-    vector<CertificateSubDescrypt> subject;
-    subject.push_back(CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
     tm current = boost::posix_time::to_tm(time::Now());
     current.tm_hour = 0;
     current.tm_min  = 0;
@@ -296,41 +291,30 @@ namespace security
     current.tm_year = current.tm_year + 20;
     Time notAfter = boost::posix_time::ptime_from_tm(current);
 
-    // _LOG_DEBUG("notBefore: " << boost::posix_time::to_iso_string(notBefore) << " notAfter: " << boost::posix_time::to_iso_string(notAfter)); 
+    certificate->setNotBefore(notBefore);
+    certificate->setNotAfter(notAfter);
+    certificate->setPublicKeyInfo(*publickey);
+    certificate->addSubjectDescription(CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
+    certificate->encode();
 
-    CertificateData certData(notBefore, notAfter, *publickey);
-    certData.addSubjectDescription(CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
-
-    Ptr<Blob> certBlob = certData.toDERBlob();
-
-    // _LOG_DEBUG("certBlob.size: " << certBlob->size());
-
-    Content content(certBlob->buf(), certBlob->size());
-    data->setContent(content);
-
-    //For temporary usage, we support RSA + SHA256 only, but will support more.
     Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
 
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
-    keyLocator.setKeyName (certName);
+    keyLocator.setKeyName (certificateName);
     
     sha256Sig->setKeyLocator (keyLocator);
     sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
 
-    data->setSignature(sha256Sig);
+    certificate->setSignature(sha256Sig);
 
-    // _LOG_DEBUG("Prepare for signing");
-    Ptr<Blob> unsignedData = data->encodeToUnsignedWire();
+    Ptr<Blob> unsignedData = certificate->encodeToUnsignedWire();
 
     Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName.toUri());
     
-    // _LOG_DEBUG("Set signature: " << sigBits);
     sha256Sig->setSignatureBits(*sigBits);
 
-    // _LOG_DEBUG("Finish selfSign");
-
-    return data;
+    return certificate;
   }
   
 }//security

@@ -197,8 +197,6 @@ int main(int argc, char** argv)
   Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
   der::PublickeyVisitor pubkeyVisitor;
   Ptr<security::Publickey> publickey = boost::any_cast<Ptr<security::Publickey> >(node->accept(pubkeyVisitor));
-
-  security::CertificateData certData(notBefore, notAfter, *publickey);
   
   if (0 == vm.count("subject_name"))
     {
@@ -207,24 +205,22 @@ int main(int argc, char** argv)
     }
 
   security::CertificateSubDescrypt subDescryptName("2.5.4.41", sName);
-  certData.addSubjectDescription(subDescryptName);
 
-  Ptr<Blob> derEncodedBlob = certData.toDERBlob();
-  
-
-  Ptr<Data> data = Create<Data>();
-  data->setName(certName);
-  Content content(derEncodedBlob->buf(), derEncodedBlob->size());
-  data->setContent(content);
+  Ptr<security::Certificate> certificate = Create<security::Certificate>();
+  certificate->setName(certName);
+  certificate->setNotBefore(notBefore);
+  certificate->setNotAfter(notAfter);
+  certificate->setPublicKeyInfo(*publickey);
+  certificate->addSubjectDescription(subDescryptName);
 
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
 
-  identityManager.signByIdentity(*data, Name(signId));
+  identityManager.signByIdentity(*certificate, Name(signId));
 
-  Ptr<Blob> dataBlob = data->encodeToWire();
+  Ptr<Blob> dataBlob = certificate->encodeToWire();
 
   string outputFileName = getOutputFileName(certName.toUri());
   ofstream ofs(outputFileName.c_str());

@@ -15,7 +15,7 @@
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
-
+#include "exception.h"
 #include "identity/basic-identity-storage.h"
 #include "policy/policy-rule.h"
 #include "policy/basic-policy-manager.h"
@@ -310,8 +310,7 @@ namespace security
       }
 
     if(NULL != trustedCert){
-      Ptr<CertificateData> certData = CertificateData::fromDER(trustedCert->content());
-      if(verifySignature(*dataPtr, certData->getKey()))
+      if(verifySignature(*dataPtr, trustedCert->getPublicKeyInfo()))
         {
           return preRecurVerifyCallback(dataPtr);
         }

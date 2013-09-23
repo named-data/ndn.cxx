@@ -19,7 +19,6 @@
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/data.h"
 #include "ndn.cxx/fields/blob.h"
-#include "ndn.cxx/security/exception.h"
 #include "ndn.cxx/helpers/der/der.h"
 
 #include "certificate-subdescrpt.h"

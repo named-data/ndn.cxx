@@ -12,6 +12,8 @@
 
 #include "identity-policy-rule.h"
 
+#include "ndn.cxx/security/exception.h"
+
 #include "ndn.cxx/helpers/der/der.h"
 #include "ndn.cxx/helpers/der/visitor/simple-visitor.h"
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"

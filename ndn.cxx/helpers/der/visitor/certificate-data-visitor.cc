@@ -15,7 +15,7 @@
 #include "publickey-visitor.h"
 #include "../der.h"
 
-#include "ndn.cxx/security/certificate/certificate-data.h"
+#include "ndn.cxx/security/certificate/certificate.h"
 #include "ndn.cxx/security/certificate/certificate-subdescrpt.h"
 #include "ndn.cxx/security/certificate/certificate-extension.h"
 
@@ -43,8 +43,8 @@ namespace der
     CertSubjectVisitor subjectVisitor;
     children[1]->accept(subjectVisitor, param);
     PublickeyVisitor pubkeyVisitor;
-    security::CertificateData* certData = boost::any_cast<security::CertificateData*>(param);
-    certData->setKey(*boost::any_cast<Ptr<security::Publickey> >(children[2]->accept(pubkeyVisitor)));
+    security::Certificate* certData = boost::any_cast<security::Certificate*>(param);
+    certData->setPublicKeyInfo(*boost::any_cast<Ptr<security::Publickey> >(children[2]->accept(pubkeyVisitor)));
         
     if(children.size() > 3)
       {
@@ -61,7 +61,7 @@ namespace der
   {
     // _LOG_DEBUG("CertValidityVisitor::visit");
     
-    security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
+    security::Certificate* certData = boost::any_cast<security::Certificate*> (param); 
 
     const DerNodePtrList & children = derSeq.getChildren();
     
@@ -83,7 +83,7 @@ namespace der
   void
   CertSubDescryptVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
+    security::Certificate* certData = boost::any_cast<security::Certificate*> (param); 
     
     const DerNodePtrList & children = derSeq.getChildren();
     
@@ -124,7 +124,7 @@ namespace der
   void 
   CertExtnEntryVisitor::visit(DerSequence& derSeq, boost::any param)
   {
-    security::CertificateData* certData = boost::any_cast<security::CertificateData*> (param); 
+    security::Certificate* certData = boost::any_cast<security::Certificate*> (param); 
     
     const DerNodePtrList & children = derSeq.getChildren();
     

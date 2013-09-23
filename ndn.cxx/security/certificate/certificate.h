@@ -15,13 +15,18 @@
 #include "ndn.cxx/common.h"
 #include "ndn.cxx/fields/name.h"
 
-#include "certificate-data.h"
+#include "certificate-subdescrpt.h"
+#include "certificate-extension.h"
+#include "publickey.h"
 
 namespace ndn
 {
 
 namespace security
 {
+  typedef vector<CertificateSubDescrypt> SubDescryptList;
+  typedef vector<CertificateExtension> ExtensionList;
+
   /**
    * @brief Certificate class, certificate in terms of data
    *
@@ -39,7 +44,7 @@ namespace security
     /**
      * @brief constructor
      */
-    Certificate() {}
+    Certificate();
 
     /**
      * @brief constructor
@@ -50,25 +55,66 @@ namespace security
     /**
      * @brief destructor
      */
-    virtual ~Certificate();
+    virtual 
+    ~Certificate();
+
+    /**
+     * @brief encode certificate info into content
+     */
+    void
+    encode ();
+
+    /**
+     * @brief add subject description
+     * @param descryption the description to be added
+     */
+    void 
+    addSubjectDescription (const CertificateSubDescrypt & description) 
+    { m_subjectList.push_back(description); }
+   
+    /**
+     * @brief add certificate extension
+     * @param extension the extension to be added
+     */
+    void 
+    addExtension (const CertificateExtension & extension) 
+    { m_extnList.push_back(extension); }
+
+    void 
+    setNotBefore (const Time & notBefore)
+    { m_notBefore = notBefore; }
 
     Time & 
-    getNotBefore();
+    getNotBefore ()
+    { return m_notBefore; }
     
     const Time &
-    getNotBefore() const;
+    getNotBefore () const
+    { return m_notBefore; }
+
+    void
+    setNotAfter (const Time & notAfter)
+    { m_notAfter = notAfter; }
 
     Time & 
-    getNotAfter();
+    getNotAfter ()
+    { return m_notAfter; }
 
     const Time &
-    getNotAfter() const;
+    getNotAfter () const
+    { return m_notAfter; }
+
+    void
+    setPublicKeyInfo (const Publickey & key)
+    { m_key = key; }
     
     Publickey & 
-    getPublicKeyInfo();
+    getPublicKeyInfo ()
+    { return m_key; }
 
-    const Publickey & 
-    getPublicKeyInfo() const;
+    const Publickey &
+    getPublicKeyInfo () const
+    { return m_key; }
 
     /**
      * @brief check if the certificate is valid
@@ -84,8 +130,19 @@ namespace security
     bool
     isTooLate();
 
+    void 
+    printCertificate ();
+
+  protected:
+    void
+    decode();
+
   private:
-    Ptr<CertificateData> m_certData;
+    SubDescryptList m_subjectList;
+    Time m_notBefore;
+    Time m_notAfter;
+    Publickey m_key;
+    ExtensionList m_extnList;
   };
 
 }//security
