@@ -537,7 +537,7 @@ namespace der
   void
   DerOid::encode128(int value, ostringstream & os)
   {
-    int mask = 1 << 7 - 1;
+    int mask = (1 << 7) - 1;
 
     if(128 > value)
       {
