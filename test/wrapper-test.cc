@@ -14,6 +14,10 @@
 #include "ndn.cxx/wrapper/closure.h"
 #include "ndn.cxx/security/keychain.h"
 #include "ndn.cxx/security/identity/osx-privatekey-storage.h"
+#include "ndn.cxx/security/policy/basic-policy-manager.h"
+#include "ndn.cxx/security/identity/basic-identity-storage.h"
+#include "ndn.cxx/security/encryption/basic-encryption-manager.h"
+#include "ndn.cxx/security/cache/basic-certificate-cache.h"
 #include "ndn.cxx/regex/regex.h"
 #include <sqlite3.h>
 #include <boost/bind.hpp>
@@ -120,8 +124,15 @@ BOOST_AUTO_TEST_CASE(Fake)
 
 BOOST_AUTO_TEST_CASE(Real)
 {
-  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
-  Ptr<security::Keychain> keychain = Ptr<security::Keychain>(new security::Keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db"));
+
+  using namespace ndn::security;
+
+  Ptr<OSXPrivatekeyStorage> privateStorage = Ptr<OSXPrivatekeyStorage>::Create();
+  Ptr<IdentityManager> identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
+  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage));
+  Ptr<EncryptionManager> encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, "/Users/yuyingdi/Test/encryption.db"));
+  Ptr<CertificateCache> certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
+  Ptr<Keychain> keychain = Ptr<Keychain>(new Keychain(identityManager, policyManager, encryptionManager, certificateCache));
 
   Ptr<Wrapper> wrapper = Ptr<Wrapper>(new Wrapper(keychain));
 

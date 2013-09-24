@@ -63,7 +63,10 @@ namespace security
      * @param policyPath the path to the policy file
      * @param encryptionPath the path to the encryption database
      */
-    Keychain(Ptr<PrivatekeyStorage> privateStorage, const string & policyPath, const string & encryptionPath);
+    Keychain(Ptr<IdentityManager> identityManager, 
+             Ptr<PolicyManager> policyManager, 
+             Ptr<EncryptionManager> encryptionManager,
+             Ptr<CertificateCache> certificateCache);
 
     /**
      * @brief Destructor
