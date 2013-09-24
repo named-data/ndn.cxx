@@ -162,14 +162,6 @@ namespace security
     getDefaultKeyNameForIdentity (const Name & identity);
     
     /**
-     * @brief get default certificate name of specified identity
-     * @param identity
-     * @return the default certificate name
-     */
-    virtual Name 
-    getDefaultCertificateNameForIdentity (const Name & identity);
-
-    /**
      * @brief get default certificate name of specified key
      * @param keyName
      * @return the default certificate name

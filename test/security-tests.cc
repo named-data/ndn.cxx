@@ -28,6 +28,7 @@
 #include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/encryption/aes-cipher.h"
 #include "ndn.cxx/security/encryption/basic-encryption-manager.h"
+#include "ndn.cxx/security/cache/basic-certificate-cache.h"
 
 #include "ndn.cxx/helpers/der/der.h"
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
@@ -51,14 +52,12 @@ BOOST_AUTO_TEST_SUITE(SecurityTests)
 
 Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
 {
-  Ptr<Data> data = Create<Data>();
+  Ptr<Certificate> certificate = Create<Certificate>();
   
-  Name certName;
-  certName.append(keyName).append("ID-CERT").append("0");
-  data->setName(certName);
+  Name certificateName;
+  certificateName.append(keyName).append("ID-CERT").append("0");
+  certificate->setName(certificateName);
 
-  vector< Ptr<security::CertificateSubDescrypt> > subject;
-  subject.push_back(Ptr<security::CertificateSubDescrypt>(new security::CertificateSubDescrypt("2.5.4.41", keyName.toUri())));
   tm current = boost::posix_time::to_tm(time::Now());
   current.tm_hour = 0;
   current.tm_min  = 0;
@@ -66,15 +65,14 @@ Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
   Time notBefore = boost::posix_time::ptime_from_tm(current);
   current.tm_year = current.tm_year + 20;
   Time notAfter = boost::posix_time::ptime_from_tm(current);
-  security::CertificateData certData(notBefore, notAfter, *pubKey);
-  certData.addSubjectDescription(security::CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
+  certificate->setNotBefore(notBefore);
+  certificate->setNotAfter(notBefore);
+  certificate->setPublicKeyInfo(*pubKey);
+  certificate->addSubjectDescription(security::CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
 
-  Ptr<Blob> certBlob = certData.toDERBlob();
-
-  Content content(certBlob->buf(), certBlob->size());
-  data->setContent(content);
+  certificate->encode();
   
-  return data;
+  return certificate;
 }
 
 BOOST_AUTO_TEST_CASE (Basic)
@@ -141,7 +139,7 @@ BOOST_AUTO_TEST_CASE (Digest)
 
 }
 
-BOOST_AUTO_TEST_CASE (IdentityPolicy)
+BOOST_AUTO_TEST_CASE (IdentityPolicyTest)
 {
   security::IdentityPolicyRule policy("^(<>*)<DNS>(<>*)$", "^(<>*)<DNS>(<>*)<><NDNCERT>", ">=", "\\1\\2", "\\1\\2", true);
   ostringstream oss;
@@ -174,7 +172,7 @@ BOOST_AUTO_TEST_CASE (WireFormat)
 
 }
 
-BOOST_AUTO_TEST_CASE (IdentityStorage)
+BOOST_AUTO_TEST_CASE (IdentityStorageTest)
 {
   try{
     security::BasicIdentityStorage idStore;
@@ -214,7 +212,7 @@ BOOST_AUTO_TEST_CASE (IdentityStorage)
   }
 }
 
-BOOST_AUTO_TEST_CASE (IdentityManager)
+BOOST_AUTO_TEST_CASE (IdentityManagerTest)
 {
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
@@ -229,12 +227,11 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_DSK_Name);
   Ptr<Data> ndn_DSK_unsign_cert = generateCertificate(ndn_DSK_Name, signingRequest);
 
-  identityManager.signByIdentity(*ndn_DSK_unsign_cert, Name("/ndn"));
+  Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn"));
+  identityManager.signByCertificate(*ndn_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_DSK_cert(*ndn_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_DSK_cert);
-
-
 
   identityManager.createIdentity(Name("/ndn/ucla.edu"));
   Name ndn_UCLA_KSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu"), true);
@@ -243,8 +240,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_UCLA_KSK_name);
   Ptr<Data> ndn_UCLA_KSK_unsign_cert = generateCertificate(ndn_UCLA_KSK_name, signingRequest);
 
-
-  identityManager.signByIdentity(*ndn_UCLA_KSK_unsign_cert, Name("/ndn"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn"));
+  identityManager.signByCertificate(*ndn_UCLA_KSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_UCLA_KSK_cert(*ndn_UCLA_KSK_unsign_cert);
 
 
@@ -254,7 +251,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_UCLA_DSK_name);
   Ptr<Data> ndn_UCLA_DSK_unsign_cert = generateCertificate(ndn_UCLA_DSK_name, signingRequest);
   
-  identityManager.signByIdentity(*ndn_UCLA_DSK_unsign_cert, Name("/ndn/ucla.edu"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu"));
+  identityManager.signByCertificate(*ndn_UCLA_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_UCLA_DSK_cert(*ndn_UCLA_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_UCLA_DSK_cert);
@@ -267,9 +265,9 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
 
   signingRequest = identityManager.getPublickey(ndn_Yingdi_KSK_name);
   Ptr<Data> ndn_Yingdi_KSK_unsign_cert = generateCertificate(ndn_Yingdi_KSK_name, signingRequest);
-
-
-  identityManager.signByIdentity(*ndn_Yingdi_KSK_unsign_cert, Name("/ndn/ucla.edu"));
+  
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu"));
+  identityManager.signByCertificate(*ndn_Yingdi_KSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_Yingdi_KSK_cert(*ndn_Yingdi_KSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_KSK_cert);
@@ -279,7 +277,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_Yingdi_DSK_name);
   Ptr<Data> ndn_Yingdi_DSK_unsign_cert = generateCertificate(ndn_Yingdi_DSK_name, signingRequest);
   
-  identityManager.signByIdentity(*ndn_Yingdi_DSK_unsign_cert, Name("/ndn/ucla.edu/yingdi"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi"));
+  identityManager.signByCertificate(*ndn_Yingdi_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_Yingdi_DSK_cert(*ndn_Yingdi_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_DSK_cert);
@@ -293,8 +292,8 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   signingRequest = identityManager.getPublickey(ndn_APP_KSK_name);
   Ptr<Data> ndn_APP_KSK_unsign_cert = generateCertificate(ndn_APP_KSK_name, signingRequest);
 
-
-  identityManager.signByIdentity(*ndn_APP_KSK_unsign_cert, Name("/ndn/ucla.edu/yingdi"));
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi"));
+  identityManager.signByCertificate(*ndn_APP_KSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_APP_KSK_cert(*ndn_APP_KSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_APP_KSK_cert);
@@ -303,8 +302,9 @@ BOOST_AUTO_TEST_CASE (IdentityManager)
   Name ndn_APP_DSK_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/yingdi/app"));
   signingRequest = identityManager.getPublickey(ndn_APP_DSK_name);
   Ptr<Data> ndn_APP_DSK_unsign_cert = generateCertificate(ndn_APP_DSK_name, signingRequest);
-  
-  identityManager.signByIdentity(*ndn_APP_DSK_unsign_cert, Name("/ndn/ucla.edu/yingdi/app"));
+
+  signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi/app"));
+  identityManager.signByCertificate(*ndn_APP_DSK_unsign_cert, signingCertificateName);
   security::Certificate ndn_APP_DSK_cert(*ndn_APP_DSK_unsign_cert);
 
   identityManager.addCertificateAsIdentityDefault(ndn_APP_DSK_cert);
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerSetDefault)
   // identityManager.loadDefaultIdentity();
 }
 
-BOOST_AUTO_TEST_CASE(PrivateStore)
+BOOST_AUTO_TEST_CASE(PrivateStoreTest)
 {
   security::OSXPrivatekeyStorage privateStorage;
   try{
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(PrivateStore)
   }
 }
 
-BOOST_AUTO_TEST_CASE(PolicyManager)
+BOOST_AUTO_TEST_CASE(PolicyManagerTest)
 {
   Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::BasicIdentityStorage identityStorage;
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(AES_CIPHER)
   cout << result << endl;
 }
 
-BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
+BOOST_AUTO_TEST_CASE(BasicEncryptionManagerTest)
 {
   Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::BasicEncryptionManager encryptionManager(privateStoragePtr, "/Users/yuyingdi/Test/encryption.db");
@@ -465,10 +465,16 @@ BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
   cout << result << endl;
 }
 
-BOOST_AUTO_TEST_CASE(KeyChain)
+BOOST_AUTO_TEST_CASE(KeyChainTest)
 {
-  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
-  security::Keychain keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db");
+  using namespace ndn::security;
+
+  Ptr<OSXPrivatekeyStorage> privateStorage = Ptr<OSXPrivatekeyStorage>::Create();
+  Ptr<IdentityManager> identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
+  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage));
+  Ptr<EncryptionManager> encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, "/Users/yuyingdi/Test/encryption.db"));
+  Ptr<CertificateCache> certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
+  Keychain keychain(identityManager, policyManager, encryptionManager, certificateCache);
   
   Data data;
   data.setName(Name("/ndn/ucla.edu/yingdi/testdata"));
@@ -478,10 +484,10 @@ BOOST_AUTO_TEST_CASE(KeyChain)
 
   
   try{
-  keychain.sign(data, Name("/ndn/ucla.edu/yingdi"), true);
+  keychain.signByIdentity(data, Name("/ndn/ucla.edu/yingdi"));
   
   // cout << boolalpha << keychain.verifyData(data) << endl;
-  }catch(security::SecException & e){
+  }catch(SecException & e){
     cerr << e.Msg() << endl;
   }
 }

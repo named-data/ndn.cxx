@@ -183,7 +183,8 @@ int main(int argc, char** argv)
     cerr << "Error in converting validity timestamp!" << endl;
     return 1;
   }
-  
+
+    
   if (0 == vm.count("request"))
     {
       cout << "request file must be specified" << endl;
@@ -191,22 +192,12 @@ int main(int argc, char** argv)
     }
 
   Ptr<Blob> keyBlob = getKeyBlob(reqFile);
-    printBlob(*keyBlob, "",0);
-  boost::iostreams::stream<boost::iostreams::array_source> is (keyBlob->buf (), keyBlob->size ());
-    cout<<"here: 1"<<endl;
-    Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
-  der::PublickeyVisitor pubkeyVisitor;
-    cout<<"here: 2"<<endl;
-    Ptr<security::Publickey> publickey;
-    try {
-         publickey = boost::any_cast<Ptr<security::Publickey> >(node->accept(pubkeyVisitor));
-    } catch (security::SecException &e) {
-        cout<<"dsfas"<<endl;
-        cout<<e.Msg()<<endl;
-    }
-    cout<<"here: 3"<<endl;
-  security::CertificateData certData(notBefore, notAfter, *publickey);
 
+  boost::iostreams::stream<boost::iostreams::array_source> is (keyBlob->buf (), keyBlob->size ());
+  Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
+  der::PublickeyVisitor pubkeyVisitor;
+  Ptr<security::Publickey> publickey = boost::any_cast<Ptr<security::Publickey> >(node->accept(pubkeyVisitor));
+  
   if (0 == vm.count("subject_name"))
     {
       cout << "subject_name must be specified" << endl;
@@ -214,26 +205,23 @@ int main(int argc, char** argv)
     }
 
   security::CertificateSubDescrypt subDescryptName("2.5.4.41", sName);
-  certData.addSubjectDescription(subDescryptName);
-    cout<<"here: 4"<<endl;
 
-  Ptr<Blob> derEncodedBlob = certData.toDERBlob();
-    cout<<"here: 5"<<endl;
-
-
-  Ptr<Data> data = Create<Data>();
-  data->setName(certName);
-  Content content(derEncodedBlob->buf(), derEncodedBlob->size());
-  data->setContent(content);
+  Ptr<security::Certificate> certificate = Create<security::Certificate>();
+  certificate->setName(certName);
+  certificate->setNotBefore(notBefore);
+  certificate->setNotAfter(notAfter);
+  certificate->setPublicKeyInfo(*publickey);
+  certificate->addSubjectDescription(subDescryptName);
 
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
 
   security::IdentityManager identityManager(publicStorage, privateStorage);
 
-  identityManager.signByIdentity(*data, Name(signId));
+  Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name(signId));
+  identityManager.signByCertificate(*certificate, signingCertificateName);
 
-  Ptr<Blob> dataBlob = data->encodeToWire();
+  Ptr<Blob> dataBlob = certificate->encodeToWire();
 
   string outputFileName = getOutputFileName(certName.toUri());
   ofstream ofs(outputFileName.c_str());
@@ -247,7 +235,6 @@ int main(int argc, char** argv)
   ofs << encoded;
   ofs << "-----END NDN ID CERT-----\n";
   ofs.close();
-  cout<<encoded<<endl;
   return 0;
 
 }

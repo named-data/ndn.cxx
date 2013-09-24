@@ -110,13 +110,14 @@ namespace security
         
         ostringstream oss;
         oss << time::NowUnixTimestamp().total_seconds();
-        string masterKeyName = "local-" + oss.str();
+        Name masterKeyName("/local-key/" + oss.str());
         m_defaultKeyName = masterKeyName;
         m_defaultSym = true;
+        string masterKeyNameUri = masterKeyName.toUri();
           
         m_privateStorage->generateKey(masterKeyName);
         sqlite3_prepare_v2 (m_db, "INSERT INTO MasterKey (key_name, key_type, active) VALUES (?, ?, ?)", -1, &stmt, 0);
-        sqlite3_bind_text (stmt, 1, masterKeyName.c_str(), masterKeyName.size(), SQLITE_TRANSIENT);
+        sqlite3_bind_text (stmt, 1, masterKeyNameUri.c_str(), masterKeyNameUri.size(), SQLITE_TRANSIENT);
         sqlite3_bind_int (stmt, 2, 1);
         sqlite3_bind_int (stmt, 3, 1);
         sqlite3_step (stmt);
@@ -129,14 +130,14 @@ namespace security
         
         if (res == SQLITE_ROW)
           {
-            m_defaultKeyName = string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes(stmt, 0));
+            m_defaultKeyName = Name(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes(stmt, 0)));
             m_defaultSym = (sqlite3_column_int(stmt, 1) == 1) ? true : false;
           }
       }    
   }
 
   void 
-  BasicEncryptionManager::createSymKey(const Name & keyName, KeyType keyType, const string & signkeyName, bool sym)
+  BasicEncryptionManager::createSymKey(const Name & keyName, KeyType keyType, const Name & signkeyName, bool sym)
   {
     if(doesKeyNameExist(keyName.toUri()))
       throw SecException("Key exists!");
@@ -155,12 +156,14 @@ namespace security
     default:
       throw SecException("Unsupported KeyType!");
     }
-    
+
+    _LOG_DEBUG("create sym key");
+
     string xmlStr = symKeyPtr->toXmlStr();
     
-    string encryptName; 
+    Name encryptName; 
     bool encryptSym;
-    if(signkeyName.empty())
+    if(0 == signkeyName.size())
       {
         encryptName = m_defaultKeyName;
         encryptSym = m_defaultSym;
@@ -170,6 +173,7 @@ namespace security
         encryptName = signkeyName;
         encryptSym = sym;
       }
+    string encryptNameUri = encryptName.toUri();
 
     Ptr<Blob> keyBlobPtr = NULL;
     if(encryptSym)
@@ -191,7 +195,7 @@ namespace security
     sqlite3_bind_int(stmt, 2, keyType);
     sqlite3_bind_blob(stmt, 3, keyBlobPtr->buf(), keyBlobPtr->size(), SQLITE_TRANSIENT);
     sqlite3_bind_int(stmt, 4, (encryptSym ? 1 : 0));
-    sqlite3_bind_text(stmt, 5, encryptName.c_str(), encryptName.size(), SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 5, encryptNameUri.c_str(), encryptNameUri.size(), SQLITE_TRANSIENT);
     
     int res = sqlite3_step (stmt);
  
@@ -265,11 +269,11 @@ namespace security
         Blob encryptedKeyBlob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes (stmt, 0));
         KeyType keyType = static_cast<KeyType>(sqlite3_column_int(stmt, 1));
         bool encryptSym = (sqlite3_column_int(stmt, 2) == 1 ? true : false);
-        string encryptKey(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3)), sqlite3_column_bytes (stmt, 3));
+        Name encryptKey(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3)), sqlite3_column_bytes (stmt, 3)));
         
         if(encryptSym)
           {
-            Ptr<Blob> keyBlobPtr = m_privateStorage->decrypt(encryptKey, encryptedKeyBlob, true);
+            Ptr<Blob> keyBlobPtr = m_privateStorage->decrypt(encryptKey, encryptedKeyBlob, encryptSym);
             if(KEY_TYPE_AES == keyType)
               {
                 Ptr<SymmetricKey> tmpKeyPtr = AesCipher::fromXmlStr(string(keyBlobPtr->buf(), keyBlobPtr->size()));

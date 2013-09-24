@@ -63,7 +63,10 @@ namespace security
      * @param policyPath the path to the policy file
      * @param encryptionPath the path to the encryption database
      */
-    Keychain(Ptr<PrivatekeyStorage> privateStorage, const string & policyPath, const string & encryptionPath);
+    Keychain(Ptr<IdentityManager> identityManager, 
+             Ptr<PolicyManager> policyManager, 
+             Ptr<EncryptionManager> encryptionManager,
+             Ptr<CertificateCache> certificateCache);
 
     /**
      * @brief Destructor
@@ -216,21 +219,36 @@ namespace security
     /**
      * @brief Sign data
      * @param data the data packet that will be signed, on return the Signature of data will be set
-     * @param signerName the name of the signer, depending on the next parameter byID
-     * @param byID if true, the signerName refers to the signing identity, otherwise the signer Name is the certificate name
+     * @param certificate the certificate whose name will be put into KeyLocator
      */
     virtual void 
-    sign(Data & data, const Name & signerName = Name(), bool byID = true);
+    sign(Data & data, const Name & certificateName);
     
     /**
      * @brief Sign blob 
      * @param buf the blob that needs to be signed
-     * @param signerName the name of the signer, depending on the next parameter byID
-     * @param byID if true, the signerName refers to the signing identity, otherwise the signer Name is the certificate name
+     * @param certificate the certificate whose name will be put into KeyLocator
      * @return the Signature
      */
     virtual Ptr<Signature> 
-    sign(const Blob & buf, const Name & signerName, bool byID = true);
+    sign(const Blob & buf, const Name & certificateName);
+
+    /**
+     * @brief Sign data 
+     * @param data the data packet that will be signed, on return the Signature of data will be set
+     * @param identity the identity name
+     */
+    virtual void 
+    signByIdentity(Data & data, const Name & identity);
+
+    /**
+     * @brief Sign blob 
+     * @param buf the blob that needs to be signed
+     * @param identity the identity name
+     * @return the Signature
+     */
+    virtual Ptr<Signature> 
+    signByIdentity (const Blob & blob, const Name & identity);
 
     /**
      * @brief Verify data packet

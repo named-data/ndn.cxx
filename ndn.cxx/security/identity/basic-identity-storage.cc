@@ -563,14 +563,6 @@ namespace security
         
     return keyName;
   }
-    
-  Name 
-  BasicIdentityStorage::getDefaultCertificateNameForIdentity (const Name & identity)
-  {
-    Name keyName = getDefaultKeyNameForIdentity(identity);
-
-    return getDefaultCertificateNameForKey(keyName);
-  }
 
   Name 
   BasicIdentityStorage::getDefaultCertificateNameForKey (const Name & keyName)

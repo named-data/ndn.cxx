@@ -231,10 +231,10 @@ namespace ndn {
   }
 
   int 
-  Wrapper::publishDataByCert (Data &data, const Name &certName)
+  Wrapper::publishDataByCert (Data &data, const Name & certificateName)
   {
     _LOG_TRACE("publishDataByCert: " << data.getName ());
-    m_keychain->sign(data, certName, false);
+    m_keychain->sign(data, certificateName);
     return putToCcnd(*data.encodeToWire());
   }
 
@@ -242,12 +242,12 @@ namespace ndn {
   Wrapper::publishDataByIdentity (Data &data, const Name &identityName)
   {
     _LOG_TRACE("publishDataByCert: " << data.getName ());
-    m_keychain->sign(data, identityName, true);
+    m_keychain->signByIdentity(data, identityName);
     return putToCcnd(*data.encodeToWire());
   }
 
   int
-  Wrapper::publishDataByCert (const Name &name, const unsigned char *buf, size_t len, int freshness, const Name &certName)
+  Wrapper::publishDataByCert (const Name &name, const unsigned char *buf, size_t len, const Name & certificateName, int freshness)
   {
     _LOG_TRACE ("publishData: " << name);
 
@@ -257,11 +257,11 @@ namespace ndn {
     Content content(buf, len, Content::DATA);
     data.setContent(content);
 
-    return publishDataByCert(data, certName);
+    return publishDataByCert(data, certificateName);
   }
 
   int
-  Wrapper::publishDataByIdentity (const Name &name, const unsigned char *buf, size_t len, int freshness, const Name &identityName)
+  Wrapper::publishDataByIdentity (const Name &name, const unsigned char *buf, size_t len, const Name &identityName, int freshness)
   {
     _LOG_TRACE ("publishData: " << name);
 

@@ -15,7 +15,7 @@
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
-
+#include "exception.h"
 #include "identity/basic-identity-storage.h"
 #include "policy/policy-rule.h"
 #include "policy/basic-policy-manager.h"
@@ -38,13 +38,20 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain(Ptr<PrivatekeyStorage> privateStorage, const string & policyPath, const string & encryptionPath)
-    :m_maxStep(100)
+  Keychain::Keychain(Ptr<IdentityManager> identityManager, 
+                     Ptr<PolicyManager> policyManager, 
+                     Ptr<EncryptionManager> encryptionManager,
+                     Ptr<CertificateCache> certificateCache)
+    : m_identityManager(identityManager)
+    , m_policyManager(policyManager)
+    , m_encryptionManager(encryptionManager)
+    , m_certificateCache(certificateCache)
+    , m_maxStep(100)
   {
-    m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
-    m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
-    m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, encryptionPath));
-    m_certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
+    // m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
+    // m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
+    // m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, encryptionPath));
+    // m_certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
   }
 
   Name
@@ -149,38 +156,48 @@ namespace security
     m_policyManager->setTrustAnchor(certificate);
   }
 
-  void 
-  Keychain::sign(Data & data, const Name & signerName, bool byID)
+  void
+  Keychain::sign (Data & data, const Name & certificateName)
   {
-    Name signingCertName;
-    
-    if(Name() == signerName)
-      signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));
+    m_identityManager->signByCertificate(data, certificateName);
+  }
+
+  Ptr<Signature>
+  Keychain::sign (const Blob & blob, const Name & certificateName)
+  {
+    return m_identityManager->signByCertificate(blob, certificateName);
+  }
+
+  void 
+  Keychain::signByIdentity(Data & data, const Name & identity)
+  {
+    Name signingCertificateName;
+    if(0 == identity.size())
+      signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));    
     else
       {
-        if(byID)
-          signingCertName = m_identityManager->getDefaultCertificateNameByIdentity(signerName);
-        else
-          signingCertName = signerName;
+        signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(identity);
       }
 
-    if(signingCertName.size() == 0)
+    if(signingCertificateName.size() == 0)
       throw SecException("No qualified certificate name found!");
 
-    if(!m_policyManager->checkSigningPolicy (data.getName (), signingCertName))
+    if(!m_policyManager->checkSigningPolicy (data.getName (), signingCertificateName))
       throw SecException("Signing Cert name does not comply with signing policy");
 
-    m_identityManager->signByCertificate(data, signingCertName);
+    m_identityManager->signByCertificate(data, signingCertificateName);
 
   }
 
   Ptr<Signature> 
-  Keychain::sign (const Blob & blob, const Name & signerName, bool byID)
+  Keychain::signByIdentity (const Blob & blob, const Name & identity)
   {
-    if(byID)
-      return m_identityManager->signByIdentity(blob, signerName);
-    else
-      return m_identityManager->signByCertificate(blob, signerName);
+    Name signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(identity);
+    
+    if(signingCertificateName.size() == 0)
+      throw SecException("No qualified certificate name found!");
+
+    return m_identityManager->signByCertificate(blob, signingCertificateName);
   }
 
   void 
@@ -305,8 +322,7 @@ namespace security
       }
 
     if(NULL != trustedCert){
-      Ptr<CertificateData> certData = CertificateData::fromDER(trustedCert->content());
-      if(verifySignature(*dataPtr, certData->getKey()))
+      if(verifySignature(*dataPtr, trustedCert->getPublicKeyInfo()))
         {
           return preRecurVerifyCallback(dataPtr);
         }

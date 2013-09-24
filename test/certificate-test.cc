@@ -8,7 +8,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "ndn.cxx/security/certificate/certificate-data.h"
+#include "ndn.cxx/security/certificate/certificate.h"
 #include "ndn.cxx/security/certificate/publicKey.h"
 #include "ndn.cxx/helpers/der/der.h"
 

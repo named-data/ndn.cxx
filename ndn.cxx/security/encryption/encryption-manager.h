@@ -30,7 +30,7 @@ namespace security
     virtual ~EncryptionManager() {}
     
     virtual void 
-    createSymKey(const Name & keyName, KeyType keyType, const string & signkeyName = "", bool sym = true) = 0;
+    createSymKey(const Name & keyName, KeyType keyType, const Name & signkeyName = Name(), bool sym = true) = 0;
 
     virtual Ptr<Blob>
     encrypt(const Name & keyName, const Blob & blob, bool sym = false, EncryptMode em = EM_DEFAULT) = 0;
