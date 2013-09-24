@@ -38,13 +38,20 @@ namespace ndn
 
 namespace security
 {
-  Keychain::Keychain(Ptr<PrivatekeyStorage> privateStorage, const string & policyPath, const string & encryptionPath)
-    :m_maxStep(100)
+  Keychain::Keychain(Ptr<IdentityManager> identityManager, 
+                     Ptr<PolicyManager> policyManager, 
+                     Ptr<EncryptionManager> encryptionManager,
+                     Ptr<CertificateCache> certificateCache)
+    : m_identityManager(identityManager)
+    , m_policyManager(policyManager)
+    , m_encryptionManager(encryptionManager)
+    , m_certificateCache(certificateCache)
+    , m_maxStep(100)
   {
-    m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
-    m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
-    m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, encryptionPath));
-    m_certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
+    // m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
+    // m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
+    // m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, encryptionPath));
+    // m_certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
   }
 
   Name

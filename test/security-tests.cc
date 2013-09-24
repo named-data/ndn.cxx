@@ -28,6 +28,7 @@
 #include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/encryption/aes-cipher.h"
 #include "ndn.cxx/security/encryption/basic-encryption-manager.h"
+#include "ndn.cxx/security/cache/basic-certificate-cache.h"
 
 #include "ndn.cxx/helpers/der/der.h"
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
@@ -138,7 +139,7 @@ BOOST_AUTO_TEST_CASE (Digest)
 
 }
 
-BOOST_AUTO_TEST_CASE (IdentityPolicy)
+BOOST_AUTO_TEST_CASE (IdentityPolicyTest)
 {
   security::IdentityPolicyRule policy("^(<>*)<DNS>(<>*)$", "^(<>*)<DNS>(<>*)<><NDNCERT>", ">=", "\\1\\2", "\\1\\2", true);
   ostringstream oss;
@@ -171,7 +172,7 @@ BOOST_AUTO_TEST_CASE (WireFormat)
 
 }
 
-BOOST_AUTO_TEST_CASE (IdentityStorage)
+BOOST_AUTO_TEST_CASE (IdentityStorageTest)
 {
   try{
     security::BasicIdentityStorage idStore;
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE (IdentityStorage)
   }
 }
 
-BOOST_AUTO_TEST_CASE (IdentityManager)
+BOOST_AUTO_TEST_CASE (IdentityManagerTest)
 {
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
@@ -319,7 +320,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerSetDefault)
   // identityManager.loadDefaultIdentity();
 }
 
-BOOST_AUTO_TEST_CASE(PrivateStore)
+BOOST_AUTO_TEST_CASE(PrivateStoreTest)
 {
   security::OSXPrivatekeyStorage privateStorage;
   try{
@@ -339,7 +340,7 @@ BOOST_AUTO_TEST_CASE(PrivateStore)
   }
 }
 
-BOOST_AUTO_TEST_CASE(PolicyManager)
+BOOST_AUTO_TEST_CASE(PolicyManagerTest)
 {
   Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::BasicIdentityStorage identityStorage;
@@ -446,7 +447,7 @@ BOOST_AUTO_TEST_CASE(AES_CIPHER)
   cout << result << endl;
 }
 
-BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
+BOOST_AUTO_TEST_CASE(BasicEncryptionManagerTest)
 {
   Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::BasicEncryptionManager encryptionManager(privateStoragePtr, "/Users/yuyingdi/Test/encryption.db");
@@ -464,10 +465,16 @@ BOOST_AUTO_TEST_CASE(BasicEncryptionManager)
   cout << result << endl;
 }
 
-BOOST_AUTO_TEST_CASE(KeyChain)
+BOOST_AUTO_TEST_CASE(KeyChainTest)
 {
-  Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
-  security::Keychain keychain(privateStoragePtr, "/Users/yuyingdi/Test/policy", "/Users/yuyingdi/Test/encryption.db");
+  using namespace ndn::security;
+
+  Ptr<OSXPrivatekeyStorage> privateStorage = Ptr<OSXPrivatekeyStorage>::Create();
+  Ptr<IdentityManager> identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
+  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage));
+  Ptr<EncryptionManager> encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, "/Users/yuyingdi/Test/encryption.db"));
+  Ptr<CertificateCache> certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
+  Keychain keychain(identityManager, policyManager, encryptionManager, certificateCache);
   
   Data data;
   data.setName(Name("/ndn/ucla.edu/yingdi/testdata"));
@@ -480,7 +487,7 @@ BOOST_AUTO_TEST_CASE(KeyChain)
   keychain.signByIdentity(data, Name("/ndn/ucla.edu/yingdi"));
   
   // cout << boolalpha << keychain.verifyData(data) << endl;
-  }catch(security::SecException & e){
+  }catch(SecException & e){
     cerr << e.Msg() << endl;
   }
 }
