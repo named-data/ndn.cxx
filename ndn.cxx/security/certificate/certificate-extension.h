@@ -57,6 +57,9 @@ namespace security
     Ptr<der::DerNode> 
     toDER ();
 
+    Ptr<Blob>
+    toDERBlob ();
+
     inline const OID &
     getOID () const;
 

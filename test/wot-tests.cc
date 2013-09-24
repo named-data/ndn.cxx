@@ -23,9 +23,6 @@ BOOST_AUTO_TEST_CASE(IntroCertExtnTest)
 {
   IntroCertificateExtension introExtn (Name("/ndn/ucla.edu/yingdi/"), IntroCertificateExtension::PRODUCER, 100);
   
-  cerr << introExtn.getOID().toString() << endl;
-  
-  
   der::PrintVisitor printVisitor;
   introExtn.toDER()->accept(printVisitor, string(""));
 }

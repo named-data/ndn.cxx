@@ -297,23 +297,6 @@ namespace der
 
     DerNode::encodeHeader(m_size);
 
-    {
-      string indent = "";
-      int offset = 0;
-      int count = 0;
-      for(int i = offset; i < m_header.size(); i++)
-        {
-          cout << " " << hex << setw(2) << setfill('0') << (int)(uint8_t)m_header[i];
-          count++;
-          if(8 == count)
-            {
-              count = 0;
-              cout << "\n" << indent;
-            }
-        }
-      cout << endl;
-    }
-
     start.write(m_header.buf(), m_header.size());
 
     DerNodePtrList::iterator it = m_nodeList.begin();

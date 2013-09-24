@@ -42,7 +42,20 @@ namespace security
     root->addChild(critical);
     root->addChild(extnValue);
 
+    root->getSize();
+
     return root;
+  }
+
+  Ptr<Blob>
+  CertificateExtension::toDERBlob()
+  {
+    blob_stream blobStream;
+    OutputIterator & start = reinterpret_cast<OutputIterator &> (blobStream);
+
+    toDER()->encode(start);
+
+    return blobStream.buf ();
   }
 
 }//security
