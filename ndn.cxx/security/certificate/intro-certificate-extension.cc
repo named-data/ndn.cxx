@@ -20,8 +20,8 @@ namespace ndn
 namespace security
 {
   IntroCertificateExtension::IntroCertificateExtension(const Name & nameSpace, const TrustClass & trustClass, const int & trustLevel)
-    : CertificateExtension(string("1.3.6.1.5.32.1"), true, Blob())
-    , m_namespace(nameSpace)
+    : CertificateExtension("1.3.6.1.5.32.1", true, Blob())
+    , m_nameSpace(nameSpace)
     , m_trustClass(trustClass)
   {
     if(trustLevel > 100 || trustLevel < 0)
@@ -32,7 +32,7 @@ namespace security
   }
 
   IntroCertificateExtension::IntroCertificateExtension(const Blob & value)
-    : CertificateExtension(string("1.3.6.1.5.32.1"), true, value)
+    : CertificateExtension("1.3.6.1.5.32.1", true, value)
   {
     decodeValue();
   }
@@ -42,7 +42,7 @@ namespace security
   {
     Ptr<der::DerSequence> root = Ptr<der::DerSequence>::Create();
     
-    Ptr<der::DerOctetString> nameSpace = Ptr<der::DerOctetString>(new der::DerOctetString(m_namespace.toUri()));
+    Ptr<der::DerOctetString> nameSpace = Ptr<der::DerOctetString>(new der::DerOctetString(m_nameSpace.toUri()));
 
     Blob trustClassBlob;
     switch(m_trustClass)
@@ -90,7 +90,7 @@ namespace security
     
     der::SimpleVisitor simpleVisitor;
 
-    m_namespace = Name(boost::any_cast<string>(children[0]->accept(simpleVisitor)));
+    m_nameSpace = Name(boost::any_cast<string>(children[0]->accept(simpleVisitor)));
 
     const Blob& trustClassBlob = boost::any_cast<const Blob &>(children[1]->accept(simpleVisitor));
     if(trustClassBlob.size() != 1 || 0 > trustClassBlob[0] || 2 < trustClassBlob[0])

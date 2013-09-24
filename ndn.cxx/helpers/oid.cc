@@ -50,10 +50,11 @@ namespace ndn
     :m_oid(oid.m_oid)
   {}
 
-  string OID::toString()
+  string 
+  OID::toString() const
   {
     ostringstream convert;
-    vector<int>::iterator it = m_oid.begin();
+    vector<int>::const_iterator it = m_oid.begin();
     for(; it < m_oid.end(); it++){
       if(it != m_oid.begin())
         convert << ".";

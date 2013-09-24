@@ -30,25 +30,46 @@ namespace security
     };
 
   public:
-    IntroCertificateExtension(const Name& nameSpace, const TrustClass & trustClass, const int & trustLevel);
+    IntroCertificateExtension (const Name& nameSpace, const TrustClass & trustClass, const int & trustLevel);
 
-    IntroCertificateExtension(const Blob & value);
+    IntroCertificateExtension (const Blob & value);
 
     virtual
-    ~IntroCertificateExtension() {}
+    ~IntroCertificateExtension () {}
+
+    inline const Name & 
+    getNameSpace () const;
+        
+    inline const TrustClass &
+    getTrustClass () const;
+
+    inline const int &
+    getTrustLevel () const;
 
   private:
     void
-    encodeValue();
+    encodeValue ();
     
     void 
-    decodeValue();
+    decodeValue ();
 
   private:
-    Name m_namespace;
+    Name m_nameSpace;
     TrustClass m_trustClass;
     int m_trustLevel;
   };
+
+  inline const Name &
+  IntroCertificateExtension::getNameSpace () const
+  { return m_nameSpace; }
+
+  inline const IntroCertificateExtension::TrustClass &
+  IntroCertificateExtension::getTrustClass () const
+  { return m_trustClass; }
+
+  inline const int &
+  IntroCertificateExtension::getTrustLevel () const
+  { return m_trustLevel; }
 
 }//security
 

@@ -51,7 +51,7 @@ namespace ndn
     }
 
     string 
-    toString();
+    toString() const;
 
     bool operator == (const OID & oid);
 
