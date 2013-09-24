@@ -47,6 +47,9 @@ namespace security
      */
     CertificateExtension (const OID & oid, const bool & critical, const Blob & value);
 
+    virtual
+    ~CertificateExtension () {}
+
     /**
      * @brief encode the object into DER syntax tree
      * @return the encoded DER syntax tree
@@ -54,7 +57,7 @@ namespace security
     Ptr<der::DerNode> 
     toDER();
       
-  private:
+  protected:
     OID m_extnID;
     bool m_critical;
     Blob m_extnValue;
