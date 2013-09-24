@@ -13,7 +13,7 @@
 
 #include "ndn.cxx/common.h"
 
-#include "privatekey-store.h"
+#include "privatekey-storage.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Security/Security.h>
@@ -24,7 +24,7 @@ namespace ndn
     
     namespace security
     {
-        class SimpleKeyStore : public PrivatekeyStore
+        class SimpleKeyStore : public PrivatekeyStorage
         {
         public:
             
@@ -36,7 +36,7 @@ namespace ndn
             virtual
             ~SimpleKeyStore() {};
             
-            virtual bool
+            virtual void
             generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
             
             /**

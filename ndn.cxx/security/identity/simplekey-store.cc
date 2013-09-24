@@ -11,6 +11,7 @@
 #include <string>
 
 #include "ndn.cxx/security/certificate/publickey.h"
+#include "ndn.cxx/security/exception.h"
 #include <cryptopp/rsa.h>
 #include <cryptopp/files.h>
 #include <cryptopp/base64.h>
@@ -25,6 +26,7 @@
 
 #include "simplekey-store.h"
 using namespace CryptoPP;
+using namespace ndn::security;
 using namespace std;
 
 namespace ndn
@@ -53,18 +55,18 @@ namespace ndn
          * @brief destructor of PrivateKeyStore
          */
         
-        bool
+        void
         SimpleKeyStore::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
         {
         	  if (SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
         	  { 
-        	  	throw SecException("public key exists");
-        	  	return false;
+        	  	throw security::SecException("public key exists");
+//        	  	return false;
         	  }
         	  if ( SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
         	  { 
-        	  	throw SecException("private key exists");
-        	  	return false;
+        	  	throw security::SecException("private key exists");
+  //      	  	return false;
         	  }
             if (keyType == KEY_TYPE_RSA) {
                 AutoSeededRandomPool rng;
@@ -85,9 +87,10 @@ namespace ndn
                 using namespace boost::filesystem;
 							  permissions(privateKeyName.c_str(), owner_read);
 							  permissions(publicKeyName.c_str(), others_read|owner_read);
-                return true;
+//                return true;
             }
-            return false;
+  //          return false;
+  						return;
         }
         
         Ptr<Publickey>
@@ -95,7 +98,7 @@ namespace ndn
         {
             if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
             {
-        	  	throw SecException("public key doesn't exists");
+        	  	throw security::SecException("public key doesn't exists");
         	  	return 0;
             }
             string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
@@ -257,7 +260,7 @@ namespace ndn
             {
             	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
         	  		{ 
-        	  			throw SecException("public key doesn't exist");
+        	  			throw security::SecException("public key doesn't exist");
         	  			return 0;
         	  		}
                   try
@@ -342,7 +345,7 @@ namespace ndn
         {
         	  if ( SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_SYMMETRIC))
         	  { 
-        	  	throw SecException("symmetric key exists");
+        	  	throw security::SecException("symmetric key exists");
         	  	return ;
         	  }
 
