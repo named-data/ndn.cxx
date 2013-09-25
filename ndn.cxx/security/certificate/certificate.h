@@ -36,9 +36,9 @@ namespace security
   class Certificate : public Data
   {
   public:
-    enum CertificateType{
-      IDENTITY_CERT,
-    };
+    // enum CertificateType{
+    //   IDENTITY_CERTIFICATE,
+    // };
 
   public:
     /**
@@ -137,7 +137,7 @@ namespace security
     void
     decode();
 
-  private:
+  protected:
     SubDescryptList m_subjectList;
     Time m_notBefore;
     Time m_notAfter;
