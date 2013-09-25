@@ -26,7 +26,6 @@
 #include "policy/policy-manager.h"
 #include "encryption/encryption-manager.h"
 #include "policy/policy-rule.h"
-#include "cache/certificate-cache.h"
 // #include "certificate/certificate.h"
 
 #include "ndn.cxx/wrapper/closure.h"
@@ -42,11 +41,6 @@ namespace ndn
 
 namespace security
 {
-
-  typedef boost::function<void (Ptr<Data>)> VerifiedCallback;
-  typedef boost::function<void ()> VerifyFailCallback;
-  typedef boost::function<void (Ptr<Data>)> RecursiveVerifiedCallback;
-
   /**
    * @brief Keychain class, the main class of security library
    *
@@ -65,8 +59,7 @@ namespace security
      */
     Keychain(Ptr<IdentityManager> identityManager, 
              Ptr<PolicyManager> policyManager, 
-             Ptr<EncryptionManager> encryptionManager,
-             Ptr<CertificateCache> certificateCache);
+             Ptr<EncryptionManager> encryptionManager);
 
     /**
      * @brief Destructor
@@ -257,7 +250,10 @@ namespace security
      * @param failureCallback the callback function that will be called if the target data cannot be verified
      */
     virtual void 
-    verifyData(Ptr<Data> data, const VerifiedCallback & verifiedCallback, const VerifyFailCallback & failureCallback);
+    verifyData(Ptr<Data> data, 
+               const DataCallback & verifiedCallback, 
+               const UnverifiedCallback& unverifiedCallback,
+               int stepCount);
 
     /*****************************************
      *           Encrypt/Decrypt             *
@@ -304,20 +300,20 @@ namespace security
     }
 
   private:  
-    /**
-     * @brief Single intermediate step of verification
-     * @param data the data packet that will be verified in this step
-     * @param isFirst if the target data packet is the original data packet, otherwise the data packet is a intermediate certificate
-     * @param stepCount the rest number of verification steps that can be executed
-     * @param recursiveVerifiedCallback the callback function that will be called if the target data packet is valid
-     * @param failureCallback the callback function that will be called if the target data cannot be verified
-     */
-    virtual void 
-    stepVerify(Ptr<Data> data, 
-               const bool isFirst,
-               const int stepCount, 
-               const RecursiveVerifiedCallback & recursiveVerifiedCallback, 
-               const VerifyFailCallback & failureCallback);
+    // /**
+    //  * @brief Single intermediate step of verification
+    //  * @param data the data packet that will be verified in this step
+    //  * @param isFirst if the target data packet is the original data packet, otherwise the data packet is a intermediate certificate
+    //  * @param stepCount the rest number of verification steps that can be executed
+    //  * @param recursiveVerifiedCallback the callback function that will be called if the target data packet is valid
+    //  * @param failureCallback the callback function that will be called if the target data cannot be verified
+    //  */
+    // virtual void 
+    // stepVerify(Ptr<Data> data, 
+    //            const bool isFirst,
+    //            const int stepCount, 
+    //            const RecursiveVerifiedCallback & recursiveVerifiedCallback, 
+    //            const VerifyFailCallback & failureCallback);
 
     /**
      * @brief Callback function that will be called if the interest for certificate times out
@@ -330,20 +326,21 @@ namespace security
     onCertificateInterestTimeout(Ptr<Closure> closure, 
                                  Ptr<Interest> interest, 
                                  int retry, 
-                                 const VerifyFailCallback & failureCallback);
+                                 const UnverifiedCallback& unverifiedCallback,
+                                 Ptr<Data> data);
 
-    /**
-     * @brief Callback function that will be called if the certificate has been validated
-     * @param certificate the certificate that has been validated
-     * @param data the data packet that needs to be verified by the certificate
-     * @param preRecurVerifyCallback the callback function that will be called if the data packet can be validated
-     * @param failureCallback the callback function that will be called if the data packet cannot be validated
-     */
-    virtual void
-    onCertificateVerified(Ptr<Data>certificate, 
-                          Ptr<Data>data, 
-                          const RecursiveVerifiedCallback &preRecurVerifyCallback, 
-                          const VerifyFailCallback &failureCallback);
+    // /**
+    //  * @brief Callback function that will be called if the certificate has been validated
+    //  * @param certificate the certificate that has been validated
+    //  * @param data the data packet that needs to be verified by the certificate
+    //  * @param preRecurVerifyCallback the callback function that will be called if the data packet can be validated
+    //  * @param failureCallback the callback function that will be called if the data packet cannot be validated
+    //  */
+    // virtual void
+    // onCertificateVerified(Ptr<Data>certificate, 
+    //                       Ptr<Data>data, 
+    //                       const RecursiveVerifiedCallback &preRecurVerifyCallback, 
+    //                       const VerifyFailCallback &failureCallback);
 
     // virtual void
     // onOriginalCertVerified(Ptr<Certificate> cert, 
@@ -355,7 +352,6 @@ namespace security
     Ptr<IdentityManager> m_identityManager;
     Ptr<PolicyManager> m_policyManager;
     Ptr<EncryptionManager> m_encryptionManager;
-    Ptr<CertificateCache> m_certificateCache;
     const int m_maxStep;
     Wrapper* m_handler;
   };

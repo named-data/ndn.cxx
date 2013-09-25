@@ -329,15 +329,15 @@ namespace ndn {
   }
 
   static void
-  onVerify(const Closure::DataCallback & dataCallback, Ptr<Data> data, Ptr<Executor> executor)
+  onVerify(const DataCallback & dataCallback, Ptr<Data> data, Ptr<Executor> executor)
   {
     executor->execute (bind (dataCallback, data));
   }
 
   static void
-  onVerifyError(const Closure::VerifyFailCallback & failCallback, Ptr<Interest> interest, Ptr<Executor> executor)
+  onVerifyError(const UnverifiedCallback & unverifiedCallback, Ptr<Data> data, Ptr<Executor> executor)
   {
-    executor->execute (bind (failCallback, interest));
+    executor->execute (bind (unverifiedCallback, data));
   }
 
   static ccn_upcall_res
@@ -350,7 +350,13 @@ namespace ndn {
     Ptr<Executor> executor;
     Ptr<Interest> interest;
     Ptr<security::Keychain> keychain;
-    tuple<Ptr<Closure>, Ptr<Executor>, Ptr<Interest>, Ptr<security::Keychain> > *realData = reinterpret_cast< tuple<Ptr<Closure>, Ptr<Executor>, Ptr<Interest>, Ptr<security::Keychain> > * > (selfp->data);
+    tuple<Ptr<Closure>, 
+          Ptr<Executor>, 
+          Ptr<Interest>, 
+          Ptr<security::Keychain> > *realData = reinterpret_cast< tuple<Ptr<Closure>, 
+                                                                        Ptr<Executor>,
+                                                                        Ptr<Interest>, 
+                                                                        Ptr<security::Keychain> > * > (selfp->data);
   tie (cp, executor, interest, keychain) = *realData;
 
     switch (kind)
@@ -398,10 +404,11 @@ namespace ndn {
     Ptr<Blob> blob = Ptr<Blob> (new Blob(info->content_ccnb, info->pco->offset[CCN_PCO_E]));
     Ptr<Data> data = Data::decodeFromWire(blob);
 
-    if(cp->m_unverifiedDataCallback.empty())
-      keychain->verifyData(data, boost::bind(onVerify, cp->m_dataCallback, _1, executor), bind(onVerifyError, cp->m_verifyFailCallback, interest, executor));
-    else
-      executor->execute (bind(cp->m_unverifiedDataCallback, data));
+
+    keychain->verifyData(data, 
+                           boost::bind(onVerify, cp->m_dataCallback, _1, executor),
+                           boost::bind(onVerifyError, cp->m_unverifiedCallback, _1, executor),
+                           cp->m_stepCount);
  
    _LOG_TRACE (">> incomingData");
     

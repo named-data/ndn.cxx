@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(PolicyManagerTest)
   Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   security::BasicIdentityStorage identityStorage;
 
-  security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr);
+  security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr, NULL, 0);
 
   policyManager.setVerificationPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<KSK-.*><ID-CERT>", "^(<>*)<DSK-.*><ID-CERT>", "==", "\\1", "\\1", false)));
   policyManager.setVerificationPolicyRule(Ptr<security::IdentityPolicyRule>(new security::IdentityPolicyRule("^(<>*)<DSK-.*><ID-CERT>", "^(<>*)<KSK-.*><ID-CERT>", "==", "\\1", "\\1", true)));  
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(PolicyManagerLoad)
 {
   Ptr<security::OSXPrivatekeyStorage> privateStoragePtr = Ptr<security::OSXPrivatekeyStorage>::Create();
   cerr << "GET privateStore" << endl;
-  security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr);
+  security::BasicPolicyManager policyManager("/Users/yuyingdi/Test/policy", privateStoragePtr, NULL, 0);
   cerr << "GET policyManager" << endl;
   try{
   policyManager.displayPolicy();
@@ -471,10 +471,11 @@ BOOST_AUTO_TEST_CASE(KeyChainTest)
 
   Ptr<OSXPrivatekeyStorage> privateStorage = Ptr<OSXPrivatekeyStorage>::Create();
   Ptr<IdentityManager> identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
-  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage));
-  Ptr<EncryptionManager> encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, "/Users/yuyingdi/Test/encryption.db"));
   Ptr<CertificateCache> certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
-  Keychain keychain(identityManager, policyManager, encryptionManager, certificateCache);
+  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage, certificateCache, 10));
+  Ptr<EncryptionManager> encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, "/Users/yuyingdi/Test/encryption.db"));
+
+  Keychain keychain(identityManager, policyManager, encryptionManager);
   
   Data data;
   data.setName(Name("/ndn/ucla.edu/yingdi/testdata"));
