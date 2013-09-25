@@ -24,7 +24,6 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
-#include <cryptopp/rsa.h>
 
 #include "logging.h"
 
@@ -40,19 +39,12 @@ namespace security
 {
   Keychain::Keychain(Ptr<IdentityManager> identityManager, 
                      Ptr<PolicyManager> policyManager, 
-                     Ptr<EncryptionManager> encryptionManager,
-                     Ptr<CertificateCache> certificateCache)
+                     Ptr<EncryptionManager> encryptionManager)
     : m_identityManager(identityManager)
     , m_policyManager(policyManager)
     , m_encryptionManager(encryptionManager)
-    , m_certificateCache(certificateCache)
     , m_maxStep(100)
-  {
-    // m_identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
-    // m_policyManager = Ptr<PolicyManager>(new BasicPolicyManager(policyPath, privateStorage));
-    // m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, encryptionPath));
-    // m_certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
-  }
+  {}
 
   Name
   Keychain::createIdentity(const Name & identity)
@@ -91,9 +83,9 @@ namespace security
   }
   
   void
-  Keychain::installCertificate(Ptr<Certificate> certificatePtr)
+  Keychain::installCertificate(Ptr<Certificate> certificate)
   {
-    verifyData(certificatePtr, boost::bind(&IdentityManager::addCertificate, &*m_identityManager, certificatePtr), VerifyFailCallback());
+    m_identityManager->addCertificate(certificate);
   }
 
   void
@@ -201,151 +193,67 @@ namespace security
   }
 
   void 
-  Keychain::verifyData(Ptr<Data> dataPtr, const VerifiedCallback & verifiedCallback, const VerifyFailCallback & failureCallback)
+  Keychain::verifyData(Ptr<Data> data, 
+                       const DataCallback & verifiedCallback, 
+                       const UnverifiedCallback& unverifiedCallback,
+                       int stepCount)
   {
     _LOG_TRACE("Enter Verify");
 
-    if(m_policyManager->requireVerify(*dataPtr))
-      stepVerify(dataPtr,
-                 true,
-                 m_maxStep, 
-                 verifiedCallback,
-                 failureCallback);  
-    else if(m_policyManager->skipVerify(*dataPtr))
-      return verifiedCallback(dataPtr);
-    else
-      return failureCallback();
-  }
-
-  static bool 
-  verifySignature(const Data & data, const Publickey & publickey)
-  {
-    using namespace CryptoPP;
-
-    Blob unsignedData(data.getSignedBlob()->signed_buf(), data.getSignedBlob()->signed_size());
-    bool result = false;
-    
-    DigestAlgorithm digestAlg = DIGEST_SHA256; //For temporary, should be assigned by Signature.getAlgorithm();
-    KeyType keyType = KEY_TYPE_RSA; //For temporary, should be assigned by Publickey.getKeyType();
-    if(KEY_TYPE_RSA == keyType)
+    if(m_policyManager->requireVerify(*data))
       {
-        RSA::PublicKey pubKey;
-        ByteQueue queue;
-
-        queue.Put((const byte*)publickey.getKeyBlob ().buf (), publickey.getKeyBlob ().size ());
-        pubKey.Load(queue);
-
-        if(DIGEST_SHA256 == digestAlg)
+        Ptr<ValidationRequest> nextStep = m_policyManager->checkVerificationPolicy(data, 
+                                                                                   stepCount,
+                                                                                   verifiedCallback,
+                                                                                   unverifiedCallback);
+        if(NULL != nextStep)
           {
-            Ptr<const signature::Sha256WithRsa> sigPtr = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (data.getSignature());
-            const Blob & sigBits = sigPtr->getSignatureBits();
-
-            RSASS<PKCS1v15, SHA256>::Verifier verifier (pubKey);
-            result = verifier.VerifyMessage((const byte*) unsignedData.buf(), unsignedData.size(), (const byte*)sigBits.buf(), sigBits.size());            
-            _LOG_DEBUG("Signature verified? " << data.getName() << " " << boolalpha << result);
+            Ptr<Closure> closure = Ptr<Closure> (new Closure(nextStep->m_verifiedCallback,
+                                                             boost::bind(&Keychain::onCertificateInterestTimeout, 
+                                                                         this, 
+                                                                         _1, 
+                                                                         _2, 
+                                                                         nextStep->m_retry,
+                                                                         unverifiedCallback,
+                                                                         data),
+                                                             nextStep->m_unverifiedCallback,
+                                                             stepCount + 1)
+                                                 );
             
+            m_handler->sendInterest(nextStep->m_interest, closure);
           }
       }
-   
-    return result;
+    else if(m_policyManager->skipVerify(*data))
+      return verifiedCallback(data);
+    else
+      return unverifiedCallback(data);
   }
 
   void
-  Keychain::onCertificateInterestTimeout(Ptr<Closure> closurePtr, Ptr<Interest> interestPtr, int retry, const VerifyFailCallback & failureCallback)
+  Keychain::onCertificateInterestTimeout(Ptr<Closure> closure, 
+                                         Ptr<Interest> interest, 
+                                         int retry, 
+                                         const UnverifiedCallback& unverifiedCallback,
+                                         Ptr<Data> data)
   {
     if(retry > 0)
       {
-        Ptr<Closure> newClosurePtr = Ptr<Closure>(new Closure(closurePtr->m_dataCallback,
-                                                              boost::bind(&Keychain::onCertificateInterestTimeout, this, _1, _2, retry - 1, failureCallback),
-                                                              closurePtr->m_verifyFailCallback,
-                                                              closurePtr->m_unverifiedDataCallback
-                                                              ));
-        m_handler->sendInterest(interestPtr, newClosurePtr);
+        Ptr<Closure> newClosure = Ptr<Closure>(new Closure(closure->m_dataCallback,
+                                                                  boost::bind(&Keychain::onCertificateInterestTimeout, 
+                                                                              this, 
+                                                                              _1, 
+                                                                              _2, 
+                                                                              retry - 1, 
+                                                                              unverifiedCallback,
+                                                                              data),
+                                                                  closure->m_unverifiedCallback,
+                                                                  closure->m_stepCount)
+                                               );
+        m_handler->sendInterest(interest, newClosure);
       }
     else
-      failureCallback();
+      unverifiedCallback(data);
   }
-
-  void 
-  Keychain::onCertificateVerified(Ptr<Data>signCert, 
-                           Ptr<Data>dataPtr, 
-                           const RecursiveVerifiedCallback &preRecurVerifyCallback, 
-                           const VerifyFailCallback &failureCallback)
-  {
-    Ptr<Certificate> certificate = Ptr<Certificate>(new Certificate(*signCert));
-
-    if(!certificate->isTooLate() && !certificate->isTooEarly())
-      m_certificateCache->insertCertificate(certificate);
-
-    if(verifySignature(*dataPtr, certificate->getPublicKeyInfo()))
-      preRecurVerifyCallback(dataPtr);
-    else
-      failureCallback();
-  }
-
-  void 
-  Keychain::stepVerify(Ptr<Data> dataPtr, 
-                       const bool isFirst, 
-                       const int stepCount, 
-                       const RecursiveVerifiedCallback & preRecurVerifyCallback, 
-                       const VerifyFailCallback & failureCallback)
-  {
-    _LOG_TRACE("Enter StepVerify");
-
-    if(0 == stepCount){
-      _LOG_DEBUG("reach the maximum steps of verification");
-      return failureCallback();
-    }
-
-    _LOG_DEBUG("Check if data comply with policies");
-    if(!m_policyManager->checkVerificationPolicy(*dataPtr)){
-      _LOG_DEBUG("data does not comply with the policy");
-      return failureCallback();
-    }
-
-    if(!isFirst)
-      {
-        Certificate targetCertificate(*dataPtr);
-        if(targetCertificate.isTooLate() || targetCertificate.isTooEarly())
-          return failureCallback();
-      }
-    
-
-    _LOG_DEBUG("Check if keyLocator is trust anchor");
-    Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (dataPtr->getSignature());
-    
-    Ptr<const Certificate> trustedCert = m_policyManager->getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
-    
-    if(NULL == trustedCert)
-      {
-        trustedCert = m_certificateCache->getCertificate(sha256sig->getKeyLocator().getKeyName());
-      }
-
-    if(NULL != trustedCert){
-      if(verifySignature(*dataPtr, trustedCert->getPublicKeyInfo()))
-        {
-          return preRecurVerifyCallback(dataPtr);
-        }
-      else
-        return failureCallback();
-    }
-    else{
-      _LOG_DEBUG("KeyLocator is not trust anchor");
-
-      RecursiveVerifiedCallback recursiveVerifiedCallback = boost::bind(&Keychain::onCertificateVerified, this, _1, dataPtr, preRecurVerifyCallback, failureCallback);
-
-      Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(sha256sig->getKeyLocator().getKeyName()));
-
-      Ptr<Closure> closurePtr = Ptr<Closure> (new Closure(Closure::DataCallback(),
-                                                          boost::bind(&Keychain::onCertificateInterestTimeout, this, _1, _2, 3, failureCallback),
-                                                          Closure::VerifyFailCallback(), 
-                                                          boost::bind(&Keychain::stepVerify, this, _1, false, stepCount-1,  recursiveVerifiedCallback, failureCallback)
-                                                          )
-                                              );
-
-      m_handler->sendInterest(interestPtr, closurePtr);
-    }
-  }  
 
   void 
   Keychain::generateSymmetricKey(const Name & keyName, KeyType keyType)

@@ -25,7 +25,7 @@ namespace ndn
 
 namespace security
 {
-  class TTLCertificateCache
+  class TTLCertificateCache : public CertificateCache
   {
   protected:
     typedef std::list<Name> TrackerList;

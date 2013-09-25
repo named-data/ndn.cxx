@@ -19,10 +19,12 @@
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
 #include <tinyxml.h>
 #include <sstream>
 #include <fstream>
 #include <cryptopp/base64.h>
+#include <cryptopp/rsa.h>
 
 #include "logging.h"
 
@@ -37,11 +39,16 @@ namespace ndn
 
 namespace security
 {
-  BasicPolicyManager::BasicPolicyManager(const string & policyPath, Ptr<PrivatekeyStorage> privatekeyStore)
-    :m_policyPath(policyPath),
-     m_policyChanged(false),
-     m_policyLoaded(false),
-     m_privatekeyStore(privatekeyStore)
+  BasicPolicyManager::BasicPolicyManager(const string & policyPath, 
+                                         Ptr<PrivatekeyStorage> privatekeyStore,
+                                         Ptr<CertificateCache> certificateCache,
+                                         const int & stepLimit)
+    : m_policyPath(policyPath)
+    , m_policyChanged(false)
+    , m_policyLoaded(false)
+    , m_privatekeyStore(privatekeyStore)
+    , m_stepLimit(stepLimit)
+    , m_certificateCache(certificateCache)
   {
     loadPolicy();
 
@@ -455,6 +462,143 @@ namespace security
       }
 
     return false;
+  }
+
+  static bool 
+  verifySignature(const Data & data, const Publickey & publickey)
+  {
+    using namespace CryptoPP;
+
+    Blob unsignedData(data.getSignedBlob()->signed_buf(), data.getSignedBlob()->signed_size());
+    bool result = false;
+    
+    DigestAlgorithm digestAlg = DIGEST_SHA256; //For temporary, should be assigned by Signature.getAlgorithm();
+    KeyType keyType = KEY_TYPE_RSA; //For temporary, should be assigned by Publickey.getKeyType();
+    if(KEY_TYPE_RSA == keyType)
+      {
+        RSA::PublicKey pubKey;
+        ByteQueue queue;
+
+        queue.Put((const byte*)publickey.getKeyBlob ().buf (), publickey.getKeyBlob ().size ());
+        pubKey.Load(queue);
+
+        if(DIGEST_SHA256 == digestAlg)
+          {
+            Ptr<const signature::Sha256WithRsa> sigPtr = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (data.getSignature());
+            const Blob & sigBits = sigPtr->getSignatureBits();
+
+            RSASS<PKCS1v15, SHA256>::Verifier verifier (pubKey);
+            result = verifier.VerifyMessage((const byte*) unsignedData.buf(), unsignedData.size(), (const byte*)sigBits.buf(), sigBits.size());            
+            _LOG_DEBUG("Signature verified? " << data.getName() << " " << boolalpha << result);
+            
+          }
+      }
+   
+    return result;
+  }
+
+  void
+  BasicPolicyManager::onCertificateVerified(Ptr<Data>signCertificate, 
+                                            Ptr<Data>data, 
+                                            const DataCallback &verifiedCallback, 
+                                            const UnverifiedCallback &unverifiedCallback)
+  {
+    Ptr<Certificate> certificate = Ptr<Certificate>(new Certificate(*signCertificate));
+
+    if(!certificate->isTooLate() && !certificate->isTooEarly())
+      m_certificateCache->insertCertificate(certificate);
+
+    if(verifySignature(*data, certificate->getPublicKeyInfo()))
+      verifiedCallback(data);
+    else
+      unverifiedCallback(data);
+  }
+
+  void
+  BasicPolicyManager::onCertificateUnverified(Ptr<Data>signCertificate, 
+                                              Ptr<Data>data, 
+                                              const UnverifiedCallback &unverifiedCallback)
+  { unverifiedCallback(data); }
+
+  Ptr<ValidationRequest>
+  BasicPolicyManager::checkVerificationPolicy(Ptr<Data> data, 
+                                              const int & stepCount, 
+                                              const DataCallback& verifiedCallback,
+                                              const UnverifiedCallback& unverifiedCallback)
+  {
+    if(m_stepLimit == stepCount){
+      _LOG_DEBUG("reach the maximum steps of verification");
+      unverifiedCallback(data);
+      return NULL;
+    }
+
+    vector< Ptr<PolicyRule> >::iterator it = m_mustFailVerify.begin();
+    for(; it != m_mustFailVerify.end(); it++)
+      {
+	if((*it)->satisfy(*data))
+          {
+            unverifiedCallback(data);
+            return NULL;
+          }
+      }
+
+    it = m_verifyPolicies.begin();
+    for(; it != m_verifyPolicies.end(); it++)
+      {
+	if((*it)->satisfy(*data))
+          {
+            Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (data->getSignature());    
+
+            if(KeyLocator::KEYNAME != sha256sig->getKeyLocator().getType())
+              {
+                unverifiedCallback(data);
+                return NULL;
+              }
+
+            Ptr<const Certificate> trustedCert = getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
+            if(NULL == trustedCert)
+              {
+                trustedCert = m_certificateCache->getCertificate(sha256sig->getKeyLocator().getKeyName());
+              }
+
+            if(NULL != trustedCert){
+              if(verifySignature(*data, trustedCert->getPublicKeyInfo()))
+                {
+                  verifiedCallback(data);
+                  return NULL;
+                }
+              else
+                unverifiedCallback(data);
+                return NULL;
+            }
+            else{
+              _LOG_DEBUG("KeyLocator is not trust anchor");
+
+              DataCallback recursiveVerifiedCallback = boost::bind(&BasicPolicyManager::onCertificateVerified, 
+                                                                   this, 
+                                                                   _1, 
+                                                                   data, 
+                                                                   verifiedCallback, 
+                                                                   unverifiedCallback);
+
+              UnverifiedCallback recursiveUnverifiedCallback = boost::bind(&BasicPolicyManager::onCertificateUnverified, 
+                                                                           this, 
+                                                                           _1, 
+                                                                           data, 
+                                                                           unverifiedCallback);
+
+
+              Ptr<Interest> interest = Ptr<Interest>(new Interest(sha256sig->getKeyLocator().getKeyName()));
+
+              Ptr<ValidationRequest> nextStep = Ptr<ValidationRequest>(new ValidationRequest(interest, 
+                                                                                             recursiveVerifiedCallback,
+                                                                                             recursiveUnverifiedCallback,
+                                                                                             3)
+                                                                       );
+              return nextStep;
+            }
+          }
+      }
   }
 
   bool 

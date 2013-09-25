@@ -20,6 +20,7 @@
 
 #include "ndn.cxx/regex/regex.h"
 #include "ndn.cxx/security/identity/privatekey-storage.h"
+#include "ndn.cxx/security/cache/certificate-cache.h"
 
 namespace ndn
 {
@@ -29,7 +30,10 @@ namespace security
   class BasicPolicyManager : public PolicyManager
   {
   public:
-    BasicPolicyManager (const string & policyPath, Ptr<PrivatekeyStorage> privatekeyStore);
+    BasicPolicyManager (const string & policyPath, 
+                        Ptr<PrivatekeyStorage> privatekeyStore, 
+                        Ptr<CertificateCache> certificateCache,
+                        const int & stepLimit);
 
     virtual
     ~BasicPolicyManager();
@@ -76,6 +80,12 @@ namespace security
     virtual bool 
     checkVerificationPolicy(const Data & data);
 
+    virtual Ptr<ValidationRequest>
+    checkVerificationPolicy(Ptr<Data> data, 
+                            const int & stepCount, 
+                            const DataCallback& verifiedCallback,
+                            const UnverifiedCallback& unverifiedCallback);
+
     virtual bool 
     checkSigningPolicy(const Name & dataName, const Name & certName);
 
@@ -86,6 +96,17 @@ namespace security
     displayPolicy ();
 
   private:
+    virtual void
+    onCertificateVerified(Ptr<Data> certificate, 
+                          Ptr<Data> data, 
+                          const DataCallback& verifiedCallback, 
+                          const UnverifiedCallback& unverifiedCallback);
+
+    virtual void
+    onCertificateUnverified(Ptr<Data>signCertificate, 
+                            Ptr<Data>data, 
+                            const UnverifiedCallback &unverifiedCallback);
+
     Ptr<Regex>
     parseInference (const string & inference);
     
@@ -115,6 +136,9 @@ namespace security
     vector< Ptr<PolicyRule> > m_mustFailSign;
     vector< Ptr<Regex> > m_signInference;
     map<Name, Certificate> m_trustAnchors;
+    
+    int m_stepLimit;
+    Ptr<CertificateCache> m_certificateCache;
   };
 }
 

@@ -18,8 +18,10 @@
 #include "ndn.cxx/regex/regex.h"
 
 #include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/wrapper/closure.h"
 
 #include "policy-rule.h"
+#include "validation-request.h"
 
 
 
@@ -83,6 +85,12 @@ namespace security
 
     virtual bool 
     checkVerificationPolicy(const Data & data) = 0;
+
+    virtual Ptr<ValidationRequest>
+    checkVerificationPolicy(Ptr<Data> data, 
+                            const int & stepCount, 
+                            const DataCallback& verifiedCallback,
+                            const UnverifiedCallback& unverifiedCallback) = 0;
     
     virtual bool 
     checkSigningPolicy(const Name & dataName, const Name & certName) = 0;

@@ -37,11 +37,11 @@ namespace ndn
     void 
     incomingData(Ptr<Data> dataPtr, Ptr<Interest> interestPtr, Ptr<Closure> closurePtr);
 
-    void
-    onVerify(const Closure::DataCallback & dataCallback, Ptr<Data> dataPtr);
+    // void
+    // onVerify(const DataCallback & dataCallback, Ptr<Data> dataPtr);
     
-    void
-    onVerifyError(const Closure::VerifyFailCallback & failCallback, Ptr<Interest> interestPtr);
+    // void
+    // onVerifyError(const VerifyFailCallback & failCallback, Ptr<Interest> interestPtr);
     
 
   private:
