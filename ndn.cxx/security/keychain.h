@@ -170,40 +170,43 @@ namespace security
      *           Policy Management           *
      *****************************************/
 
-    /**
-     * @brief Set a signing policy rule
-     * @param policy the signing policy rule
-     */
-    virtual void 
-    setSigningPolicyRule(Ptr<PolicyRule> policy);
+    Ptr<PolicyManager>
+    getPolicyManager();
 
-    /**
-     * @brief Set verification exemption rule
-     * @param exemption the verification exemption rule
-     */
-    virtual void
-    setVerificationExemption(Ptr<Regex> exemption);
+    // /**
+    //  * @brief Set a signing policy rule
+    //  * @param policy the signing policy rule
+    //  */
+    // virtual void 
+    // setSigningPolicyRule(Ptr<PolicyRule> policy);
 
-    /**
-     * @brief Set verification policy rule
-     * @param policy the verification policy rule
-     */
-    virtual void 
-    setVerificationPolicyRule(Ptr<PolicyRule> policy);
+    // /**
+    //  * @brief Set verification exemption rule
+    //  * @param exemption the verification exemption rule
+    //  */
+    // virtual void
+    // setVerificationExemption(Ptr<Regex> exemption);
 
-    /**
-     * @brief Set signing inference
-     * @param inference the siging inference
-     */
-    virtual void 
-    setSigningInference(Ptr<Regex> inference);
+    // /**
+    //  * @brief Set verification policy rule
+    //  * @param policy the verification policy rule
+    //  */
+    // virtual void 
+    // setVerificationPolicyRule(Ptr<PolicyRule> policy);
 
-    /**
-     * @brief Set trust anchor
-     * @param certificate the trust anchor
-     */
-    virtual void 
-    setTrustAnchor(const Certificate & certificate);
+    // /**
+    //  * @brief Set signing inference
+    //  * @param inference the siging inference
+    //  */
+    // virtual void 
+    // setSigningInference(Ptr<Regex> inference);
+
+    // /**
+    //  * @brief Set trust anchor
+    //  * @param certificate the trust anchor
+    //  */
+    // virtual void 
+    // setTrustAnchor(const Certificate & certificate);
 
     /*****************************************
      *              Sign/Verify              *

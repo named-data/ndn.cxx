@@ -118,35 +118,39 @@ namespace security
     //TODO: Implement
   }
 
-  void 
-  Keychain::setSigningPolicyRule(Ptr<PolicyRule> policy)
-  {
-    m_policyManager->setSigningPolicyRule(policy);
-  }
+  Ptr<PolicyManager>
+  Keychain::getPolicyManager()
+  { return m_policyManager; }
 
-  void 
-  Keychain::setVerificationExemption(Ptr<Regex> exempt)
-  {
-    m_policyManager->setVerificationExemption(exempt);
-  }
+  // void 
+  // Keychain::setSigningPolicyRule(Ptr<PolicyRule> policy)
+  // {
+  //   m_policyManager->setSigningPolicyRule(policy);
+  // }
 
-  void 
-  Keychain::setVerificationPolicyRule(Ptr<PolicyRule> policy)
-  {
-    m_policyManager->setVerificationPolicyRule(policy);
-  }
+  // void 
+  // Keychain::setVerificationExemption(Ptr<Regex> exempt)
+  // {
+  //   m_policyManager->setVerificationExemption(exempt);
+  // }
+
+  // void 
+  // Keychain::setVerificationPolicyRule(Ptr<PolicyRule> policy)
+  // {
+  //   m_policyManager->setVerificationPolicyRule(policy);
+  // }
   
-  void 
-  Keychain::setSigningInference(Ptr<Regex> inference)
-  {
-    m_policyManager->setSigningInference(inference);
-  }
+  // void 
+  // Keychain::setSigningInference(Ptr<Regex> inference)
+  // {
+  //   m_policyManager->setSigningInference(inference);
+  // }
 
-  void 
-  Keychain::setTrustAnchor(const Certificate & certificate)
-  {
-    m_policyManager->setTrustAnchor(certificate);
-  }
+  // void 
+  // Keychain::setTrustAnchor(const Certificate & certificate)
+  // {
+  //   m_policyManager->setTrustAnchor(certificate);
+  // }
 
   void
   Keychain::sign (Data & data, const Name & certificateName)
