@@ -163,6 +163,21 @@ namespace security
     keyRoot->accept(printVisitor, string(""));
   }
 
+  Name
+  Certificate::getPublicKeyName()
+  {
+    const Name & certificateName = getName ();
+    int i = certificateName.size() - 1;
+
+    for (; i >= 0; i--)
+      {
+        if(certificateName.get(i).toUri() == string("ID-CERT"))
+          break; 
+      }
+    
+    return certificateName.getSubName(0, i);
+  }
+
 }//security
 
 }//ndn
