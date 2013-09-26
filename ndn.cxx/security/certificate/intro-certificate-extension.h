@@ -24,7 +24,7 @@ namespace security
   {
   public:
     enum TrustClass {
-      PRODUCER,
+      NORMAL_PRODUCER,
       INTRODUCER,
       META_INTRODUCER,
     };

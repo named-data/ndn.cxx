@@ -12,6 +12,7 @@
 #define NDN_INTRO_CERTIFICATE_H
 
 #include "certificate.h"
+#include "intro-certificate-extension.h"
 
 namespace ndn
 {
@@ -27,13 +28,17 @@ namespace security
                      const Time & notAfter,
                      const Publickey & key,
                      const Name& nameSpace, 
-                     const TrustClass & trustClass, 
+                     const IntroCertificateExtension::TrustClass & trustClass, 
                      const int & trustLevel);
 
+    IntroCertificate(const Data & data);
+
     virtual
-    ~IntroCertificate();
-  }
+    ~IntroCertificate() {}
+  };
 
 }//security
 
 }//ndn
+
+#endif

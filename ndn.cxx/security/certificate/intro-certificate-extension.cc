@@ -47,7 +47,7 @@ namespace security
     Blob trustClassBlob;
     switch(m_trustClass)
       {
-      case PRODUCER:
+      case NORMAL_PRODUCER:
 	trustClassBlob.push_back(0);
 	break;
       case INTRODUCER:
@@ -98,7 +98,7 @@ namespace security
     switch(trustClassBlob[0])
       {
       case 0:
-	m_trustClass = PRODUCER;
+	m_trustClass = NORMAL_PRODUCER;
 	break;
       case 1:
 	m_trustClass = INTRODUCER;

@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_SUITE(WebOfTrustTests)
 
 BOOST_AUTO_TEST_CASE(IntroCertExtnTest)
 {
-  IntroCertificateExtension introExtn (Name("/ndn/ucla.edu/yingdi/"), IntroCertificateExtension::PRODUCER, 100);
+  IntroCertificateExtension introExtn (Name("/ndn/ucla.edu/yingdi/"), IntroCertificateExtension::NORMAL_PRODUCER, 100);
   
   der::PrintVisitor printVisitor;
   introExtn.toDER()->accept(printVisitor, string(""));
