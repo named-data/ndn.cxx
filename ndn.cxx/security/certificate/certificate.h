@@ -116,9 +116,6 @@ namespace security
     getPublicKeyInfo () const
     { return m_key; }
 
-    virtual Name 
-    getPublicKeyName ();
-
     /**
      * @brief check if the certificate is valid
      * @return true if current time is early than notBefore
