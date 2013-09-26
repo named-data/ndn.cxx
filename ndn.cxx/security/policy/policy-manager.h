@@ -15,7 +15,6 @@
 
 #include "ndn.cxx/data.h"
 #include "ndn.cxx/fields/name.h"
-#include "ndn.cxx/regex/regex.h"
 
 #include "ndn.cxx/security/certificate/certificate.h"
 #include "ndn.cxx/wrapper/closure.h"
@@ -89,6 +88,8 @@ namespace security
     virtual Name 
     inferSigningIdentity(const Name & dataName) = 0;
 
+    static bool
+    verifySignature(const Data & data, const Publickey & publickey);
   };
 
 }//security
