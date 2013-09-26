@@ -599,6 +599,9 @@ namespace security
             }
           }
       }
+
+    unverifiedCallback(data);
+    return NULL;
   }
 
   bool 
