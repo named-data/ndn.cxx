@@ -41,65 +41,54 @@ namespace security
     virtual
     ~PolicyManager() {}
 
-    // virtual void
-    // loadPolicy() = 0;
-
-    // virtual void 
-    // setDefaultEncryptionKey(const Name & keyName, bool sym) = 0;
-
-    // virtual void
-    // savePolicy(const Name & keyName = Name(), bool sym = true) = 0;
-
-    // // virtual void 
-    // // setSigningPolicyRule(const string & policy) = 0;
-
-    // virtual void 
-    // setSigningPolicyRule(Ptr<PolicyRule> policy) = 0;
-
-    // // virtual void 
-    // // setSigningInference(const string & inference) = 0;
-
-    // virtual void 
-    // setSigningInference(Ptr<Regex> inference) = 0;
-
-    // // virtual void 
-    // // setVerificationPolicyRule(const string & policy) = 0;
-
-    // virtual void 
-    // setVerificationPolicyRule(Ptr<PolicyRule> policy) = 0;
-
-    // virtual void
-    // setVerificationExemption(Ptr<Regex> exempt) = 0;
-
-    // virtual void 
-    // setTrustAnchor(const Certificate & certificate) = 0;
-
+    /**
+     * @brief check if the received data packet can escape from verification
+     * @param data the received data packet
+     * @return true if the data does not need to be verified, otherwise false
+     */
     virtual bool 
     skipVerify (const Data & data) = 0;
 
+    /**
+     * @brief check if the received data packet requires verification
+     * @param data the received data packet
+     * @return true if the data must be verified, otherwise false
+     */
     virtual bool
     requireVerify (const Data & data) = 0;
 
-    // virtual Ptr<const Certificate>
-    // getTrustAnchor(const Name & anchorName) = 0;
-
-    // virtual bool 
-    // checkVerificationPolicy(const Data & data) = 0;
-
+    /**
+     * @brief check whether received data packet complies with the verification policy, and get the indication of next verification step
+     * @param data the received data packet
+     * @param stepCount the number of verification steps that have been done, used to track the verification progress
+     * @param verifiedCallback the callback function that will be called if the received data packet has been validated
+     * @param unverifiedCallback the callback function that will be called if the received data packet cannot be validated
+     * @return the indication of next verification step, NULL if there is no further step
+     */
     virtual Ptr<ValidationRequest>
     checkVerificationPolicy(Ptr<Data> data, 
                             const int & stepCount, 
                             const DataCallback& verifiedCallback,
                             const UnverifiedCallback& unverifiedCallback) = 0;
+
     
+    /**
+     * @brief check if the signing certificate name and data name satify the signing policy 
+     * @param dataName the name of data to be signed
+     * @param certificateName the name of signing certificate
+     * @return true if the signing certificate can be used to sign the data, otherwise false
+     */
     virtual bool 
-    checkSigningPolicy(const Name & dataName, const Name & certName) = 0;
+    checkSigningPolicy(const Name & dataName, const Name & certificateName) = 0;
     
+    /**
+     * @brief Infer signing identity name according to policy, if the signing identity cannot be inferred, it should return empty name
+     * @param dataName, the name of data to be signed
+     * @return the signing identity. 
+     */
     virtual Name 
     inferSigningIdentity(const Name & dataName) = 0;
 
-    // virtual void
-    // displayPolicy () = 0;
   };
 
 }//security
