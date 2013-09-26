@@ -41,38 +41,38 @@ namespace security
     virtual
     ~PolicyManager() {}
 
-    virtual void
-    loadPolicy() = 0;
-
-    virtual void 
-    setDefaultEncryptionKey(const Name & keyName, bool sym) = 0;
-
-    virtual void
-    savePolicy(const Name & keyName = Name(), bool sym = true) = 0;
+    // virtual void
+    // loadPolicy() = 0;
 
     // virtual void 
-    // setSigningPolicyRule(const string & policy) = 0;
+    // setDefaultEncryptionKey(const Name & keyName, bool sym) = 0;
 
-    virtual void 
-    setSigningPolicyRule(Ptr<PolicyRule> policy) = 0;
+    // virtual void
+    // savePolicy(const Name & keyName = Name(), bool sym = true) = 0;
 
-    // virtual void 
-    // setSigningInference(const string & inference) = 0;
-
-    virtual void 
-    setSigningInference(Ptr<Regex> inference) = 0;
+    // // virtual void 
+    // // setSigningPolicyRule(const string & policy) = 0;
 
     // virtual void 
-    // setVerificationPolicyRule(const string & policy) = 0;
+    // setSigningPolicyRule(Ptr<PolicyRule> policy) = 0;
 
-    virtual void 
-    setVerificationPolicyRule(Ptr<PolicyRule> policy) = 0;
+    // // virtual void 
+    // // setSigningInference(const string & inference) = 0;
 
-    virtual void
-    setVerificationExemption(Ptr<Regex> exempt) = 0;
+    // virtual void 
+    // setSigningInference(Ptr<Regex> inference) = 0;
 
-    virtual void 
-    setTrustAnchor(const Certificate & certificate) = 0;
+    // // virtual void 
+    // // setVerificationPolicyRule(const string & policy) = 0;
+
+    // virtual void 
+    // setVerificationPolicyRule(Ptr<PolicyRule> policy) = 0;
+
+    // virtual void
+    // setVerificationExemption(Ptr<Regex> exempt) = 0;
+
+    // virtual void 
+    // setTrustAnchor(const Certificate & certificate) = 0;
 
     virtual bool 
     skipVerify (const Data & data) = 0;
@@ -80,11 +80,11 @@ namespace security
     virtual bool
     requireVerify (const Data & data) = 0;
 
-    virtual Ptr<const Certificate>
-    getTrustAnchor(const Name & anchorName) = 0;
+    // virtual Ptr<const Certificate>
+    // getTrustAnchor(const Name & anchorName) = 0;
 
-    virtual bool 
-    checkVerificationPolicy(const Data & data) = 0;
+    // virtual bool 
+    // checkVerificationPolicy(const Data & data) = 0;
 
     virtual Ptr<ValidationRequest>
     checkVerificationPolicy(Ptr<Data> data, 
@@ -98,12 +98,8 @@ namespace security
     virtual Name 
     inferSigningIdentity(const Name & dataName) = 0;
 
-    virtual void
-    displayPolicy () = 0;
-
-  protected:
-    Name m_defaultKeyName;
-    bool m_defaultSym;
+    // virtual void
+    // displayPolicy () = 0;
   };
 
 }//security

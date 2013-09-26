@@ -444,25 +444,25 @@ namespace security
       return Ptr<const Certificate>(new Certificate(m_trustAnchors[name]));
   }
 
-  bool 
-  BasicPolicyManager::checkVerificationPolicy(const Data & data)
-  {
-    vector< Ptr<PolicyRule> >::iterator it = m_mustFailVerify.begin();
-    for(; it != m_mustFailVerify.end(); it++)
-      {
-	if((*it)->satisfy(data))
-	  return false;
-      }
+  // bool 
+  // BasicPolicyManager::checkVerificationPolicy(const Data & data)
+  // {
+  //   vector< Ptr<PolicyRule> >::iterator it = m_mustFailVerify.begin();
+  //   for(; it != m_mustFailVerify.end(); it++)
+  //     {
+  //       if((*it)->satisfy(data))
+  //         return false;
+  //     }
 
-    it = m_verifyPolicies.begin();
-    for(; it != m_verifyPolicies.end(); it++)
-      {
-	if((*it)->satisfy(data))
-	  return true;
-      }
+  //   it = m_verifyPolicies.begin();
+  //   for(; it != m_verifyPolicies.end(); it++)
+  //     {
+  //       if((*it)->satisfy(data))
+  //         return true;
+  //     }
 
-    return false;
-  }
+  //   return false;
+  // }
 
   static bool 
   verifySignature(const Data & data, const Publickey & publickey)
