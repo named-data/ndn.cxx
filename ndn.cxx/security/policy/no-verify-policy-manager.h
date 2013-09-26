@@ -8,54 +8,41 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef NDN_POLICY_MANAGER_H
-#define NDN_POLICY_MANAGER_H
+#ifndef NDN_NO_VERIFY_POLICY_MANAGER_H
+#define NDN_NO_VERIFY_POLICY_MANAGER_H
 
-#include <string>
-
-#include "ndn.cxx/data.h"
-#include "ndn.cxx/fields/name.h"
-#include "ndn.cxx/regex/regex.h"
-
-#include "ndn.cxx/security/certificate/certificate.h"
-#include "ndn.cxx/wrapper/closure.h"
-
-#include "policy-rule.h"
-#include "validation-request.h"
-
-
-
-using namespace std;
-
+#include "policy-manager.h"
 
 namespace ndn
 {
 
 namespace security
 {
-  class PolicyManager
+
+  class NoVerifyPolicyManager : public PolicyManager
   {
   public:
-    PolicyManager() {}
+    NoVerifyPolicyManager();
     
-    virtual
-    ~PolicyManager() {}
+    virtual 
+    ~NoVerifyPolicyManager();
 
-    /**
+     /**
      * @brief check if the received data packet can escape from verification
      * @param data the received data packet
      * @return true if the data does not need to be verified, otherwise false
      */
-    virtual bool 
-    skipVerify (const Data & data) = 0;
+    inline virtual bool 
+    skipVerify (const Data & data);
+    
 
     /**
      * @brief check if PolicyManager has the verification rule for the received data
      * @param data the received data packet
      * @return true if the data must be verified, otherwise false
      */
-    virtual bool
-    requireVerify (const Data & data) = 0;
+    inline virtual bool
+    requireVerify (const Data & data);
 
     /**
      * @brief check whether received data packet complies with the verification policy, and get the indication of next verification step
@@ -65,11 +52,11 @@ namespace security
      * @param unverifiedCallback the callback function that will be called if the received data packet cannot be validated
      * @return the indication of next verification step, NULL if there is no further step
      */
-    virtual Ptr<ValidationRequest>
+    inline virtual Ptr<ValidationRequest>
     checkVerificationPolicy(Ptr<Data> data, 
                             const int & stepCount, 
                             const DataCallback& verifiedCallback,
-                            const UnverifiedCallback& unverifiedCallback) = 0;
+                            const UnverifiedCallback& unverifiedCallback);
 
     
     /**
@@ -78,18 +65,44 @@ namespace security
      * @param certificateName the name of signing certificate
      * @return true if the signing certificate can be used to sign the data, otherwise false
      */
-    virtual bool 
-    checkSigningPolicy(const Name & dataName, const Name & certificateName) = 0;
+    inline virtual bool 
+    checkSigningPolicy(const Name & dataName, const Name & certificateName);
     
     /**
      * @brief Infer signing identity name according to policy, if the signing identity cannot be inferred, it should return empty name
      * @param dataName, the name of data to be signed
      * @return the signing identity. 
      */
-    virtual Name 
-    inferSigningIdentity(const Name & dataName) = 0;
-
+    inline virtual Name 
+    inferSigningIdentity(const Name & dataName);
   };
+
+  inline bool 
+  NoVerifyPolicyManager::skipVerify (const Data & data)
+  { return true; }
+
+  inline bool
+  NoVerifyPolicyManager::requireVerify (const Data & data)
+  { return false; }
+    
+
+  inline Ptr<ValidationRequest>
+  NoVerifyPolicyManager::checkVerificationPolicy(Ptr<Data> data, 
+                                                 const int & stepCount, 
+                                                 const DataCallback& verifiedCallback,
+                                                 const UnverifiedCallback& unverifiedCallback)
+  { 
+    verifiedCallback(data); 
+    return NULL;
+  }
+
+  inline bool 
+  NoVerifyPolicyManager::checkSigningPolicy(const Name & dataName, const Name & certificateName)
+  { return true; }
+
+  inline Name 
+  NoVerifyPolicyManager::inferSigningIdentity(const Name & dataName)
+  { return Name(); }
 
 }//security
 

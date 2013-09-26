@@ -169,7 +169,13 @@ namespace security
   {
     Name signingCertificateName;
     if(0 == identity.size())
-      signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(m_policyManager->inferSigningIdentity (data.getName ()));    
+      {
+        Name inferredIdentity = m_policyManager->inferSigningIdentity (data.getName ());
+        if(Name() == inferredIdentity)
+          signingCertificateName = m_identityManager->getDefaultCertificateName();
+        else
+          signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(inferredIdentity);    
+      }
     else
       {
         signingCertificateName = m_identityManager->getDefaultCertificateNameByIdentity(identity);
