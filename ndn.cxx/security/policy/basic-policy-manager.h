@@ -38,7 +38,7 @@ namespace security
     virtual
     ~BasicPolicyManager();
     
-    virtual void
+    void
     loadPolicy();
 
     void 
@@ -47,28 +47,28 @@ namespace security
     void 
     loadTrustAnchor(TiXmlElement * element);
 
-    virtual void 
+    void 
     setDefaultEncryptionKey(const Name & keyName, bool sym);
     
-    virtual void
+    void
     savePolicy(const Name & keyName = Name(), bool sym = true);
 
-    virtual void 
+    void 
     setSigningPolicyRule (Ptr<PolicyRule> policy);
 
-    virtual void 
+    void 
     setSigningInference(Ptr<Regex> inference);
 
-    virtual void
+    void
     setVerificationPolicyRule (Ptr<PolicyRule> policy);
 
-    virtual void
+    void
     setVerificationExemption(Ptr<Regex> exempt);
 
-    virtual void 
+    void 
     setTrustAnchor(const Certificate & certificate);
 
-    virtual Ptr<const Certificate>
+    Ptr<const Certificate>
     getTrustAnchor(const Name & name);
 
     virtual bool
@@ -77,8 +77,8 @@ namespace security
     virtual bool 
     skipVerify (const Data & data);
 
-    virtual bool 
-    checkVerificationPolicy(const Data & data);
+    // bool 
+    // checkVerificationPolicy(const Data & data);
 
     virtual Ptr<ValidationRequest>
     checkVerificationPolicy(Ptr<Data> data, 
@@ -95,7 +95,7 @@ namespace security
     void
     displayPolicy ();
 
-  private:
+  protected:
     virtual void
     onCertificateVerified(Ptr<Data> certificate, 
                           Ptr<Data> data, 
@@ -107,6 +107,7 @@ namespace security
                             Ptr<Data>data, 
                             const UnverifiedCallback &unverifiedCallback);
 
+  private:
     Ptr<Regex>
     parseInference (const string & inference);
     
@@ -124,7 +125,10 @@ namespace security
     virtual void
     loadPolicyFromFile();
 
-  private:
+  protected:
+    Name m_defaultKeyName;
+    bool m_defaultSym;
+
     const string m_policyPath;
     bool m_policyChanged;
     bool m_policyLoaded;
