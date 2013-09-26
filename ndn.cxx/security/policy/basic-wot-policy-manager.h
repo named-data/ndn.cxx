@@ -7,3 +7,31 @@
  *
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
+
+#ifndef NDN_BASIC_WOT_POLICY_MANAGER_H
+#define NDN_BASIC_WOT_POLICY_MANAGER_H
+
+#include "policy-manager.h"
+
+namespace ndn
+{
+
+namespace security
+{
+
+  class BasicWOTPolicyManager : public PolicyManager
+  {
+  public:
+    BasicWOTPolicyManager();
+
+    virtual
+    ~BasicWOTPolicyManager();
+
+  protected:
+    
+  };
+
+}//security
+
+}//ndn
+#endif

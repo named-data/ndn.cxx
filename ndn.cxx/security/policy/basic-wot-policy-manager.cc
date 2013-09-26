@@ -8,3 +8,20 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
+#include "basic-wot-policy-manager.h"
+
+namespace ndn
+{
+
+namespace security
+{
+
+  BasicWOTPolicyManager::BasicWOTPolicyManager()
+  {}
+  
+  BasicWOTPolicyManager::~BasicWOTPolicyManager()
+  {}
+
+}//security
+
+}//ndn
