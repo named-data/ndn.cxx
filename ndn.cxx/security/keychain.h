@@ -251,12 +251,13 @@ namespace security
      * @param data the data packet that will be verified
      * @param verifiedCallback the callback function that will be called if the target data has been verified
      * @param failureCallback the callback function that will be called if the target data cannot be verified
+     * @param stepCount a counter to track how many validation steps have been gone through
      */
     virtual void 
     verifyData(Ptr<Data> data, 
                const DataCallback & verifiedCallback, 
                const UnverifiedCallback& unverifiedCallback,
-               int stepCount);
+               int stepCount = 0);
 
     /*****************************************
      *           Encrypt/Decrypt             *
