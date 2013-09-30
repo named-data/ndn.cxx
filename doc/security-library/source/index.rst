@@ -258,7 +258,7 @@ For this simple use case, IdentityManager provides ``createIdentityCertificate``
 
 .. code-block:: c++
 
-   shared_ptr<Certificate>
+   Name
    IdentityManager::createIdentityCertificate (const Name& keyName, 
                                                const Name& signerCertificateName, 
 					       const Time& notBefore, 
@@ -266,10 +266,11 @@ For this simple use case, IdentityManager provides ``createIdentityCertificate``
 
 ``createIdentityCertificate`` will construct an unsigned identity certificate using the public key indicated by ``keyName`` and validity information ``notBefore`` and ``notAfter``.
 After that, the private key, which corresponds to the certificate with the name indicated by ``signerCertificateName``, will be used to sign the identity certificate.
-The return value of ``createIdentityCertificate`` is the generated identity certificate.
+The return value of ``createIdentityCertificate`` is the name of the generated identity certificate.
 
 The argument ``keyName`` refers to a public key managed by the IdentityManager. 
 If the public key to be signed is managed by others, one must supply the public key bits.
+And the return value of ``createIdentityCertificate`` is the generated identity certificate.
  
 .. code-block:: c++
 

@@ -143,6 +143,69 @@ namespace security
     return m_publicStorage->getDefaultIdentity();
   }
 
+  Name
+  IdentityManager::createIdentityCertificate (const Name& keyName,
+                                              const Name& signerCertificateName,
+                                              const Time& notBefore,
+                                              const Time& notAfter)
+  {
+    Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
+    Ptr<Publickey> publickey = Publickey::fromDER(keyBlob);
+
+    Ptr<Certificate> certificate = createIdentityCertificate(keyName,
+                                                             *publickey,
+                                                             signerCertificateName,
+                                                             notBefore,
+                                                             notAfter);
+
+    m_publicStorage->addCertificate(*certificate);
+    
+    return certificate->getName();
+  }
+
+  Ptr<Certificate>
+  IdentityManager::createIdentityCertificate (const Name& keyName,
+                                              const Publickey& publickey,
+                                              const Name& signerCertificateName,
+                                              const Time& notBefore,
+                                              const Time& notAfter)
+  {
+    Ptr<Certificate> certificate = Create<Certificate>();
+    
+    Name certificateName;
+    TimeInterval ti = time::NowUnixTimestamp();
+    ostringstream oss;
+    oss << ti.total_seconds();
+
+    certificateName.append(keyName).append("ID-CERT").append(oss.str());
+    certificate->setName(certificateName);
+
+    certificate->setNotBefore(notBefore);
+    certificate->setNotAfter(notAfter);
+    certificate->setPublicKeyInfo(publickey);
+    certificate->addSubjectDescription(CertificateSubDescrypt("2.5.4.41", keyName.toUri()));
+    certificate->encode();
+
+    Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
+
+    KeyLocator keyLocator;    
+    keyLocator.setType (KeyLocator::KEYNAME);
+    keyLocator.setKeyName (signerCertificateName);
+    
+    sha256Sig->setKeyLocator (keyLocator);
+    sha256Sig->setPublisherKeyDigest (*publickey.getDigest ());
+
+    certificate->setSignature(sha256Sig);
+
+    Ptr<Blob> unsignedData = certificate->encodeToUnsignedWire();
+
+    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName);
+    
+    sha256Sig->setSignatureBits(*sigBits);
+
+    return certificate;
+  }
+
   void
   IdentityManager::addCertificate (Ptr<Certificate> certificate)
   {

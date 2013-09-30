@@ -96,6 +96,36 @@ namespace security
     getPublickey(const Name & keyName);
 
     /**
+     * @brief Create an identity certificate for a public key managed by this IdentityManager
+     * @param keyName the name of public key to be signed
+     * @param signerCertificateName the name of signing certificate
+     * @param notBefore the notBefore value in the validity field of the generated certificate
+     * @param notAfter the notAfter vallue in validity field of the generated certificate
+     * @return the name of generated identity certificate
+     */
+    virtual Name
+    createIdentityCertificate (const Name& keyName,
+                               const Name& signerCertificateName,
+                               const Time& notBefore,
+                               const Time& notAfter);
+
+    /**
+     * @brief Create an idenity certificate for a public key supplied by caller
+     * @param keyName the name of public key to be signed
+     * @param publickey the public key to be signed
+     * @param signerCertificateName the name of signing certificate
+     * @param notBefore the notBefore value in the validity field of the generated certificate
+     * @param notAfter the notAfter vallue in validity field of the generated certificate
+     * @return the generated identity certificate
+     */
+    virtual Ptr<Certificate>
+    createIdentityCertificate (const Name& keyName,
+                               const Publickey& publickey,
+                               const Name& signerCertificateName,
+                               const Time& notBefore,
+                               const Time& notAfter); 
+
+    /**
      * @brief Add a certificate into the public storage
      * @param certificate the certificate to to added
      */
