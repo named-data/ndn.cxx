@@ -46,7 +46,7 @@ namespace security
      * @return true if the data does not need to be verified, otherwise false
      */
     virtual bool 
-    skipVerify (const Data & data) = 0;
+    skipVerifyAndTrust (const Data & data) = 0;
 
     /**
      * @brief check if PolicyManager has the verification rule for the received data

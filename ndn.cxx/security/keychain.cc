@@ -233,7 +233,7 @@ namespace security
             m_handler->sendInterest(nextStep->m_interest, closure);
           }
       }
-    else if(m_policyManager->skipVerify(*data))
+    else if(m_policyManager->skipVerifyAndTrust(*data))
       return verifiedCallback(data);
     else
       return unverifiedCallback(data);

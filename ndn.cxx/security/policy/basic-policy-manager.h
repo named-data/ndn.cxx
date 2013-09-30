@@ -75,7 +75,7 @@ namespace security
     requireVerify (const Data & data);
 
     virtual bool 
-    skipVerify (const Data & data);
+    skipVerifyAndTrust (const Data & data);
 
     // bool 
     // checkVerificationPolicy(const Data & data);

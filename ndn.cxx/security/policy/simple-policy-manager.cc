@@ -55,7 +55,7 @@ namespace security
   }
 
   bool 
-  SimplePolicyManager::skipVerify (const Data & data)
+  SimplePolicyManager::skipVerifyAndTrust (const Data & data)
   {
     vector< Ptr<Regex> >::iterator it = m_verifyExempt.begin();
     for(; it != m_verifyExempt.end(); it++)

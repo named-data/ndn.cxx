@@ -78,7 +78,7 @@ namespace security
   };
 
   inline bool 
-  NoVerifyPolicyManager::skipVerify (const Data & data)
+  NoVerifyPolicyManager::skipVerifyAndTrust (const Data & data)
   { return true; }
 
   inline bool
