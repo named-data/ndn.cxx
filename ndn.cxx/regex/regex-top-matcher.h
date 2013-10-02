@@ -46,6 +46,9 @@ namespace regex
     static Ptr<RegexTopMatcher>
     fromXmlElement(TiXmlElement * element);
 
+    static Ptr<RegexTopMatcher>
+    fromName(const Name& name);
+
   protected:
     virtual void 
     compile();
@@ -53,6 +56,9 @@ namespace regex
   private:
     string
     getItemFromExpand(const string & expand, int & offset);
+
+    string
+    convertSpecialChar(const string& str);
 
   private:
     const string m_expand;
