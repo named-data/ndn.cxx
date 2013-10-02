@@ -57,7 +57,7 @@ namespace regex
     string
     getItemFromExpand(const string & expand, int & offset);
 
-    string
+    static string
     convertSpecialChar(const string& str);
 
   private:

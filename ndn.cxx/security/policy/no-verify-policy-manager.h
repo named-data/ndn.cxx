@@ -33,7 +33,7 @@ namespace security
      * @return true if the data does not need to be verified, otherwise false
      */
     inline virtual bool 
-    skipVerify (const Data & data);
+    skipVerifyAndTrust (const Data & data);
     
 
     /**

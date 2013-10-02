@@ -18,11 +18,13 @@ namespace security
   ValidationRequest::ValidationRequest (Ptr<Interest> interest,
 					const DataCallback& verifiedCallback,
 					const UnverifiedCallback& unverifiedCallback,
-					const int& retry)
+					const int& retry,
+                                        const int& stepCount)
     : m_interest(interest)
     , m_verifiedCallback(verifiedCallback)
     , m_unverifiedCallback(unverifiedCallback)
     , m_retry(retry)
+    , m_stepCount(stepCount)
   {}
 
 }//security

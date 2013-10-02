@@ -28,7 +28,8 @@ namespace security
     ValidationRequest (Ptr<Interest> interest,
                        const DataCallback& verifiedCallback,
                        const UnverifiedCallback& unverifiedCallback,
-                       const int& retry);
+                       const int& retry,
+                       const int& stepCount);
     
     virtual
     ~ValidationRequest () {}
@@ -38,6 +39,7 @@ namespace security
     DataCallback m_verifiedCallback; // callback function if requested certificate has been validated
     UnverifiedCallback m_unverifiedCallback; //callback function if requested certificate cannot be validated
     int m_retry; // number of retrials when interest timeout
+    int m_stepCount;
   };
 
 }//security

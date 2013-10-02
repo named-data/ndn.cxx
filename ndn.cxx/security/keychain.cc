@@ -227,7 +227,7 @@ namespace security
                                                                          unverifiedCallback,
                                                                          data),
                                                              nextStep->m_unverifiedCallback,
-                                                             stepCount + 1)
+                                                             nextStep->m_stepCount)
                                                  );
             
             m_handler->sendInterest(nextStep->m_interest, closure);

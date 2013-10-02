@@ -243,7 +243,7 @@ namespace regex
     Name::const_iterator it = name.begin();
     string regexStr("^");
     
-    for(; it != m_chatRoomNameSpace.end(); it++)
+    for(; it != name.end(); it++)
       {
 	regexStr.append("<");
 	regexStr.append(convertSpecialChar(it->toUri()));
@@ -257,7 +257,7 @@ namespace regex
   RegexTopMatcher::convertSpecialChar(const string& str)
   {
     string newStr;
-    for(i = 0; i < str.size(); i++)
+    for(int i = 0; i < str.size(); i++)
       {
         char c = str[i];
         switch(c)

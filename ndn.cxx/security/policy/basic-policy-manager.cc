@@ -560,7 +560,8 @@ namespace security
               Ptr<ValidationRequest> nextStep = Ptr<ValidationRequest>(new ValidationRequest(interest, 
                                                                                              recursiveVerifiedCallback,
                                                                                              recursiveUnverifiedCallback,
-                                                                                             3)
+                                                                                             3,
+                                                                                             stepCount + 1)
                                                                        );
               return nextStep;
             }
