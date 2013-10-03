@@ -78,6 +78,14 @@ namespace security
     setDefaultKeyForIdentity (const Name & keyName, const Name & identity = Name());
 
     /**
+     * @brief get the default key of an identity
+     * @param identity the name of the identity, if not specified the identity name can be inferred from the keyName
+     * @return the public key
+     */
+    virtual Name
+    getDefaultKeyNameForIdentity (const Name & identity = Name());
+    
+    /**
      * @brief Generate a pair of RSA keys for the specified identity and set it as default key of the identity
      * @param identity the name of the identity
      * @param ksk create a KSK or not, true for KSK, false for DSK 

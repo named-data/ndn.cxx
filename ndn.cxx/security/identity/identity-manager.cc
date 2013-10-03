@@ -131,6 +131,12 @@ namespace security
     m_publicStorage->setDefaultKeyNameForIdentity(keyName, identity);
   }
 
+  Name
+  IdentityManager::getDefaultKeyNameForIdentity (const Name & identity)
+  {
+    return m_publicStorage->getDefaultKeyNameForIdentity (identity);
+  }
+
   Ptr<Publickey>
   IdentityManager::getPublickey(const Name & keyName)
   {
