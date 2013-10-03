@@ -123,11 +123,11 @@ namespace security
     createSigningRequest(const Name & keyName);
 
     /**
-     * @brief Install a certificate into identity
+     * @brief Install an identity certificate into identity
      * @param certificate the certificate in terms of Data packet
      */
     virtual void 
-    installCertificate(Ptr<Certificate> certificate);
+    installIdentityCertificate(Ptr<Certificate> certificate);
 
     /**
      * @brief Set a certificate as the default certificate name of the corresponding key

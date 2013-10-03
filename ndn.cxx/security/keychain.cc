@@ -83,7 +83,7 @@ namespace security
   }
   
   void
-  Keychain::installCertificate(Ptr<Certificate> certificate)
+  Keychain::installIdentityCertificate(Ptr<Certificate> certificate)
   {
     m_identityManager->addCertificate(certificate);
   }
