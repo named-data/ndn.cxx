@@ -294,7 +294,7 @@ IdentityManager must be able to export public key bits, and ``getPublickey`` met
 .. code-block:: c++
 
    shared_ptr<Publickey>
-   getPublickey (const Name& keyName);
+   IdentityManager::getPublickey (const Name& keyName);
 
 
 Install Identity Certificate
@@ -307,7 +307,7 @@ Once the requested certificate is obtained, it can be installed via calling ``in
 .. code-block:: c++
    
    void
-   addIdentityCertificate (const Certificate& certificate);
+   IdentityManager::addIdentityCertificate (const Certificate& certificate);
 
 Example
 +++++++
@@ -324,14 +324,15 @@ Here is an example showing how to set identity, key, and identity certificate.
    Name aliceKSKCertName = identityManager.createIdentity(alice);
    
    /* get the public key bits of KSK (the default key for now) for signing */
-   shared_ptr<Publickey> aliceKSK = identityManager.getDefaultKeyForIdentity(alice);
+   Name aliceKSKName = identityManager.getDefaultKeyNameForIdentity(alice);
+   shared_ptr<Publickey> aliceKSK = identityManager.getPublickey(aliceKSKName);
 
    /* ask operators of "/ndn/ucla.edu/" to generate an identity certificate of the KSK, and install the certificate*/
    ... 
-   identityManager.installIdentityCertificate(aliceKSKCert);
+   identityManager.addCertificate(aliceKSKCert);
 
    /* generate a RSA key pair as DSK */
-   Name aliceDSKName = identityManager.generateRSAKey(alice, false, 2048); 
+   Name aliceDSKName = identityManager.generateRSAKeyPair(alice, false, 2048); 
 
    Time notBefore(...);
    Time notAfter(...);
@@ -340,7 +341,7 @@ Here is an example showing how to set identity, key, and identity certificate.
    shared_ptr<Certificate> aliceDSKCert = identityManager.createIdentityCertificate(aliceDSKName, aliceKSKCertName, notBefore, notAfter); 
 
    /* install the identity certificate */
-   identityManager.installIdentityCertificate(*aliceDSKCert);
+   identityManager.addCertificate(*aliceDSKCert);
 
    /* set the DSK and its certificate as default key and certificate of "/ndn/ucla.edu/alice" */
    identityManager.setDefaultKeyForIdentity(aliceDSKName);
