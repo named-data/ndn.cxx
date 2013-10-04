@@ -19,6 +19,7 @@
 #include "policy-manager.h"
 
 #include "ndn.cxx/regex/regex.h"
+#include "ndn.cxx/security/certificate/identity-certificate.h"
 #include "ndn.cxx/security/identity/privatekey-storage.h"
 #include "ndn.cxx/security/cache/certificate-cache.h"
 
@@ -66,9 +67,9 @@ namespace security
     setVerificationExemption(Ptr<Regex> exempt);
 
     void 
-    setTrustAnchor(const Certificate & certificate);
+    setTrustAnchor(Ptr<IdentityCertificate> certificate);
 
-    Ptr<const Certificate>
+    Ptr<const IdentityCertificate>
     getTrustAnchor(const Name & name);
 
     virtual bool
@@ -139,7 +140,7 @@ namespace security
     vector< Ptr<PolicyRule> > m_signPolicies;
     vector< Ptr<PolicyRule> > m_mustFailSign;
     vector< Ptr<Regex> > m_signInference;
-    map<Name, Certificate> m_trustAnchors;
+    map<Name, Ptr<IdentityCertificate> > m_trustAnchors;
     
     int m_stepLimit;
     Ptr<CertificateCache> m_certificateCache;

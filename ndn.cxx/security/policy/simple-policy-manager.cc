@@ -106,7 +106,7 @@ namespace security
                                             const DataCallback &verifiedCallback, 
                                             const UnverifiedCallback &unverifiedCallback)
   {
-    Ptr<Certificate> certificate = Ptr<Certificate>(new Certificate(*signCertificate));
+    Ptr<IdentityCertificate> certificate = Ptr<IdentityCertificate>(new IdentityCertificate(*signCertificate));
 
     if(!certificate->isTooLate() && !certificate->isTooEarly())
       m_certificateCache->insertCertificate(certificate);
@@ -158,11 +158,11 @@ namespace security
                 return NULL;
               }
 	    const Name & keyLocatorName = sha256sig->getKeyLocator().getKeyName();
-            Ptr<const Certificate> trustedCert;
+            Ptr<const IdentityCertificate> trustedCert;
             if(m_trustAnchors.end() == m_trustAnchors.find(keyLocatorName))
-                trustedCert = m_certificateCache->getCertificate(keyLocatorName);
+              trustedCert = m_certificateCache->getCertificate(keyLocatorName);
 	    else
-		trustedCert = Ptr<const Certificate>(new Certificate(m_trustAnchors[keyLocatorName]));
+              trustedCert = m_trustAnchors[keyLocatorName];
 
             if(NULL != trustedCert){
               if(verifySignature(*data, trustedCert->getPublicKeyInfo()))

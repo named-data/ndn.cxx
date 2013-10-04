@@ -50,9 +50,10 @@ using namespace ndn::security;
 
 BOOST_AUTO_TEST_SUITE(SecurityTests)
 
-Ptr<Data> generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
+Ptr<Data> 
+generateCertificate(Name keyName, Ptr<security::Publickey> pubKey)
 {
-  Ptr<Certificate> certificate = Create<Certificate>();
+  Ptr<IdentityCertificate> certificate = Create<IdentityCertificate>();
   
   Name certificateName;
   certificateName.append(keyName).append("ID-CERT").append("0");
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerTest)
 
   Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn"));
   identityManager.signByCertificate(*ndn_DSK_unsign_cert, signingCertificateName);
-  security::Certificate ndn_DSK_cert(*ndn_DSK_unsign_cert);
+  Ptr<security::IdentityCertificate> ndn_DSK_cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate(*ndn_DSK_unsign_cert));
 
   identityManager.addCertificateAsIdentityDefault(ndn_DSK_cert);
 
@@ -242,7 +243,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerTest)
 
   signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn"));
   identityManager.signByCertificate(*ndn_UCLA_KSK_unsign_cert, signingCertificateName);
-  security::Certificate ndn_UCLA_KSK_cert(*ndn_UCLA_KSK_unsign_cert);
+  Ptr<security::IdentityCertificate> ndn_UCLA_KSK_cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate(*ndn_UCLA_KSK_unsign_cert));
 
 
   identityManager.addCertificateAsIdentityDefault(ndn_UCLA_KSK_cert);
@@ -253,7 +254,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerTest)
   
   signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu"));
   identityManager.signByCertificate(*ndn_UCLA_DSK_unsign_cert, signingCertificateName);
-  security::Certificate ndn_UCLA_DSK_cert(*ndn_UCLA_DSK_unsign_cert);
+  Ptr<security::IdentityCertificate> ndn_UCLA_DSK_cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate(*ndn_UCLA_DSK_unsign_cert));
 
   identityManager.addCertificateAsIdentityDefault(ndn_UCLA_DSK_cert);
 
@@ -268,7 +269,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerTest)
   
   signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu"));
   identityManager.signByCertificate(*ndn_Yingdi_KSK_unsign_cert, signingCertificateName);
-  security::Certificate ndn_Yingdi_KSK_cert(*ndn_Yingdi_KSK_unsign_cert);
+  Ptr<security::IdentityCertificate> ndn_Yingdi_KSK_cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate (*ndn_Yingdi_KSK_unsign_cert));
 
   identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_KSK_cert);
 
@@ -279,7 +280,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerTest)
   
   signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi"));
   identityManager.signByCertificate(*ndn_Yingdi_DSK_unsign_cert, signingCertificateName);
-  security::Certificate ndn_Yingdi_DSK_cert(*ndn_Yingdi_DSK_unsign_cert);
+  Ptr<security::IdentityCertificate> ndn_Yingdi_DSK_cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate (*ndn_Yingdi_DSK_unsign_cert));
 
   identityManager.addCertificateAsIdentityDefault(ndn_Yingdi_DSK_cert);
 
@@ -294,7 +295,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerTest)
 
   signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi"));
   identityManager.signByCertificate(*ndn_APP_KSK_unsign_cert, signingCertificateName);
-  security::Certificate ndn_APP_KSK_cert(*ndn_APP_KSK_unsign_cert);
+  Ptr<security::IdentityCertificate> ndn_APP_KSK_cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate(*ndn_APP_KSK_unsign_cert));
 
   identityManager.addCertificateAsIdentityDefault(ndn_APP_KSK_cert);
 
@@ -305,7 +306,7 @@ BOOST_AUTO_TEST_CASE (IdentityManagerTest)
 
   signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name("/ndn/ucla.edu/yingdi/app"));
   identityManager.signByCertificate(*ndn_APP_DSK_unsign_cert, signingCertificateName);
-  security::Certificate ndn_APP_DSK_cert(*ndn_APP_DSK_unsign_cert);
+  Ptr<security::IdentityCertificate> ndn_APP_DSK_cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate(*ndn_APP_DSK_unsign_cert));
 
   identityManager.addCertificateAsIdentityDefault(ndn_APP_DSK_cert);
 }
@@ -372,7 +373,7 @@ BOOST_AUTO_TEST_CASE(PolicyManagerTest)
 
   Ptr<Data> readData = Data::decodeFromWire (readBlob);
 
-  security::Certificate cert(*readData); 
+  Ptr<IdentityCertificate> cert = Ptr<IdentityCertificate>(new IdentityCertificate(*readData)); 
   
   policyManager.setTrustAnchor(cert);
 
@@ -410,7 +411,7 @@ BOOST_AUTO_TEST_CASE(DumpCert)
 
   Ptr<Data> readData = Data::decodeFromWire (readBlob);
 
-  security::Certificate cert(*readData); 
+  // security::Certificate cert(*readData); 
 
   // DERendec endec;
   

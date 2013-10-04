@@ -212,7 +212,7 @@ namespace security
                                   new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
 
         Ptr<Blob> rawCertPtr = Ptr<Blob>(new Blob(decoded.c_str(), decoded.size()));
-        Certificate cert(*Data::decodeFromWire(rawCertPtr));
+        Ptr<IdentityCertificate> cert = Ptr<IdentityCertificate>(new IdentityCertificate(*Data::decodeFromWire(rawCertPtr)));
 
         setTrustAnchor(cert);
 
@@ -342,10 +342,10 @@ namespace security
     TiXmlElement * trustAnchors = new TiXmlElement("TrustAnchors");
     doc->LinkEndChild(trustAnchors);
 
-    map<Name, Certificate>::iterator tIt = m_trustAnchors.begin();
+    map<Name, Ptr<IdentityCertificate> >::iterator tIt = m_trustAnchors.begin();
     for(; tIt != m_trustAnchors.end(); tIt++)
       {
-        Ptr<Blob> rawData = tIt->second.encodeToWire();
+        Ptr<Blob> rawData = tIt->second->encodeToWire();
         string encoded;
         CryptoPP::StringSource ss(reinterpret_cast<const unsigned char *>(rawData->buf()), rawData->size(), true,
                                   new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
@@ -428,20 +428,20 @@ namespace security
   }
 
   void 
-  BasicPolicyManager::setTrustAnchor(const Certificate & certificate)
+  BasicPolicyManager::setTrustAnchor(Ptr<IdentityCertificate> certificate)
   {
-    m_trustAnchors.insert(pair<const Name, const Certificate>(certificate.getName(), certificate));
+    m_trustAnchors.insert(pair<Name, Ptr<IdentityCertificate> >(certificate->getName(), certificate));
 
     m_policyChanged = true;
   }
 
-  Ptr<const Certificate>
+  Ptr<const IdentityCertificate>
   BasicPolicyManager::getTrustAnchor(const Name & name)
   {
     if(m_trustAnchors.end() == m_trustAnchors.find(name))
       return NULL;
     else
-      return Ptr<const Certificate>(new Certificate(m_trustAnchors[name]));
+      return m_trustAnchors[name];
   }
 
   // bool 
@@ -470,7 +470,7 @@ namespace security
                                             const DataCallback &verifiedCallback, 
                                             const UnverifiedCallback &unverifiedCallback)
   {
-    Ptr<Certificate> certificate = Ptr<Certificate>(new Certificate(*signCertificate));
+    Ptr<IdentityCertificate> certificate = Ptr<IdentityCertificate>(new IdentityCertificate(*signCertificate));
 
     if(!certificate->isTooLate() && !certificate->isTooEarly())
       m_certificateCache->insertCertificate(certificate);
@@ -522,7 +522,7 @@ namespace security
                 return NULL;
               }
 
-            Ptr<const Certificate> trustedCert = getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
+            Ptr<const IdentityCertificate> trustedCert = getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
             if(NULL == trustedCert)
               {
                 trustedCert = m_certificateCache->getCertificate(sha256sig->getKeyLocator().getKeyName());

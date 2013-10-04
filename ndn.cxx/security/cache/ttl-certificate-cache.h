@@ -33,14 +33,14 @@ namespace security
     class TTLCacheEntry
     {
     public:
-      TTLCacheEntry(const Time & timestamp, const Certificate & certificate, TrackerList::iterator it)
+      TTLCacheEntry(const Time & timestamp, Ptr<Certificate> certificate, TrackerList::iterator it)
         : m_timestamp(timestamp)
         , m_certificate(certificate)
         , m_it(it)
       {}
 
       Time m_timestamp;
-      Certificate m_certificate;
+      Ptr<Certificate> m_certificate;
       TrackerList::iterator m_it;
     };
     

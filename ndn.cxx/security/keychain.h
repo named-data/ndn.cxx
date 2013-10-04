@@ -127,7 +127,7 @@ namespace security
      * @param certificate the certificate in terms of Data packet
      */
     virtual void 
-    installIdentityCertificate(Ptr<Certificate> certificate);
+    installIdentityCertificate(Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Set a certificate as the default certificate name of the corresponding key
@@ -141,7 +141,7 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<Certificate> 
+    virtual Ptr<IdentityCertificate> 
     getCertificate(const Name & certificateName);
 
     /**
@@ -149,7 +149,7 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<Certificate>
+    virtual Ptr<IdentityCertificate>
     getAnyCertificate(const Name & certName);
 
     /**

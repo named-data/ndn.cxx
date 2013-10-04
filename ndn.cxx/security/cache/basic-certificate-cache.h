@@ -35,7 +35,7 @@ namespace security
     getCertificate(const Name & certificateName);
 
   private:
-    std::map<Name, Certificate> m_cache;
+    std::map<Name, Ptr<Certificate> > m_cache;
   };
   
 }//security

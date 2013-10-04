@@ -20,13 +20,13 @@ namespace security
   void
   BasicCertificateCache::insertCertificate(Ptr<Certificate> certificate)
   { 
-    m_cache.insert(pair<const Name, const Certificate>(certificate->getName(), *certificate));
+    m_cache.insert(pair<Name, Ptr<Certificate> >(certificate->getName(), certificate));
   }
   
   Ptr<Certificate>
   BasicCertificateCache::getCertificate(const Name & certificateName)
   {
-    map<Name, Certificate>::iterator it = m_cache.find(certificateName);
+    map<Name, Ptr<Certificate> >::iterator it = m_cache.find(certificateName);
 
     if(it == m_cache.end())
       {
@@ -34,16 +34,16 @@ namespace security
       }
     else
       {	
-	if(it->second.isTooEarly())
+	if(it->second->isTooEarly())
 	  return NULL;
 	
-	if(it->second.isTooLate())
+	if(it->second->isTooLate())
 	  {
 	    m_cache.erase(it);
 	    return NULL;
 	  }
 
-	return Ptr<Certificate>(new Certificate(it->second));
+	return it->second;
       }
   }
   

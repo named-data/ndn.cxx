@@ -140,7 +140,7 @@ int main(int argc, char** argv)
   Ptr<Blob> certBlob = getCertBlob (certFileName);
   
   Ptr<ndn::Data> certData= Data::decodeFromWire (certBlob);
-  security::Certificate cert(*certData);
+  Ptr<security::IdentityCertificate> cert = Ptr<security::IdentityCertificate>(new security::IdentityCertificate(*certData));
 
   cout << "get cert" << endl;
   

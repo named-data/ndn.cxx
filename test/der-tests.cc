@@ -14,7 +14,7 @@
 #include "ndn.cxx/data.h"
 #include "ndn.cxx/security/certificate/certificate.h"
 #include "ndn.cxx/security/certificate/publickey.h"
-#include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/security/certificate/identity-certificate.h"
 #include "ndn.cxx/helpers/der/exception.h"
 #include "ndn.cxx/helpers/der/der.h"
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
@@ -45,7 +45,7 @@ getCert(const Name & name)
   if(sqlite3_step(stmt) == SQLITE_ROW)
     {
       Ptr<Data> data = Data::decodeFromWire(Ptr<Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0))));
-      cert = Ptr<security::Certificate>(new security::Certificate(*data));
+      cert = Ptr<security::Certificate>(new security::IdentityCertificate(*data));
     }
   sqlite3_close (fakeDB);
 
@@ -172,10 +172,10 @@ BOOST_AUTO_TEST_CASE(CertificateDataVisitor)
   node->accept(printVisitor, string(""));
 
   der::CertificateDataVisitor certDataVisitor;
-  security::Certificate certificate;
-  node->accept(certDataVisitor, boost::any(&certificate));
+  Ptr<security::Certificate> certificate;
+  node->accept(certDataVisitor, boost::any(GetPointer(certificate)));
   
-  certificate.printCertificate();
+  certificate->printCertificate();
 
   }catch(der::DerException & e){
     cout << e.Msg() << endl;

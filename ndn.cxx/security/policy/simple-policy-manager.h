@@ -16,6 +16,7 @@
 #include "policy-manager.h"
 
 #include "ndn.cxx/regex/regex.h"
+#include "ndn.cxx/security/certificate/identity-certificate.h"
 #include "ndn.cxx/security/cache/certificate-cache.h"
 
 namespace ndn
@@ -117,7 +118,7 @@ namespace security
      * @param certificate the trust anchor 
      */
     inline virtual void 
-    addTrustAnchor(const Certificate & certificate);
+    addTrustAnchor(Ptr<IdentityCertificate> certificate);
 
   protected:
     virtual void
@@ -140,7 +141,7 @@ namespace security
     RuleList m_signPolicies;
     RuleList m_mustFailSign;
     RegexList m_signInference;
-    std::map<Name, Certificate> m_trustAnchors;    
+    std::map<Name, Ptr<IdentityCertificate> > m_trustAnchors;    
   };
 
   inline void 
@@ -160,8 +161,8 @@ namespace security
   { m_verifyExempt.push_back(exempt); }
 
   inline void  
-  SimplePolicyManager::addTrustAnchor(const Certificate & certificate)
-  { m_trustAnchors.insert(pair<const Name, const Certificate>(certificate.getName(), certificate)); }
+  SimplePolicyManager::addTrustAnchor(Ptr<IdentityCertificate> certificate)
+  { m_trustAnchors.insert(pair<Name, Ptr<IdentityCertificate> >(certificate->getName(), certificate)); }
 
 }//security
 

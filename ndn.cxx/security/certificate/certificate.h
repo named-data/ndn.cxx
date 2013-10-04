@@ -37,7 +37,7 @@ namespace security
   {
   public:
     // enum CertificateType{
-    //   IDENTITY_CERTIFICATE,
+    //    IDENTITY_CERTIFICATE,
     // };
 
   public:
@@ -117,7 +117,7 @@ namespace security
     { return m_key; }
 
     virtual Name 
-    getPublicKeyName ();
+    getPublicKeyName () = 0;
 
     /**
      * @brief check if the certificate is valid

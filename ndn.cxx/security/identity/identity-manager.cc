@@ -50,7 +50,7 @@ namespace security
 	Name keyName = generateRSAKeyPairAsDefault(identity, true);
 
 	_LOG_DEBUG("Create self-signed certificate");
-	Certificate selfCert(*selfSign(keyName)); 
+	Ptr<IdentityCertificate> selfCert = selfSign(keyName); 
 	
 	_LOG_DEBUG("Add self-signed certificate as default");
 
@@ -158,25 +158,25 @@ namespace security
     Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
     Ptr<Publickey> publickey = Publickey::fromDER(keyBlob);
 
-    Ptr<Certificate> certificate = createIdentityCertificate(keyName,
-                                                             *publickey,
-                                                             signerCertificateName,
-                                                             notBefore,
-                                                             notAfter);
+    Ptr<IdentityCertificate> certificate = createIdentityCertificate(keyName,
+                                                                     *publickey,
+                                                                     signerCertificateName,
+                                                                     notBefore,
+                                                                     notAfter);
 
-    m_publicStorage->addCertificate(*certificate);
+    m_publicStorage->addCertificate(certificate);
     
     return certificate->getName();
   }
 
-  Ptr<Certificate>
+  Ptr<IdentityCertificate>
   IdentityManager::createIdentityCertificate (const Name& keyName,
                                               const Publickey& publickey,
                                               const Name& signerCertificateName,
                                               const Time& notBefore,
                                               const Time& notAfter)
   {
-    Ptr<Certificate> certificate = Create<Certificate>();
+    Ptr<IdentityCertificate> certificate = Create<IdentityCertificate>();
     
     Name certificateName;
     TimeInterval ti = time::NowUnixTimestamp();
@@ -213,41 +213,41 @@ namespace security
   }
 
   void
-  IdentityManager::addCertificate (Ptr<Certificate> certificate)
+  IdentityManager::addCertificate (Ptr<IdentityCertificate> certificate)
   {
-    m_publicStorage->addCertificate(*certificate);
+    m_publicStorage->addCertificate(certificate);
   }
 
   void 
-  IdentityManager::addCertificateAsDefault (const Certificate & certificate)
+  IdentityManager::addCertificateAsDefault (Ptr<IdentityCertificate> certificate)
   {
     m_publicStorage->addCertificate(certificate);
     
-    setDefaultCertificateForKey(certificate.getName());
+    setDefaultCertificateForKey(certificate->getName());
   }
 
   void
-  IdentityManager::addCertificateAsIdentityDefault (const Certificate & certificate)
+  IdentityManager::addCertificateAsIdentityDefault (Ptr<IdentityCertificate> certificate)
   {
     m_publicStorage->addCertificate(certificate);
 
-    Name keyName = m_publicStorage->getKeyNameForCertificate(certificate.getName());
+    Name keyName = m_publicStorage->getKeyNameForCertificate(certificate->getName());
     
     setDefaultKeyForIdentity(keyName);
 
-    setDefaultCertificateForKey(certificate.getName());
+    setDefaultCertificateForKey(certificate->getName());
   }
 
-  Ptr<Certificate>
+  Ptr<IdentityCertificate>
   IdentityManager::getCertificate (const Name & certName)
   {
-    return Ptr<Certificate>(new Certificate(*m_publicStorage->getCertificate(certName, false)));
+    return Ptr<IdentityCertificate>(new IdentityCertificate(*m_publicStorage->getCertificate(certName, false)));
   }
 
-  Ptr<Certificate>
+  Ptr<IdentityCertificate>
   IdentityManager::getAnyCertificate (const Name & certName)
   {
-    return Ptr<Certificate>(new Certificate(*m_publicStorage->getCertificate(certName, true)));
+    return Ptr<IdentityCertificate>(new IdentityCertificate(*m_publicStorage->getCertificate(certName, true)));
   }
 
   void
@@ -340,10 +340,10 @@ namespace security
     sha256Sig->setSignatureBits(*sigBits);
   }
 
-  Ptr<Data>
+  Ptr<IdentityCertificate>
   IdentityManager::selfSign (const Name & keyName)
   {
-    Ptr<Certificate> certificate = Create<Certificate>();
+    Ptr<IdentityCertificate> certificate = Create<IdentityCertificate>();
     
     Name certificateName;
     certificateName.append(keyName).append("ID-CERT").append("0");

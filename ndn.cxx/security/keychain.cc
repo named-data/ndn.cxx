@@ -83,7 +83,7 @@ namespace security
   }
   
   void
-  Keychain::installIdentityCertificate(Ptr<Certificate> certificate)
+  Keychain::installIdentityCertificate(Ptr<IdentityCertificate> certificate)
   {
     m_identityManager->addCertificate(certificate);
   }
@@ -94,13 +94,13 @@ namespace security
     m_identityManager->setDefaultCertificateForKey (certName);
   }
 
-  Ptr<Certificate> 
+  Ptr<IdentityCertificate> 
   Keychain::getCertificate(const Name & certName)
   {
     return m_identityManager->getCertificate(certName);
   }
 
-  Ptr<Certificate> 
+  Ptr<IdentityCertificate> 
   Keychain::getAnyCertificate(const Name & certName)
   {
     return m_identityManager->getAnyCertificate(certName);

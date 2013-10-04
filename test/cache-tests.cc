@@ -12,6 +12,7 @@
 
 #include "ndn.cxx/security/cache/ttl-certificate-cache.h"
 #include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/security/certificate/identity-certificate.h"
 
 #include <sqlite3.h>
 #include <unistd.h>
@@ -24,7 +25,7 @@ BOOST_AUTO_TEST_SUITE(CacheTests)
 Ptr<Certificate>
 getCert(const Name & name)
 {
-  Ptr<Certificate> certificate = NULL;
+  Ptr<IdentityCertificate> certificate = NULL;
 
   sqlite3 * fakeDB;
   int res = sqlite3_open("/Users/yuyingdi/Test/fake-data.db", &fakeDB);
@@ -39,7 +40,7 @@ getCert(const Name & name)
   if(sqlite3_step(stmt) == SQLITE_ROW)
     {
       Ptr<const Blob> blob = Ptr<const Blob>(new Blob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0)));
-      certificate = Ptr<Certificate>(new Certificate(*Data::decodeFromWire(blob)));
+      certificate = Ptr<IdentityCertificate>(new IdentityCertificate(*Data::decodeFromWire(blob)));
     }
 
   sqlite3_close (fakeDB);

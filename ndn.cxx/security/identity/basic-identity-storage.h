@@ -127,15 +127,15 @@ namespace security
      * @brief add a certificate in to identity storage without checking if identity and key exists
      * @param certificate the certificate to be added
      */
-    virtual void
-    addAnyCertificate (const Certificate & certificate);
+    void
+    addAnyCertificate (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief add a certificate in to identity storage
      * @param certificate the certificate to be added
      */
     virtual void 
-    addCertificate (const Certificate & certificate);
+    addCertificate (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief get a certificate from identity storage

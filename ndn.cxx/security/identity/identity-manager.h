@@ -126,7 +126,7 @@ namespace security
      * @param notAfter the notAfter vallue in validity field of the generated certificate
      * @return the generated identity certificate
      */
-    virtual Ptr<Certificate>
+    virtual Ptr<IdentityCertificate>
     createIdentityCertificate (const Name& keyName,
                                const Publickey& publickey,
                                const Name& signerCertificateName,
@@ -138,7 +138,7 @@ namespace security
      * @param certificate the certificate to to added
      */
     virtual void
-    addCertificate (Ptr<Certificate> certificate);
+    addCertificate (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Set the certificate as the default of its corresponding key
@@ -152,21 +152,21 @@ namespace security
      * @param certificate the certificate to be added
      */
     virtual void
-    addCertificateAsIdentityDefault (const Certificate & certificate);
+    addCertificateAsIdentityDefault (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Add a certificate into the public storage and set the certificate as the default of its corresponding key
      * @brief certificate the certificate to be added
      */
     virtual void
-    addCertificateAsDefault (const Certificate & certificate);
+    addCertificateAsDefault (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Get a certificate with the specified name
      * @param certificateName name of the requested certificate
      * @return the requested certificate
      */
-    virtual Ptr<Certificate>
+    virtual Ptr<IdentityCertificate>
     getCertificate (const Name & certificateName);
     
     /**
@@ -174,7 +174,7 @@ namespace security
      * @param certificateName name of the requested certificate
      * @return the requested certificate
      */
-    virtual Ptr<Certificate>
+    Ptr<IdentityCertificate>
     getAnyCertificate (const Name & certificateName);
 
     /**
@@ -250,7 +250,7 @@ namespace security
      * @param keyName name of the public key
      * @return the generated certificate
      */
-    virtual Ptr<Data>
+    virtual Ptr<IdentityCertificate>
     selfSign (const Name & keyName);
     
   private:

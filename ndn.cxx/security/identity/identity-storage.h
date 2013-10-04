@@ -12,7 +12,7 @@
 #define NDN_IDENTITY_STORAGE_H
 
 #include "ndn.cxx/security/security-common.h"
-#include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/security/certificate/identity-certificate.h"
 
 using namespace boost::posix_time;
 
@@ -127,7 +127,7 @@ namespace security
      * @param certificate the certificate to be added
      */
     virtual void 
-    addCertificate (const Certificate & certificate) = 0;
+    addCertificate (Ptr<IdentityCertificate> certificate) = 0;
 
     /**
      * @brief get a certificate from identity storage
