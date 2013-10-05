@@ -36,12 +36,13 @@ namespace security
     virtual Name 
     getPublicKeyName ();
 
+    static bool
+    isIdentityCertificate(const Data& data);
+
   private:
     static bool
     isCorrectName(const Name& name);
     
-    static bool
-    isIdentityCertificate(const Data& data);
   };
 
 }//security
