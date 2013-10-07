@@ -141,7 +141,7 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<IdentityCertificate> 
+    virtual Ptr<Certificate> 
     getCertificate(const Name & certificateName);
 
     /**
@@ -149,8 +149,24 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<IdentityCertificate>
+    virtual Ptr<Certificate>
     getAnyCertificate(const Name & certName);
+
+    /**
+     * @brief Get identity certificate
+     * @param certificateName name of the certificate
+     * @returns certificate that is valid 
+     */
+    virtual Ptr<IdentityCertificate> 
+    getIdentityCertificate(const Name & certificateName);
+
+    /**
+     * @brief Get identity certificate even if it is not valid
+     * @param certificateName name of the certificate
+     * @returns certificate that is valid 
+     */
+    virtual Ptr<IdentityCertificate> 
+    getAnyIdentityCertificate(const Name & certificateName);
 
     /**
      * @brief Revoke a key

@@ -94,16 +94,28 @@ namespace security
     m_identityManager->setDefaultCertificateForKey (certName);
   }
 
-  Ptr<IdentityCertificate> 
+  Ptr<Certificate> 
   Keychain::getCertificate(const Name & certName)
   {
     return m_identityManager->getCertificate(certName);
   }
 
-  Ptr<IdentityCertificate> 
+  Ptr<Certificate> 
   Keychain::getAnyCertificate(const Name & certName)
   {
     return m_identityManager->getAnyCertificate(certName);
+  }
+
+  Ptr<IdentityCertificate> 
+  Keychain::getIdentityCertificate(const Name & certificateName)
+  {
+    return m_identityManager->getCertificate(certificateName);
+  }
+  
+  Ptr<IdentityCertificate> 
+  Keychain::getAnyIdentityCertificate(const Name & certificateName)
+  {
+    return m_identityManager->getAnyCertificate(certificateName);
   }
 
   void 
