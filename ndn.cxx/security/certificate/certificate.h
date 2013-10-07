@@ -117,7 +117,7 @@ namespace security
     { return m_key; }
 
     virtual Name 
-    getPublicKeyName () = 0;
+    getPublicKeyName () const = 0;
 
     /**
      * @brief check if the certificate is valid

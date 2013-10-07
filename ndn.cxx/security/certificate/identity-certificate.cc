@@ -54,7 +54,7 @@ namespace security
   }
 
   Name
-  IdentityCertificate::getPublicKeyName()
+  IdentityCertificate::getPublicKeyName() const
   {
     const Name & certificateName = getName ();
     int i = certificateName.size() - 1;

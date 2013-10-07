@@ -34,7 +34,7 @@ namespace security
     setName (const Name& name);
 
     virtual Name 
-    getPublicKeyName ();
+    getPublicKeyName () const;
 
     static bool
     isIdentityCertificate(const Data& data);
