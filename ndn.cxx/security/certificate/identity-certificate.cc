@@ -67,8 +67,8 @@ namespace security
   }
 
   bool
-  IdentityCertificate::isIdentityCertificate(const Data& data)
-  { return (isCorrectName(data.getName()) ? true : false); }
+  IdentityCertificate::isIdentityCertificate(const Certificate& certificate)
+  { return (isCorrectName(certificate.getName()) ? true : false); }
 
 }//security
 

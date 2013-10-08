@@ -37,7 +37,7 @@ namespace security
     getPublicKeyName () const;
 
     static bool
-    isIdentityCertificate(const Data& data);
+    isIdentityCertificate(const Certificate& certificate);
 
   private:
     static bool
