@@ -56,8 +56,10 @@ namespace ndn
          */
         
         void
-        SimpleKeyStore::generateKeyPair(const string & keyName, KeyType keyType, int keySize)
+        SimpleKeyStore::generateKeyPair(const Name & keyName, KeyType keyType, int keySize)
         {
+             string keyURI = keyName.toUri();
+//             cout<<keyURI<<endl;
         	  if (SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
         	  { 
         	  	throw security::SecException("public key exists");
@@ -72,13 +74,15 @@ namespace ndn
                 AutoSeededRandomPool rng;
                 InvertibleRSAFunction privkey;
                 privkey.Initialize(rng, keySize);
-                string privateKeyName = SimpleKeyStore::nameTransform(keyName) + "_priv.txt";
+                string privateKeyName = SimpleKeyStore::nameTransform(keyURI) + "_priv.txt";
+//                cout<<privateKeyName<<endl;
+                SimpleKeyStore::maintainMapping(keyURI,SimpleKeyStore::nameTransform(keyURI));
                 Base64Encoder privkeysink(new FileSink(privateKeyName.c_str()));
                 privkey.DEREncode(privkeysink);
                 privkeysink.MessageEnd();
                 
                 RSAFunction pubkey(privkey);
-                string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
+                string publicKeyName = SimpleKeyStore::nameTransform(keyURI) + "_pub.txt";
                 Base64Encoder pubkeysink(new FileSink( publicKeyName.c_str()));
                 pubkey.DEREncode(pubkeysink);
                 pubkeysink.MessageEnd();
@@ -94,14 +98,15 @@ namespace ndn
         }
         
         Ptr<Publickey>
-        SimpleKeyStore::getPublickey(const string & keyName)
+        SimpleKeyStore::getPublickey(const Name & keyName)
         {
+            string keyURI = keyName.toUri();
             if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
             {
         	  	throw security::SecException("public key doesn't exists");
         	  	return 0;
             }
-            string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
+            string publicKeyName = SimpleKeyStore::nameTransform(keyURI) + "_pub.txt";
             ifstream file (publicKeyName.c_str(), ios::in|ios::binary|ios::ate);
             if (file.is_open())
             {
@@ -128,8 +133,9 @@ namespace ndn
          * @returns signature, NULL if signing fails
          */
         Ptr<Blob>
-        SimpleKeyStore::sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo)
+        SimpleKeyStore::sign(const Blob & pData, const Name & keyName, DigestAlgorithm digestAlgo)
         {
+              string keyURI = keyName.toUri();
         	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
         	  { 
         	  	throw SecException("private key doesn't exists");
@@ -141,7 +147,7 @@ namespace ndn
                   string strContents = string(pData.buf(),pData.size());
    	         //Read private key
                   CryptoPP::ByteQueue bytes;
-                  string privateKeyName = SimpleKeyStore::nameTransform(keyName) + "_priv.txt";
+                  string privateKeyName = SimpleKeyStore::nameTransform(keyURI) + "_priv.txt";
                   FileSource file(privateKeyName.c_str(), true, new Base64Decoder);
                   file.TransferTo(bytes);
                   bytes.MessageEnd();
@@ -174,8 +180,9 @@ namespace ndn
          * @returns decrypted data
          */
         Ptr<Blob>
-        SimpleKeyStore::decrypt(const string & keyName, const Blob & pData, bool sym )
+        SimpleKeyStore::decrypt(const Name & keyName, const Blob & pData, bool sym )
         {
+            string keyURI = keyName.toUri();
             if (!sym)
             {
             	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
@@ -187,7 +194,7 @@ namespace ndn
                   {
                       AutoSeededRandomPool rng;
  	    	          CryptoPP::ByteQueue bytes;
-                      string privateKeyName = SimpleKeyStore::nameTransform(keyName) + "_priv.txt";
+                      string privateKeyName = SimpleKeyStore::nameTransform(keyURI) + "_priv.txt";
                       FileSource file(privateKeyName.c_str(), true, new Base64Decoder);
                       file.TransferTo(bytes);
                       bytes.MessageEnd();
@@ -217,7 +224,7 @@ namespace ndn
         	  			throw SecException("symmetric key doesn't exist");
         	  			return 0;
                   }
-            	  string symKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+            	  string symKeyName = SimpleKeyStore::nameTransform(keyURI) + "_key.txt";
                 string cipher, decoded, recovered;
                 Ptr<Blob> key_content = SimpleKeyStore::readSymetricKey(symKeyName);
                 string key = string(key_content->buf(),key_content->size());
@@ -252,10 +259,10 @@ namespace ndn
         }
         
         Ptr<Blob>
-        SimpleKeyStore::encrypt(const string & keyName, const Blob & pData, bool sym)
+        SimpleKeyStore::encrypt(const Name & keyName, const Blob & pData, bool sym)
         {
             string plain = string(pData.buf(),pData.size());
-
+            string keyURI = keyName.toUri();
             if (!sym)
             {
             	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
@@ -267,7 +274,7 @@ namespace ndn
                   {
                       AutoSeededRandomPool rng;
                       CryptoPP::ByteQueue bytes;
-                      string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
+                      string publicKeyName = SimpleKeyStore::nameTransform(keyURI) + "_pub.txt";
                       FileSource file(publicKeyName.c_str(), true, new Base64Decoder);
                       file.TransferTo(bytes);
                       bytes.MessageEnd();
@@ -298,7 +305,7 @@ namespace ndn
         	  			throw SecException("symmetric key doesn't exist");
         	  			return 0;
                 }
-                string symKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+                string symKeyName = SimpleKeyStore::nameTransform(keyURI) + "_key.txt";
                 string cipher, decoded;
                 Ptr<Blob> key_content = SimpleKeyStore::readSymetricKey(symKeyName);
                 string key = string(key_content->buf(),key_content->size());
@@ -341,8 +348,9 @@ namespace ndn
          * @returns true if key have been successfully generated
          */
         void 
-        SimpleKeyStore::generateKey(const string & keyName, KeyType keyType, int keySize)
+        SimpleKeyStore::generateKey(const Name & keyName, KeyType keyType, int keySize)
         {
+              string keyURI = keyName.toUri();
         	  if ( SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_SYMMETRIC))
         	  { 
         	  	throw security::SecException("symmetric key exists");
@@ -361,7 +369,8 @@ namespace ndn
                                 new StringSink(encoded)
                                 ) // HexEncoder
                  ); // StringSource
-                 string symKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+                 SimpleKeyStore::maintainMapping(keyURI,SimpleKeyStore::nameTransform(keyURI));
+                 string symKeyName = SimpleKeyStore::nameTransform(keyURI) + "_key.txt";
                  Blob blob(encoded.c_str(), encoded.size());
 							SimpleKeyStore::writeSymetricKey(symKeyName, blob);
 						  using namespace boost::filesystem;
@@ -371,11 +380,12 @@ namespace ndn
         }
         
         bool
-        SimpleKeyStore::doesKeyExist(const string & keyName, KeyClass keyClass)
+        SimpleKeyStore::doesKeyExist(const Name & keyName, KeyClass keyClass)
         {
+                string keyURI = keyName.toUri();
         	if (keyClass == KEY_CLASS_PUBLIC)
         	{
-                string publicKeyName = SimpleKeyStore::nameTransform(keyName) + "_pub.txt";
+                string publicKeyName = SimpleKeyStore::nameTransform(keyURI) + "_pub.txt";
                 fstream fin(publicKeyName.c_str(),ios::in);
   	        	if (fin)
   	        		return true;
@@ -384,7 +394,7 @@ namespace ndn
 					}
         	if (keyClass == KEY_CLASS_PRIVATE)
         	{
-                string privateKeyName = SimpleKeyStore::nameTransform(keyName) + "_priv.txt";
+                string privateKeyName = SimpleKeyStore::nameTransform(keyURI) + "_priv.txt";
                 fstream fin(privateKeyName.c_str(),ios::in);
                 if (fin)
                     return true;
@@ -393,7 +403,7 @@ namespace ndn
 	        }
 	        if (keyClass == KEY_CLASS_SYMMETRIC)
         	{
-                string symmetricKeyName = SimpleKeyStore::nameTransform(keyName) + "_key.txt";
+                string symmetricKeyName = SimpleKeyStore::nameTransform(keyURI) + "_key.txt";
                 fstream fin(symmetricKeyName.c_str(),ios::in);
                 if (fin)
                     return true;
@@ -405,7 +415,7 @@ namespace ndn
     	
         std::string SimpleKeyStore::nameTransform(const string &keyName)
         {
-            char *cstr = new char[keyName.length()+1];
+          /*            char *cstr = new char[keyName.length()+1];
             std::strcpy(cstr,keyName.c_str());
             for (int i = 0; i < keyName.length(); i++)
             {
@@ -414,6 +424,23 @@ namespace ndn
                     cstr[i] = '~';
                 }
             }
+            string ret = currentDir;
+            ret.append(string(cstr));
+            return ret;*/
+             std::string digest;
+             CryptoPP::SHA256 hash;
+             CryptoPP::StringSource foo(keyName, true,
+                                        new CryptoPP::HashFilter(hash,
+                                                                 new CryptoPP::Base64Encoder (new CryptoPP::StringSink(digest))));
+             char * cstr = new char [digest.length()+1];
+             std::strcpy (cstr, digest.c_str());
+             for (int i = 0; i < digest.length(); i++)
+             {
+              if (cstr[i] == '/')
+              {
+                cstr[i] = '%';
+              }
+             }
             string ret = currentDir;
             ret.append(string(cstr));
             return ret;
@@ -436,6 +463,16 @@ namespace ndn
 //    				 return string(memblock,size);
             }
             else return 0;
+        }
+        
+        void SimpleKeyStore::maintainMapping(string str1, string str2)
+        {
+            std::ofstream outfile;
+            string dirFile = currentDir;
+            dirFile.append("mapping.txt");
+            outfile.open(dirFile.c_str(), std::ios_base::app);
+            outfile << str1+" "+str2;
+            outfile.close();
         }
         
         void 

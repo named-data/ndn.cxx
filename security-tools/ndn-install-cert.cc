@@ -145,10 +145,11 @@ int main(int argc, char** argv)
   cout << "get cert" << endl;
   
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
+    cout<<"1"<<endl;
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
-
+    cout<<"2"<<endl;
   security::IdentityManager identityManager(publicStorage, privateStorage);
-
+    cout<<"3"<<endl;
   if(setAsIdDefault)
     {
       identityManager.addCertificateAsIdentityDefault(cert);

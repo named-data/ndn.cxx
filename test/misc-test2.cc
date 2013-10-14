@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(MiscTests2)
 BOOST_AUTO_TEST_CASE (MKDIR)
 {
     SimpleKeyStore sp(".//keystore//");
-    sp.generateKeyPair("/ndn/xingyu");
+    sp.generateKeyPair(ndn::Name("/ndn/xingyu"));
 }
 BOOST_AUTO_TEST_CASE (hash)
 {
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE (hash)
 BOOST_AUTO_TEST_CASE (GenKey)
 {
     SimpleKeyStore sp(".//keystore//");
-	sp.generateKeyPair("/ndn/xingyu");
+    sp.generateKeyPair(ndn::Name("/ndn/maxingyu"));
 
 }
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE (GenKey)
 BOOST_AUTO_TEST_CASE (Read)
 {
 		SimpleKeyStore sp;
-	Ptr<Publickey>  p = sp.getPublickey("/ndn/xingyu");
+		Ptr<Publickey>  p = sp.getPublickey(ndn::Name("/ndn/xingyu"));
 //	cout<<"hrer"<<endl;
 	Blob b = p->getKeyBlob();
 	cout<<string(b.buf(),b.size())<<endl;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE (Sign)
 	string str1("1234567");
   Blob blob1(str1.c_str(), str1.size());
   
-  Ptr<Blob> sig = sp.sign(blob1,"/ndn/xingyu");
+  Ptr<Blob> sig = sp.sign(blob1,ndn::Name("/ndn/xingyu"));
 	cout<<string(sig->buf(),sig->size())<<endl;
 	
    //Read public key
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE (VerifySign)
     
     RSASS<PSS, SHA256>::Verifier verifier(pubKey);
     
-    Ptr<Blob> sig = sp.sign(blob1,"/ndn/xingyu");
+    Ptr<Blob> sig = sp.sign(blob1,ndn::Name("/ndn/xingyu"));
     string signature = string(sig->buf(),sig->size());
     cout<<signature<<endl;
     // Verify
@@ -213,10 +213,10 @@ BOOST_AUTO_TEST_CASE (Encrypt)
             SimpleKeyStore sp2(".//keystore//");
 			string str1("RSA Encryption 123456789");
  			Blob blob1(str1.c_str(), str1.size());
-			Ptr<Blob> enc = sp.encrypt("/ndn/xingyu", blob1);
+			Ptr<Blob> enc = sp.encrypt(ndn::Name("/ndn/xingyu"), blob1);
 //			cout<<string(enc->buf(),enc->size())<<endl;
 			Blob cipher(enc->buf(),enc->size());
-		  Ptr<Blob> rec = sp2.decrypt("/ndn/xingyu",cipher);
+			Ptr<Blob> rec = sp2.decrypt(ndn::Name("/ndn/xingyu"),cipher);
 		  cout<<string(rec->buf(),rec->size())<<endl;
 }
 
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE (AES)
 BOOST_AUTO_TEST_CASE (SYM_GEN)
 {
     SimpleKeyStore sp(".//keystore//");
-	sp.generateKey("/ndn/xingyu");
+    sp.generateKey(ndn::Name("/ndn/xingyuma"));
 }
 
 BOOST_AUTO_TEST_CASE (SYM_EN)
@@ -348,9 +348,9 @@ BOOST_AUTO_TEST_CASE (SYM_EN)
         SimpleKeyStore sp2(".//keystore//");
 			string str1("SYM Encryption dudi");
  			Blob blob1(str1.c_str(), str1.size());
-			Ptr<Blob> enc = sp.encrypt("/ndn/xingyu", blob1,false);
+			Ptr<Blob> enc = sp.encrypt(ndn::Name("/ndn/xingyu"), blob1,false);
 			Blob cipher(enc->buf(),enc->size());
-		  Ptr<Blob> rec = sp2.decrypt("/ndn/xingyu",cipher,false);
+			Ptr<Blob> rec = sp2.decrypt(ndn::Name("/ndn/xingyu"),cipher,false);
 		  cout<<"recover:  "<<string(rec->buf(),rec->size())<<endl;
 }
 

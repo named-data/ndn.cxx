@@ -1,4 +1,3 @@
-
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil -*- */
 /*
  * Copyright (c) 2013, Regents of the University of California
@@ -12,12 +11,17 @@
 #include <iostream>
 #include <fstream>
 
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/variables_map.hpp>
-#include <boost/program_options/parsers.hpp>
+//#include <boost/program_options/options_description.hpp>
+//#include <boost/program_options/variables_map.hpp>
+//#include <boost/program_options/parsers.hpp>
+#include <boost/program_options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 #include <cryptopp/base64.h>
+
+#include <vector>
 
 #include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
@@ -52,15 +56,33 @@ getOutputFileName(const string& certName)
 }
 
 Ptr<Blob>
-getKeyBlob(const string& keyBits)
+getKeyBlob(const string& fileName)
 {
+    ifstream ifs (fileName.c_str());
+    string str((istreambuf_iterator<char>(ifs)),
+               istreambuf_iterator<char>());
     
-  //    string keyBits = key;
+    string firstLine = "-----BEGIN RSA PUBLIC KEY-----\n";
+    string lastLine = "-----END RSA PUBLIC KEY-----\n";
+    
+    int fPos = str.find(firstLine) + firstLine.size();
+    int lPos = str.rfind(lastLine);
+    
+    string keyBits = str.substr(fPos, lPos-fPos);
     
     string decoded;
     CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(keyBits.c_str()), keyBits.size(), true,
                                new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
     
+    return Ptr<Blob>(new Blob(decoded.c_str(), decoded.size()));
+}
+
+Ptr<Blob>
+getKeyBlobFromString(const string& keyBits)
+{
+    string decoded;
+    CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(keyBits.c_str()), keyBits.size(), true,
+                               new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
     return Ptr<Blob>(new Blob(decoded.c_str(), decoded.size()));
 }
 
@@ -88,10 +110,12 @@ int main(int argc, char** argv)
     string keyName;
     string notBeforeStr;
     string notAfterStr;
-    string sName;
+    vector<string> Lists;
+//    vector<vector<string> > Lists(2);
     string reqFile;
     char certType;
     string signId;
+    string keyBits;
     
     po::options_description desc("General options");
     desc.add_options()
@@ -99,9 +123,9 @@ int main(int argc, char** argv)
     ("key_name,n", po::value<string>(&keyName), "key name, for example, /ndn/ucla.edu/alice/DSK-123456789")
     ("not_before,S", po::value<string>(&notBeforeStr), "certificate starting date, YYYYMMDDhhmmss")
     ("not_after,E", po::value<string>(&notAfterStr), "certificate ending date, YYYYMMDDhhmmss")
-    ("subject_name,N", po::value<string>(&sName), "subject name")
-    ("extension_info,N", po::value<string>(&sName), "extension info")
+    ("subject_name,N", po::value<vector<string> >(&Lists)->multitoken(), "subject name")
     ("request,r", po::value<string>(&reqFile), "request file name")
+    ("keybit,k", po::value<string>(&keyBits), "request key bits")
     ("cert_type,t", po::value<char>(&certType)->default_value('i'), "certificate type, 'i' for identity certificate")
     ("sign_id,s", po::value<string>(&signId), "signing Identity")
     ;
@@ -177,21 +201,15 @@ int main(int argc, char** argv)
         return 1;
     }
     
+    cout<<"keybits  "<<keyBits<<endl;
     
-    if (0 == vm.count("request"))
-    {
-        cout << "request file must be specified" << endl;
-        return 1;
-    }
     
-    Ptr<Blob> keyBlob = getKeyBlob(reqFile);
+    Ptr<Blob> keyBlob = getKeyBlobFromString(keyBits);
     
     boost::iostreams::stream<boost::iostreams::array_source> is (keyBlob->buf (), keyBlob->size ());
     Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
     der::PublickeyVisitor pubkeyVisitor;
     Ptr<security::Publickey> publickey = boost::any_cast<Ptr<security::Publickey> >(node->accept(pubkeyVisitor));
-    
-    security::CertificateData certData(notBefore, notAfter, *publickey);
     
     if (0 == vm.count("subject_name"))
     {
@@ -199,25 +217,29 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    security::CertificateSubDescrypt subDescryptName("2.5.4.41", sName);
-    certData.addSubjectDescription(subDescryptName);
     
-    Ptr<Blob> derEncodedBlob = certData.toDERBlob();
+    Ptr<security::Certificate> certificate = Create<security::Certificate>();
+    certificate->setName(certName);
+    certificate->setNotBefore(notBefore);
+    certificate->setNotAfter(notAfter);
+    certificate->setPublicKeyInfo(*publickey);
     
+    for (int i = 0 ; i < Lists.size()/2; i++)
+    {
+        security::CertificateSubDescrypt subDescryptName(Lists[2*i], Lists[2*i+1]);
+        certificate->addSubjectDescription(subDescryptName);
+    }
     
-    Ptr<Data> data = Create<Data>();
-    data->setName(certName);
-    Content content(derEncodedBlob->buf(), derEncodedBlob->size());
-    data->setContent(content);
     
     Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
     Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
     
     security::IdentityManager identityManager(publicStorage, privateStorage);
     
-    identityManager.signByIdentity(*data, Name(signId));
+    Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name(signId));
+    identityManager.signByCertificate(*certificate, signingCertificateName);
     
-    Ptr<Blob> dataBlob = data->encodeToWire();
+    Ptr<Blob> dataBlob = certificate->encodeToWire();
     
     string outputFileName = getOutputFileName(certName.toUri());
     ofstream ofs(outputFileName.c_str());
@@ -231,18 +253,6 @@ int main(int argc, char** argv)
     ofs << encoded;
     ofs << "-----END NDN ID CERT-----\n";
     ofs.close();
-		
-    ofstream ofs2("tmp.txt");
-    ofs2 << "-----BEGIN NDN ID CERT-----\n";
-    string encoded2;
-    CryptoPP::StringSource ss2(reinterpret_cast<const unsigned char *>(dataBlob->buf()), 
-                              dataBlob->size(), 
-                              true,
-                              new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded2), true, 64));
-    ofs2 << encoded2;
-    ofs2 << "-----END NDN ID CERT-----\n";
-    ofs2.close();
-
     return 0;
     
 }

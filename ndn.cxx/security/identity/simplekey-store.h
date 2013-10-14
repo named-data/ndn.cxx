@@ -37,13 +37,13 @@ namespace ndn
             ~SimpleKeyStore() {};
             
             virtual void
-            generateKeyPair(const string & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
+            generateKeyPair(const Name & keyName, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
             
             /**
              *
              */
             virtual Ptr<Publickey>
-            getPublickey(const string & keyName);
+            getPublickey(const Name & keyName);
             
             /**
              * @brief sign data
@@ -53,7 +53,7 @@ namespace ndn
              * @returns signature, NULL if signing fails
              */
             virtual Ptr<Blob>
-            sign(const Blob & pData, const string & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256);
+            sign(const Blob & pData, const Name & keyName, DigestAlgorithm digestAlgo = DIGEST_SHA256);
             
             /**
              * @brief decrypt data
@@ -62,10 +62,10 @@ namespace ndn
              * @returns decrypted data
              */
             virtual Ptr<Blob>
-            decrypt(const string & keyName, const Blob & pData, bool sym = false);
+            decrypt(const Name & keyName, const Blob & pData, bool sym = false);
             
             virtual Ptr<Blob>
-            encrypt(const string & keyName, const Blob & pData, bool sym = false);
+            encrypt(const Name & keyName, const Blob & pData, bool sym = false);
             
             
             //TODO Symmetrical key stuff.
@@ -77,10 +77,10 @@ namespace ndn
              * @returns true if key have been successfully generated
              */
             virtual void 
-            generateKey(const string & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256);
+            generateKey(const Name & keyName, KeyType keyType = KEY_TYPE_AES, int keySize = 256);
             
             virtual bool
-            doesKeyExist(const string & keyName, KeyClass keyClass);
+            doesKeyExist(const Name & keyName, KeyClass keyClass);
             
             std::string 
             nameTransform(const string &keyName);
@@ -88,6 +88,7 @@ namespace ndn
             Ptr<Blob>
             readSymetricKey(const string &filename);
             
+            void maintainMapping(string str1,string str2);
             void
             writeSymetricKey(const string &filename, const Blob & pData);
         private:
