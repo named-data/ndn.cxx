@@ -63,29 +63,6 @@ namespace security
   }
 
   // void
-  // IdentityManager::loadDefaultIdentity()
-  // {
-  //   fs::path identityDir = fs::path(getenv("HOME")) / ".ndn-identity";
-  //   ifstream ifs( (identityDir / "default-identity").c_str());
-    
-  //   ifs.seekg (0, ios::end);
-  //   ifstream::pos_type size = ifs.tellg();
-  //   // _LOG_DEBUG("Size: " << size);
-  //   char * memblock = new char [size];
-
-  //   ifs.seekg (0, ios::beg);
-  //   ifs.getline(memblock, size);
-    
-  //   Name defaultIdName(memblock);
-
-  //   if(!m_publicStorage->doesIdentityExist(defaultIdName))
-  //     throw SecException("Identity does not exist!");
-  //   setDefaultIdentity(defaultIdName);
-
-  //   // _LOG_DEBUG("Default ID: " << default_identity);
-  // }
-
-  // void
   // IdentityManager::setDefaultIdentity (const Name & identity)
   // {
   //   m_publicStorage->setDefaultIdentity (identity); 
@@ -103,7 +80,7 @@ namespace security
     _LOG_DEBUG("Create a key record in public storage");
     Ptr<Publickey> pubKey = m_privateStorage->getPublickey(keyName.toUri());
     m_publicStorage->addKey(keyName, keyType, pubKey->getKeyBlob());
-    _LOG_DEBUG("OK");
+
     return keyName;
   }
 
@@ -111,7 +88,7 @@ namespace security
   IdentityManager::generateRSAKeyPair (const Name & identity, bool ksk, int keySize)
   {
     Name keyName = generateKeyPair(identity, ksk, KEY_TYPE_RSA, keySize);
-    _LOG_DEBUG("OK2");
+
     return keyName;
   }
 
@@ -150,15 +127,17 @@ namespace security
   }
 
   Name
-  IdentityManager::createIdentityCertificate (const Name& keyName,
+  IdentityManager::createIdentityCertificate (const Name& certificatePrefix,
                                               const Name& signerCertificateName,
                                               const Time& notBefore,
                                               const Time& notAfter)
   {
+    Name keyName = getKeyNameFromCertificatePrefix(certificatePrefix);
+    
     Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
     Ptr<Publickey> publickey = Publickey::fromDER(keyBlob);
 
-    Ptr<IdentityCertificate> certificate = createIdentityCertificate(keyName,
+    Ptr<IdentityCertificate> certificate = createIdentityCertificate(certificatePrefix,
                                                                      *publickey,
                                                                      signerCertificateName,
                                                                      notBefore,
@@ -170,22 +149,23 @@ namespace security
   }
 
   Ptr<IdentityCertificate>
-  IdentityManager::createIdentityCertificate (const Name& keyName,
+  IdentityManager::createIdentityCertificate (const Name& certificatePrefix,
                                               const Publickey& publickey,
                                               const Name& signerCertificateName,
                                               const Time& notBefore,
                                               const Time& notAfter)
-  {
+  { 
     Ptr<IdentityCertificate> certificate = Create<IdentityCertificate>();
+    Name keyName = getKeyNameFromCertificatePrefix(certificatePrefix);
     
-    Name certificateName;
+    Name certificateName = certificatePrefix;
     TimeInterval ti = time::NowUnixTimestamp();
     ostringstream oss;
     oss << ti.total_seconds();
 
-    certificateName.append(keyName).append("ID-CERT").append(oss.str());
+    certificateName.append("ID-CERT").append(oss.str());
+     
     certificate->setName(certificateName);
-
     certificate->setNotBefore(notBefore);
     certificate->setNotAfter(notAfter);
     certificate->setPublicKeyInfo(publickey);
@@ -223,7 +203,7 @@ namespace security
   {
     m_publicStorage->addCertificate(certificate);
     
-    setDefaultCertificateForKey(certificate->getName());
+    setDefaultCertificateForKey(*certificate);
   }
 
   void
@@ -231,11 +211,11 @@ namespace security
   {
     m_publicStorage->addCertificate(certificate);
 
-    Name keyName = m_publicStorage->getKeyNameForCertificate(certificate->getName());
+    Name keyName = certificate->getPublicKeyName();
     
     setDefaultKeyForIdentity(keyName);
 
-    setDefaultCertificateForKey(certificate->getName());
+    setDefaultCertificateForKey(*certificate);
   }
 
   Ptr<IdentityCertificate>
@@ -251,14 +231,14 @@ namespace security
   }
 
   void
-  IdentityManager::setDefaultCertificateForKey (const Name & certName)
+  IdentityManager::setDefaultCertificateForKey (const IdentityCertificate & certificate)
   {
-    Name keyName = m_publicStorage->getKeyNameForCertificate(certName);
+    Name keyName = certificate.getPublicKeyName();
     
     if(!m_publicStorage->doesKeyExist(keyName))
       throw SecException("No corresponding Key record for certificaite!");
 
-    m_publicStorage->setDefaultCertificateNameForKey (keyName, certName);
+    m_publicStorage->setDefaultCertificateNameForKey (keyName, certificate.getName());
   }
 
   Name
@@ -287,11 +267,10 @@ namespace security
 
   Ptr<Signature>
   IdentityManager::signByCertificate (const Blob & blob, const Name & certName)
-  {    
-    Name keyName = m_publicStorage->getKeyNameForCertificate(certName);
-    
+  {   
+    Ptr<IdentityCertificate> certificate = getCertificate(certName);
+    Name keyName = certificate->getPublicKeyName();
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
-
     Ptr<Blob> sigBits = m_privateStorage->sign (blob, keyName.toUri());
 
     //For temporary usage, we support RSA + SHA256 only, but will support more.
@@ -311,8 +290,8 @@ namespace security
   void
   IdentityManager::signByCertificate (Data & data, const Name & certName)
   { 
-    Name keyName = m_publicStorage->getKeyNameForCertificate(certName);
-    
+    Ptr<IdentityCertificate> certificate = getCertificate(certName);
+    Name keyName = certificate->getPublicKeyName();
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
 
     //For temporary usage, we support RSA + SHA256 only, but will support more.
@@ -345,8 +324,8 @@ namespace security
   {
     Ptr<IdentityCertificate> certificate = Create<IdentityCertificate>();
     
-    Name certificateName;
-    certificateName.append(keyName).append("ID-CERT").append("0");
+    Name certificateName = keyName.getSubName(0, keyName.size()-1);
+    certificateName.append("KEY").append(keyName.get(keyName.size()-1)).append("ID-CERT").append("0");
     certificate->setName(certificateName);
 
     Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
@@ -384,6 +363,26 @@ namespace security
     sha256Sig->setSignatureBits(*sigBits);
 
     return certificate;
+  }
+
+  Name
+  IdentityManager::getKeyNameFromCertificatePrefix(const Name & certificatePrefix)
+  {
+    Name result;
+
+    string keyString("KEY");
+    int i = 0;
+    for(; i < certificatePrefix.size(); i++)
+      if(certificatePrefix.get(i).toUri() == keyString)
+        break;
+    
+    if(i >= certificatePrefix.size())
+      throw SecException("Identity Certificate Prefix does not have KEY component");
+
+    result.append(certificatePrefix.getSubName(0, i));
+    result.append(certificatePrefix.getSubName(i+1, certificatePrefix.size()-i-1));
+    
+    return result;
   }
   
 }//security

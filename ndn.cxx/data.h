@@ -34,6 +34,7 @@ public:
   /**
    * @brief Destructor
    */
+  virtual
   ~Data ();
 
   /**
@@ -43,7 +44,7 @@ public:
    *
    * In some cases, a direct access to and manipulation of name using getName is more efficient
    */
-  inline Data &
+  virtual inline Data &
   setName (const Name &name);
 
   /**

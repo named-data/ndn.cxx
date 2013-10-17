@@ -89,9 +89,9 @@ namespace security
   }
 
   void
-  Keychain::setDefaultCertificateForKey(const Name & certName)
+  Keychain::setDefaultCertificateForKey(const IdentityCertificate & certificate)
   {
-    m_identityManager->setDefaultCertificateForKey (certName);
+    m_identityManager->setDefaultCertificateForKey (certificate);
   }
 
   Ptr<Certificate> 

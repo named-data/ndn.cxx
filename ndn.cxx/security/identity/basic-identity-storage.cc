@@ -73,7 +73,7 @@ namespace security
         not_before        TIMESTAMP,                                   \n \
         not_after         TIMESTAMP,                                   \n \
         certificate_data  BLOB NOT NULL,                               \n \
-        valid_flag        INTEGER DEFAULT 0,                           \n \
+        valid_flag        INTEGER DEFAULT 1,                           \n \
         default_cert      INTEGER DEFAULT 0,                           \n \
                                                                        \
         PRIMARY KEY (cert_name)                                        \n \
@@ -210,29 +210,6 @@ namespace security
     return false;
   }
 
-  Name 
-  BasicIdentityStorage::getNewKeyName(const Name & identity, bool ksk)
-  {
-    TimeInterval ti = time::NowUnixTimestamp();
-    ostringstream oss;
-    oss << ti.total_seconds();
-
-    string keyIdStr;
-    
-    if (ksk)
-      keyIdStr = ("KSK-" + oss.str());
-    else
-      keyIdStr = ("DSK-" + oss.str());
-
-
-    Name keyName = Name(identity).append(keyIdStr);
-
-    if(doesKeyExist(keyName))
-      throw SecException("Key name has already existed");
-
-    return keyName;
-  }
-
   bool 
   BasicIdentityStorage::doesKeyExist (const Name & keyName)
   {
@@ -258,20 +235,6 @@ namespace security
     sqlite3_finalize (stmt);
 
     return keyIdExist;
-  }
-
-  Name 
-  BasicIdentityStorage::getKeyNameForCertificate (const Name & certName)
-  {
-    int i = certName.size() - 1;
-
-    for (; i >= 0; i--)
-      {
-        if(certName.get(i).toUri() == string("ID-CERT"))
-          break; 
-      }
-    
-    return certName.getSubName(0, i);
   }
 
   void
@@ -389,7 +352,7 @@ namespace security
   BasicIdentityStorage::addAnyCertificate (Ptr<IdentityCertificate> certificate)
   {
     const Name & certName = certificate->getName();
-    Name keyName = getKeyNameForCertificate(certName);
+    Name keyName = certificate->getPublicKeyName();
 
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
@@ -425,22 +388,16 @@ namespace security
   void 
   BasicIdentityStorage::addCertificate (Ptr<IdentityCertificate> certificate)
   {
-    _LOG_DEBUG("1");
     const Name & certName = certificate->getName();
-    Name keyName = getKeyNameForCertificate(certName);
+    Name keyName = certificate->getPublicKeyName();
 
-    _LOG_DEBUG("2");
     if(!doesKeyExist(keyName))
-      {
-        _LOG_DEBUG("here wrong");
-        throw SecException("No corresponding Key record for certificaite!");
-      }
+      throw SecException("No corresponding Key record for certificaite!" + keyName.toUri() + " " + certName.toUri());
 
     // Check if certificate has already existed!
     if(doesCertificateExist(certName))
       throw SecException("Certificate has already been installed!");
 
-    _LOG_DEBUG("3");
     string keyId = keyName.get(-1).toUri();
     Name identity = keyName.getSubName(0, keyName.size() - 1);
     
@@ -451,7 +408,6 @@ namespace security
     if(keyBlob == NULL or (*keyBlob) != (certificate->getPublicKeyInfo().getKeyBlob()))
       throw SecException("Certificate does not match public key!");
 
-    _LOG_DEBUG("4");
     // Insert the certificate
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2 (m_db, 

@@ -11,6 +11,10 @@
 #include "identity-certificate.h"
 #include "ndn.cxx/security/exception.h"
 
+#include "logging.h"
+
+INIT_LOGGER("IdentityCertificate");
+
 namespace ndn
 {
 
@@ -26,6 +30,8 @@ namespace security
   {
     if(!isCorrectName(data.getName()))
       throw SecException("Wrong Identity Certificate Name!");
+    
+    setPublicKeyName();
   }
 
   bool
@@ -33,13 +39,23 @@ namespace security
   {
     int i = name.size() - 1;
     
+    string idString("ID-CERT");
     for (; i >= 0; i--)
-      if(name.get(i).toUri() == string("ID-CERT"))
+      if(name.get(i).toUri() == idString)
 	break;
 
     if (i < 0)
       return false;
-    
+
+    int keyIdx = 0;
+    string keyString("KEY");
+    for (; keyIdx < name.size(); keyIdx++)
+      if(name.get(keyIdx).toUri() == keyString)
+        break;
+
+    if (keyIdx >= name.size())
+      return false;
+
     return true;
   }
 
@@ -50,20 +66,27 @@ namespace security
       throw SecException("Wrong Identity Certificate Name!");
     
     Data::setName(name);
+    setPublicKeyName();
     return *this;
   }
 
-  Name
-  IdentityCertificate::getPublicKeyName() const
+  void
+  IdentityCertificate::setPublicKeyName()
   {
     const Name & certificateName = getName ();
-    int i = certificateName.size() - 1;
 
+    int i = certificateName.size() - 1;
+    string idString("ID-CERT");
     for (; i >= 0; i--)
-      if(certificateName.get(i).toUri() == string("ID-CERT"))
+      if(certificateName.get(i).toUri() == idString)
 	break; 
     
-    return certificateName.getSubName(0, i);
+    Name tmpName = certificateName.getSubName(0, i);    
+    string keyString("KEY");
+    for (i = 0; i < tmpName.size(); i++)
+      if(tmpName.get(i).toUri() == keyString)
+          break;
+    m_publicKeyName = tmpName.getSubName(0, i).append(tmpName.getSubName(i+1, tmpName.size() - i - 1));
   }
 
   bool

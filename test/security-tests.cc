@@ -500,4 +500,120 @@ BOOST_AUTO_TEST_CASE(DUMP)
   dump.dump();
 }
 
+BOOST_AUTO_TEST_CASE(CertificateRegenartion)
+{
+  try{
+  Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
+  security::IdentityManager identityManager(publicStorage, privateStorage);
+  
+  Ptr<security::Publickey> signingRequest = NULL;
+  tm current = boost::posix_time::to_tm(time::Now());
+  current.tm_hour = 0;
+  current.tm_min  = 0;
+  current.tm_sec  = 0;
+  Time notBefore = boost::posix_time::ptime_from_tm(current);
+  current.tm_year = current.tm_year + 20;
+  Time notAfter = boost::posix_time::ptime_from_tm(current);
+
+
+  Ptr<security::IdentityCertificate> ndn_KSK_cert = identityManager.selfSign(Name("/ndn/KSK-1376698603"));
+  identityManager.addCertificateAsDefault(ndn_KSK_cert);
+  Name ndn_DSK_name("/ndn/KEY/DSK-1376698604");
+  Name ndn_DSK_cert_name = identityManager.createIdentityCertificate (ndn_DSK_name, ndn_KSK_cert->getName(), notBefore, notAfter);
+  cout << "3" << endl;
+  Ptr<security::IdentityCertificate> ndn_DSK_cert = identityManager.getCertificate(ndn_DSK_cert_name);
+  cout << "4" << endl;
+  identityManager.setDefaultCertificateForKey(*ndn_DSK_cert);
+  cout << "5" << endl;
+
+  Name ndn_UCLA_KSK_name("/ndn/KEY/ucla.edu/KSK-1376698607");
+  Name ndn_UCLA_KSK_cert_name = identityManager.createIdentityCertificate (ndn_UCLA_KSK_name, ndn_DSK_cert->getName(), notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_UCLA_KSK_cert = identityManager.getCertificate(ndn_UCLA_KSK_cert_name);
+  identityManager.setDefaultCertificateForKey(*ndn_UCLA_KSK_cert);
+
+  Name ndn_UCLA_DSK_name("/ndn/ucla.edu/KEY/DSK-1376698608");
+  Name ndn_UCLA_DSK_cert_name = identityManager.createIdentityCertificate (ndn_UCLA_DSK_name, ndn_UCLA_KSK_cert->getName(), notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_UCLA_DSK_cert = identityManager.getCertificate(ndn_UCLA_DSK_cert_name);
+  identityManager.setDefaultCertificateForKey(*ndn_UCLA_DSK_cert);
+
+  Name ndn_YINGDI_KSK_name("/ndn/ucla.edu/KEY/yingdi/KSK-1376698611");
+  Name ndn_YINGDI_KSK_cert_name = identityManager.createIdentityCertificate (ndn_YINGDI_KSK_name, ndn_UCLA_DSK_cert->getName(), notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_YINGDI_KSK_cert = identityManager.getCertificate(ndn_YINGDI_KSK_cert_name);
+  identityManager.setDefaultCertificateForKey(*ndn_YINGDI_KSK_cert);
+
+  Name ndn_YINGDI_DSK_name("/ndn/ucla.edu/yingdi/KEY/DSK-1376698612");
+  Name ndn_YINGDI_DSK_cert_name = identityManager.createIdentityCertificate (ndn_YINGDI_DSK_name, ndn_YINGDI_KSK_cert->getName(), notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_YINGDI_DSK_cert = identityManager.getCertificate(ndn_YINGDI_DSK_cert_name);
+  identityManager.setDefaultCertificateForKey(*ndn_YINGDI_DSK_cert);
+
+  Name ndn_APP_KSK_name("/ndn/ucla.edu/yingdi/KEY/app/KSK-1376698614");
+  Name ndn_APP_KSK_cert_name = identityManager.createIdentityCertificate (ndn_APP_KSK_name, ndn_YINGDI_DSK_cert->getName(), notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_APP_KSK_cert = identityManager.getCertificate(ndn_APP_KSK_cert_name);
+  identityManager.setDefaultCertificateForKey(*ndn_APP_KSK_cert);
+
+  Name ndn_APP_DSK_name("/ndn/ucla.edu/yingdi/app/KEY/DSK-1376698615");
+  Name ndn_APP_DSK_cert_name = identityManager.createIdentityCertificate (ndn_APP_DSK_name, ndn_APP_KSK_cert->getName(), notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_APP_DSK_cert = identityManager.getCertificate(ndn_APP_DSK_cert_name);
+  identityManager.setDefaultCertificateForKey(*ndn_APP_DSK_cert);
+  }catch(security::SecException& e){
+    cerr << e.Msg() << endl;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CertificateGeneration2)
+{
+  try{
+  Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
+  Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
+  security::IdentityManager identityManager(publicStorage, privateStorage);
+
+  Ptr<security::Publickey> signingRequest = NULL;
+  tm current = boost::posix_time::to_tm(time::Now());
+  current.tm_hour = 0;
+  current.tm_min  = 0;
+  current.tm_sec  = 0;
+  Time notBefore = boost::posix_time::ptime_from_tm(current);
+  current.tm_year = current.tm_year + 20;
+  Time notAfter = boost::posix_time::ptime_from_tm(current);
+
+  identityManager.createIdentity(Name("/ndn/ucla.edu/alice"));
+  Name ndn_ALICE_KSK_internal_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/alice"), true);
+  Name ndn_ALICE_KSK_name = ndn_ALICE_KSK_internal_name.getSubName(0, ndn_ALICE_KSK_internal_name.size()-2);
+  ndn_ALICE_KSK_name.append("KEY").append(ndn_ALICE_KSK_internal_name.get(-2)).append(ndn_ALICE_KSK_internal_name.get(-1));
+  Name ndn_UCLA_DSK_cert_name = identityManager.getDefaultCertificateNameByIdentity (Name("/ndn/ucla.edu"));
+  Name ndn_ALICE_KSK_cert_name = identityManager.createIdentityCertificate (ndn_ALICE_KSK_name, ndn_UCLA_DSK_cert_name, notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_ALICE_KSK_cert = identityManager.getCertificate(ndn_ALICE_KSK_cert_name);
+  identityManager.setDefaultKeyForIdentity(ndn_ALICE_KSK_internal_name, Name("/ndn/ucla.edu/alice"));
+  identityManager.setDefaultCertificateForKey(*ndn_ALICE_KSK_cert);
+
+  Name ndn_ALICE_DSK_internal_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/alice"));
+  Name ndn_ALICE_DSK_name = ndn_ALICE_DSK_internal_name.getSubName(0, ndn_ALICE_DSK_internal_name.size()-1);
+  ndn_ALICE_DSK_name.append("KEY").append(ndn_ALICE_DSK_internal_name.get(-1));
+  Name ndn_ALICE_DSK_cert_name = identityManager.createIdentityCertificate (ndn_ALICE_DSK_name, ndn_ALICE_KSK_cert_name, notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_ALICE_DSK_cert = identityManager.getCertificate(ndn_ALICE_DSK_cert_name);
+  identityManager.setDefaultKeyForIdentity(ndn_ALICE_DSK_internal_name, Name("/ndn/ucla.edu/alice"));
+  identityManager.setDefaultCertificateForKey(*ndn_ALICE_DSK_cert);
+
+  identityManager.createIdentity(Name("/ndn/ucla.edu/bob"));
+  Name ndn_BOB_KSK_internal_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/bob"), true);
+  Name ndn_BOB_KSK_name = ndn_BOB_KSK_internal_name.getSubName(0, ndn_BOB_KSK_internal_name.size()-2);
+  ndn_BOB_KSK_name.append("KEY").append(ndn_BOB_KSK_internal_name.get(-2)).append(ndn_BOB_KSK_internal_name.get(-1));
+  Name ndn_BOB_KSK_cert_name = identityManager.createIdentityCertificate (ndn_BOB_KSK_name, ndn_UCLA_DSK_cert_name, notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_BOB_KSK_cert = identityManager.getCertificate(ndn_BOB_KSK_cert_name);
+  identityManager.setDefaultKeyForIdentity(ndn_BOB_KSK_internal_name, Name("/ndn/ucla.edu/bob"));
+  identityManager.setDefaultCertificateForKey(*ndn_BOB_KSK_cert);
+
+  Name ndn_BOB_DSK_internal_name = identityManager.generateRSAKeyPair(Name("/ndn/ucla.edu/bob"));
+  Name ndn_BOB_DSK_name = ndn_BOB_DSK_internal_name.getSubName(0, ndn_BOB_DSK_internal_name.size()-1);
+  ndn_BOB_DSK_name.append("KEY").append(ndn_BOB_DSK_internal_name.get(-1));
+  Name ndn_BOB_DSK_cert_name = identityManager.createIdentityCertificate (ndn_BOB_DSK_name, ndn_BOB_KSK_cert_name, notBefore, notAfter);
+  Ptr<security::IdentityCertificate> ndn_BOB_DSK_cert = identityManager.getCertificate(ndn_BOB_DSK_cert_name);
+  identityManager.setDefaultKeyForIdentity(ndn_BOB_DSK_internal_name, Name("/ndn/ucla.edu/bob"));
+  identityManager.setDefaultCertificateForKey(*ndn_BOB_DSK_cert);
+  }catch(security::SecException& e){
+    cerr << e.Msg() << endl;
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

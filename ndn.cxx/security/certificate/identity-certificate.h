@@ -33,8 +33,10 @@ namespace security
     Data &
     setName (const Name& name);
 
-    virtual Name 
-    getPublicKeyName () const;
+    inline Name
+    getPublicKeyName () const
+    { return m_publicKeyName; }
+
 
     static bool
     isIdentityCertificate(const Certificate& certificate);
@@ -42,6 +44,13 @@ namespace security
   private:
     static bool
     isCorrectName(const Name& name);
+    
+    void
+    setPublicKeyName();
+    
+  protected:
+    Name m_publicKeyName;
+
     
   };
 

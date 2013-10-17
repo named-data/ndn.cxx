@@ -76,14 +76,14 @@ namespace security
      * @param identity the name of the identity
      * @return the key name of the auto-generated KSK of the identity 
      */
-    virtual Name 
+    Name 
     createIdentity(const Name & identity);
 
     /**
      * @brief get the default identity name
      * @return the name of the default identity
      */
-    virtual Name
+    Name
     getDefaultIdentity ();
 
     /**
@@ -93,7 +93,7 @@ namespace security
      * @param keySize the size of the key
      * @return the generated key name 
      */
-    virtual Name
+    Name
     generateRSAKeyPair (const Name & identity, bool ksk = false, int keySize = 2048);
 
     /**
@@ -101,7 +101,7 @@ namespace security
      * @param keyName the name of the key
      * @param identity the name of the identity, if not specified the identity name can be inferred from the keyName
      */
-    virtual void
+    void
     setDefaultKeyForIdentity (const Name & keyName, const Name & identity = Name());
 
     /**
@@ -111,7 +111,7 @@ namespace security
      * @param keySize the size of the key
      * @return the generated key name
      */
-    virtual Name
+    Name
     generateRSAKeyPairAsDefault (const Name & identity, bool ksk = false, int keySize = 2048);
 
     /**
@@ -119,29 +119,29 @@ namespace security
      * @param keyName the name of the key
      * @returns signing request blob
      */
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     createSigningRequest(const Name & keyName);
 
     /**
      * @brief Install an identity certificate into identity
      * @param certificate the certificate in terms of Data packet
      */
-    virtual void 
+    void 
     installIdentityCertificate(Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Set a certificate as the default certificate name of the corresponding key
      * @param certificateName the name of the certificate
      */
-    virtual void
-    setDefaultCertificateForKey(const Name & certificateName);
+    void
+    setDefaultCertificateForKey(const IdentityCertificate & certificate);
 
     /**
      * @brief Get certificate
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<Certificate> 
+    Ptr<Certificate> 
     getCertificate(const Name & certificateName);
 
     /**
@@ -149,7 +149,7 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<Certificate>
+    Ptr<Certificate>
     getAnyCertificate(const Name & certName);
 
     /**
@@ -157,7 +157,7 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<IdentityCertificate> 
+    Ptr<IdentityCertificate> 
     getIdentityCertificate(const Name & certificateName);
 
     /**
@@ -165,21 +165,21 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<IdentityCertificate> 
+    Ptr<IdentityCertificate> 
     getAnyIdentityCertificate(const Name & certificateName);
 
     /**
      * @brief Revoke a key
      * @param keyName the name of the key that will be revoked
      */
-    virtual void 
+    void 
     revokeKey(const Name & keyName);
 
     /**
      * @brief Revoke a certificate
      * @param certificateName the name of the certificate that will be revoked
      */
-    virtual void 
+    void 
     revokeCertificate(const Name & certificateName);
 
     /*****************************************
@@ -233,7 +233,7 @@ namespace security
      * @param data the data packet that will be signed, on return the Signature of data will be set
      * @param certificate the certificate whose name will be put into KeyLocator
      */
-    virtual void 
+    void 
     sign(Data & data, const Name & certificateName);
     
     /**
@@ -242,7 +242,7 @@ namespace security
      * @param certificate the certificate whose name will be put into KeyLocator
      * @return the Signature
      */
-    virtual Ptr<Signature> 
+    Ptr<Signature> 
     sign(const Blob & buf, const Name & certificateName);
 
     /**
@@ -250,7 +250,7 @@ namespace security
      * @param data the data packet that will be signed, on return the Signature of data will be set
      * @param identity the identity name
      */
-    virtual void 
+    void 
     signByIdentity(Data & data, const Name & identity);
 
     /**
@@ -259,7 +259,7 @@ namespace security
      * @param identity the identity name
      * @return the Signature
      */
-    virtual Ptr<Signature> 
+    Ptr<Signature> 
     signByIdentity (const Blob & blob, const Name & identity);
 
     /**
@@ -269,7 +269,7 @@ namespace security
      * @param failureCallback the callback function that will be called if the target data cannot be verified
      * @param stepCount a counter to track how many validation steps have been gone through
      */
-    virtual void 
+    void 
     verifyData(Ptr<Data> data, 
                const DataCallback & verifiedCallback, 
                const UnverifiedCallback& unverifiedCallback,
@@ -284,7 +284,7 @@ namespace security
      * @param keyName the name of the generated key
      * @param keyType the type of the key, e.g. AES
      */
-    virtual void 
+    void 
     generateSymmetricKey(const Name & keyName, KeyType keyType);
 
     /**
@@ -295,7 +295,7 @@ namespace security
      * @param em the encryption mode
      * @return the encrypted blob
      */
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     encrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
 
     /**
@@ -306,7 +306,7 @@ namespace security
      * @param em the encryption mode
      * @return the decrypted blob
      */
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     decrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
     
     /**
@@ -342,7 +342,7 @@ namespace security
      * @param retry the number of rest retrials
      * @param failureCallback the callback function that will be called if the retransmission eventaully fails
      */
-    virtual void
+    void
     onCertificateInterestTimeout(Ptr<Closure> closure, 
                                  Ptr<Interest> interest, 
                                  int retry, 
