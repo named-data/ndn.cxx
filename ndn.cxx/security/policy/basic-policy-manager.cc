@@ -19,10 +19,12 @@
 #include "ndn.cxx/helpers/der/visitor/print-visitor.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
 #include <tinyxml.h>
 #include <sstream>
 #include <fstream>
 #include <cryptopp/base64.h>
+
 
 #include "logging.h"
 
@@ -37,11 +39,16 @@ namespace ndn
 
 namespace security
 {
-  BasicPolicyManager::BasicPolicyManager(const string & policyPath, Ptr<PrivatekeyStorage> privatekeyStore)
-    :m_policyPath(policyPath),
-     m_policyChanged(false),
-     m_policyLoaded(false),
-     m_privatekeyStore(privatekeyStore)
+  BasicPolicyManager::BasicPolicyManager(const string & policyPath, 
+                                         Ptr<PrivatekeyStorage> privatekeyStore,
+                                         Ptr<CertificateCache> certificateCache,
+                                         const int & stepLimit)
+    : m_policyPath(policyPath)
+    , m_policyChanged(false)
+    , m_policyLoaded(false)
+    , m_privatekeyStore(privatekeyStore)
+    , m_stepLimit(stepLimit)
+    , m_certificateCache(certificateCache)
   {
     loadPolicy();
 
@@ -205,7 +212,7 @@ namespace security
                                   new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
 
         Ptr<Blob> rawCertPtr = Ptr<Blob>(new Blob(decoded.c_str(), decoded.size()));
-        Certificate cert(*Data::decodeFromWire(rawCertPtr));
+        Ptr<IdentityCertificate> cert = Ptr<IdentityCertificate>(new IdentityCertificate(*Data::decodeFromWire(rawCertPtr)));
 
         setTrustAnchor(cert);
 
@@ -335,10 +342,10 @@ namespace security
     TiXmlElement * trustAnchors = new TiXmlElement("TrustAnchors");
     doc->LinkEndChild(trustAnchors);
 
-    map<Name, Certificate>::iterator tIt = m_trustAnchors.begin();
+    map<Name, Ptr<IdentityCertificate> >::iterator tIt = m_trustAnchors.begin();
     for(; tIt != m_trustAnchors.end(); tIt++)
       {
-        Ptr<Blob> rawData = tIt->second.encodeToWire();
+        Ptr<Blob> rawData = tIt->second->encodeToWire();
         string encoded;
         CryptoPP::StringSource ss(reinterpret_cast<const unsigned char *>(rawData->buf()), rawData->size(), true,
                                   new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), false));
@@ -408,7 +415,7 @@ namespace security
   }
 
   bool 
-  BasicPolicyManager::skipVerify (const Data & data)
+  BasicPolicyManager::skipVerifyAndTrust (const Data & data)
   {
     vector< Ptr<Regex> >::iterator it = m_verifyExempt.begin();
     for(; it != m_verifyExempt.end(); it++)
@@ -421,40 +428,148 @@ namespace security
   }
 
   void 
-  BasicPolicyManager::setTrustAnchor(const Certificate & certificate)
+  BasicPolicyManager::setTrustAnchor(Ptr<IdentityCertificate> certificate)
   {
-    m_trustAnchors.insert(pair<const Name, const Certificate>(certificate.getName(), certificate));
+    m_trustAnchors.insert(pair<Name, Ptr<IdentityCertificate> >(certificate->getName(), certificate));
 
     m_policyChanged = true;
   }
 
-  Ptr<const Certificate>
+  Ptr<const IdentityCertificate>
   BasicPolicyManager::getTrustAnchor(const Name & name)
   {
     if(m_trustAnchors.end() == m_trustAnchors.find(name))
       return NULL;
     else
-      return Ptr<const Certificate>(new Certificate(m_trustAnchors[name]));
+      return m_trustAnchors[name];
   }
 
-  bool 
-  BasicPolicyManager::checkVerificationPolicy(const Data & data)
+  // bool 
+  // BasicPolicyManager::checkVerificationPolicy(const Data & data)
+  // {
+  //   vector< Ptr<PolicyRule> >::iterator it = m_mustFailVerify.begin();
+  //   for(; it != m_mustFailVerify.end(); it++)
+  //     {
+  //       if((*it)->satisfy(data))
+  //         return false;
+  //     }
+
+  //   it = m_verifyPolicies.begin();
+  //   for(; it != m_verifyPolicies.end(); it++)
+  //     {
+  //       if((*it)->satisfy(data))
+  //         return true;
+  //     }
+
+  //   return false;
+  // }
+
+  void
+  BasicPolicyManager::onCertificateVerified(Ptr<Data>signCertificate, 
+                                            Ptr<Data>data, 
+                                            const DataCallback &verifiedCallback, 
+                                            const UnverifiedCallback &unverifiedCallback)
   {
+    Ptr<IdentityCertificate> certificate = Ptr<IdentityCertificate>(new IdentityCertificate(*signCertificate));
+
+    if(!certificate->isTooLate() && !certificate->isTooEarly())
+      m_certificateCache->insertCertificate(certificate);
+
+    if(verifySignature(*data, certificate->getPublicKeyInfo()))
+      verifiedCallback(data);
+    else
+      unverifiedCallback(data);
+  }
+
+  void
+  BasicPolicyManager::onCertificateUnverified(Ptr<Data>signCertificate, 
+                                              Ptr<Data>data, 
+                                              const UnverifiedCallback &unverifiedCallback)
+  { unverifiedCallback(data); }
+
+  Ptr<ValidationRequest>
+  BasicPolicyManager::checkVerificationPolicy(Ptr<Data> data, 
+                                              const int & stepCount, 
+                                              const DataCallback& verifiedCallback,
+                                              const UnverifiedCallback& unverifiedCallback)
+  {
+    if(m_stepLimit == stepCount){
+      _LOG_DEBUG("reach the maximum steps of verification");
+      unverifiedCallback(data);
+      return NULL;
+    }
+
     vector< Ptr<PolicyRule> >::iterator it = m_mustFailVerify.begin();
     for(; it != m_mustFailVerify.end(); it++)
       {
-	if((*it)->satisfy(data))
-	  return false;
+	if((*it)->satisfy(*data))
+          {
+            unverifiedCallback(data);
+            return NULL;
+          }
       }
 
     it = m_verifyPolicies.begin();
     for(; it != m_verifyPolicies.end(); it++)
       {
-	if((*it)->satisfy(data))
-	  return true;
+	if((*it)->satisfy(*data))
+          {
+            Ptr<const signature::Sha256WithRsa> sha256sig = boost::dynamic_pointer_cast<const signature::Sha256WithRsa> (data->getSignature());    
+
+            if(KeyLocator::KEYNAME != sha256sig->getKeyLocator().getType())
+              {
+                unverifiedCallback(data);
+                return NULL;
+              }
+
+            Ptr<const IdentityCertificate> trustedCert = getTrustAnchor(sha256sig->getKeyLocator().getKeyName());
+            if(NULL == trustedCert)
+              {
+                trustedCert = m_certificateCache->getCertificate(sha256sig->getKeyLocator().getKeyName());
+              }
+
+            if(NULL != trustedCert){
+              if(verifySignature(*data, trustedCert->getPublicKeyInfo()))
+                {
+                  verifiedCallback(data);
+                  return NULL;
+                }
+              else
+                unverifiedCallback(data);
+                return NULL;
+            }
+            else{
+              _LOG_DEBUG("KeyLocator is not trust anchor");
+
+              DataCallback recursiveVerifiedCallback = boost::bind(&BasicPolicyManager::onCertificateVerified, 
+                                                                   this, 
+                                                                   _1, 
+                                                                   data, 
+                                                                   verifiedCallback, 
+                                                                   unverifiedCallback);
+
+              UnverifiedCallback recursiveUnverifiedCallback = boost::bind(&BasicPolicyManager::onCertificateUnverified, 
+                                                                           this, 
+                                                                           _1, 
+                                                                           data, 
+                                                                           unverifiedCallback);
+
+
+              Ptr<Interest> interest = Ptr<Interest>(new Interest(sha256sig->getKeyLocator().getKeyName()));
+
+              Ptr<ValidationRequest> nextStep = Ptr<ValidationRequest>(new ValidationRequest(interest, 
+                                                                                             recursiveVerifiedCallback,
+                                                                                             recursiveUnverifiedCallback,
+                                                                                             3,
+                                                                                             stepCount + 1)
+                                                                       );
+              return nextStep;
+            }
+          }
       }
 
-    return false;
+    unverifiedCallback(data);
+    return NULL;
   }
 
   bool 

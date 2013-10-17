@@ -77,7 +77,7 @@ namespace security
         {
           m_lruList.splice(m_lruList.end(), m_lruList, it->second.m_it);
           it->second.m_timestamp = expire;
-          it->second.m_certificate = *certificate;
+          it->second.m_certificate = certificate;
         }
       else
         {
@@ -87,7 +87,7 @@ namespace security
               m_lruList.pop_front();
             }
           TrackerList::iterator it = m_lruList.insert(m_lruList.end(), name);
-          TTLCacheEntry cacheEntry(expire, *certificate, it);
+          TTLCacheEntry cacheEntry(expire, certificate, it);
           m_cache.insert(pair <Name, TTLCacheEntry> (name, cacheEntry));
         }
     }
@@ -102,7 +102,7 @@ namespace security
       if(it != m_cache.end())
         {
           m_lruList.splice(m_lruList.end(), m_lruList, it->second.m_it);
-          return Ptr<Certificate>(new Certificate(it->second.m_certificate));
+          return it->second.m_certificate;
         }
       else
         return NULL;

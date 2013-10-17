@@ -59,16 +59,6 @@ namespace security
     virtual bool 
     revokeIdentity ();
 
-
-    /**
-     * @brief generate a name for a new key of the identity
-     * @param identity
-     * @param ksk generate a KSK name if true, DSK name otherwise
-     * @return the generated key name
-     */
-    virtual Name 
-    getNewKeyName (const Name & identity, bool ksk);
-
     /**
      * @brief check if the specified key has already existed
      * @param keyName the name of the key
@@ -76,13 +66,6 @@ namespace security
      */
     virtual bool 
     doesKeyExist (const Name & keyName);
-
-    /**
-     * @brief extract key name from certificate name
-     * @param certificateName the certificate name to be processed
-     */
-    virtual Name 
-    getKeyNameForCertificate (const Name & certificateName);
 
     /**
      * @brief add a public key in to identity storage
@@ -127,15 +110,15 @@ namespace security
      * @brief add a certificate in to identity storage without checking if identity and key exists
      * @param certificate the certificate to be added
      */
-    virtual void
-    addAnyCertificate (const Certificate & certificate);
+    void
+    addAnyCertificate (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief add a certificate in to identity storage
      * @param certificate the certificate to be added
      */
     virtual void 
-    addCertificate (const Certificate & certificate);
+    addCertificate (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief get a certificate from identity storage

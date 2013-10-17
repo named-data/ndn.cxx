@@ -237,6 +237,53 @@ namespace regex
     return Ptr<RegexTopMatcher>(new RegexTopMatcher (expr, expand));
   }
 
+  Ptr<RegexTopMatcher>
+  RegexTopMatcher::fromName(const Name& name)
+  {
+    Name::const_iterator it = name.begin();
+    string regexStr("^");
+    
+    for(; it != name.end(); it++)
+      {
+	regexStr.append("<");
+	regexStr.append(convertSpecialChar(it->toUri()));
+	regexStr.append(">");
+      }
+
+    return Ptr<RegexTopMatcher>(new RegexTopMatcher(regexStr));
+  }
+
+  string
+  RegexTopMatcher::convertSpecialChar(const string& str)
+  {
+    string newStr;
+    for(int i = 0; i < str.size(); i++)
+      {
+        char c = str[i];
+        switch(c)
+          {
+          case '.':
+          case '[':
+          case '{':
+          case '}':
+          case '(':
+          case ')':
+          case '\\':
+          case '*':
+          case '+':
+          case '?':
+          case '|':
+          case '^':
+          case '$':
+            newStr.push_back('\\');
+          default:
+            newStr.push_back(c);
+          }
+      }
+
+    return newStr;
+  }
+
 }//regex
 
 }//ndn

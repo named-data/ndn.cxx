@@ -66,26 +66,25 @@ namespace ndn
 
   }
 
-  void
-  FakeWrapper::incomingData(Ptr<Data> dataPtr, Ptr<Interest> interestPtr, Ptr<Closure> closurePtr)
+  static void
+  onVerify(const DataCallback & dataCallback, Ptr<Data> data, Ptr<Executor> executor)
   {
-    if(closurePtr->m_unverifiedDataCallback.empty())
-      m_keychain->verifyData(dataPtr, 
-                             boost::bind(&FakeWrapper::onVerify, this, closurePtr->m_dataCallback, dataPtr), 
-                             boost::bind(&FakeWrapper::onVerifyError, this, closurePtr->m_verifyFailCallback, interestPtr));
-    else
-      m_executor->execute (boost::bind(closurePtr->m_unverifiedDataCallback, dataPtr));
+    executor->execute (boost::bind (dataCallback, data));
+  }
+
+  static void
+  onVerifyError(const UnverifiedCallback & unverifiedCallbackCallback, Ptr<Data> data, Ptr<Executor> executor)
+  {
+    executor->execute (boost::bind (unverifiedCallbackCallback, data));
   }
 
   void
-  FakeWrapper::onVerify(const Closure::DataCallback & dataCallback, Ptr<Data> dataPtr)
+  FakeWrapper::incomingData(Ptr<Data> data, Ptr<Interest> interest, Ptr<Closure> closure)
   {
-    m_executor->execute (boost::bind (dataCallback, dataPtr));
+    m_keychain->verifyData(data, 
+                         boost::bind(onVerify, closure->m_dataCallback, _1, m_executor),
+                         boost::bind(onVerifyError, closure->m_unverifiedCallback, _1, m_executor),
+                         closure->m_stepCount);
   }
 
-  void
-  FakeWrapper::onVerifyError(const Closure::VerifyFailCallback & failCallback, Ptr<Interest> interestPtr)
-  {
-    m_executor->execute (boost::bind (failCallback, interestPtr));
-  }
 }

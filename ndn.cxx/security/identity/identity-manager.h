@@ -56,7 +56,7 @@ namespace security
      * @brief Get default identity
      * @return the default identity name
      */
-    virtual Name
+    Name
     getDefaultIdentity ();
 
     /**
@@ -66,7 +66,7 @@ namespace security
      * @param keySize the size of the key
      * @return the generated key name 
      */
-    virtual Name
+    Name
     generateRSAKeyPair (const Name & identity, bool ksk = false, int keySize = 2048);
 
     /**
@@ -74,9 +74,17 @@ namespace security
      * @param keyName the name of the key
      * @param identity the name of the identity, if not specified the identity name can be inferred from the keyName
      */
-    virtual void
+    void
     setDefaultKeyForIdentity (const Name & keyName, const Name & identity = Name());
 
+    /**
+     * @brief get the default key of an identity
+     * @param identity the name of the identity, if not specified the identity name can be inferred from the keyName
+     * @return the public key
+     */
+    Name
+    getDefaultKeyNameForIdentity (const Name & identity = Name());
+    
     /**
      * @brief Generate a pair of RSA keys for the specified identity and set it as default key of the identity
      * @param identity the name of the identity
@@ -84,7 +92,7 @@ namespace security
      * @param keySize the size of the key
      * @return the generated key name
      */
-    virtual Name
+    Name
     generateRSAKeyPairAsDefault (const Name & identity, bool ksk = false, int keySize = 2048);
 
     /**
@@ -92,43 +100,73 @@ namespace security
      * @param keyName name of the key
      * @return the public key
      */
-    virtual Ptr<Publickey>
+    Ptr<Publickey>
     getPublickey(const Name & keyName);
+
+    /**
+     * @brief Create an identity certificate for a public key managed by this IdentityManager
+     * @param keyName the name of public key to be signed
+     * @param signerCertificateName the name of signing certificate
+     * @param notBefore the notBefore value in the validity field of the generated certificate
+     * @param notAfter the notAfter vallue in validity field of the generated certificate
+     * @return the name of generated identity certificate
+     */
+    Name
+    createIdentityCertificate (const Name& keyName,
+                               const Name& signerCertificateName,
+                               const Time& notBefore,
+                               const Time& notAfter);
+
+    /**
+     * @brief Create an idenity certificate for a public key supplied by caller
+     * @param keyName the name of public key to be signed
+     * @param publickey the public key to be signed
+     * @param signerCertificateName the name of signing certificate
+     * @param notBefore the notBefore value in the validity field of the generated certificate
+     * @param notAfter the notAfter vallue in validity field of the generated certificate
+     * @return the generated identity certificate
+     */
+    Ptr<IdentityCertificate>
+    createIdentityCertificate (const Name& keyName,
+                               const Publickey& publickey,
+                               const Name& signerCertificateName,
+                               const Time& notBefore,
+                               const Time& notAfter); 
 
     /**
      * @brief Add a certificate into the public storage
      * @param certificate the certificate to to added
      */
-    virtual void
-    addCertificate (Ptr<Certificate> certificate);
+    void
+    addCertificate (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Set the certificate as the default of its corresponding key
-     * @param certificateName name of the certificate
+     * @param certificate the certificate
      */
-    virtual void
-    setDefaultCertificateForKey (const Name & certificateName);
+    void
+    setDefaultCertificateForKey (const IdentityCertificate & certificate);
 
     /**
      * @brief Add a certificate into the public storage and set the certificate as the default of its corresponding identity
      * @param certificate the certificate to be added
      */
-    virtual void
-    addCertificateAsIdentityDefault (const Certificate & certificate);
+    void
+    addCertificateAsIdentityDefault (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Add a certificate into the public storage and set the certificate as the default of its corresponding key
      * @brief certificate the certificate to be added
      */
-    virtual void
-    addCertificateAsDefault (const Certificate & certificate);
+    void
+    addCertificateAsDefault (Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Get a certificate with the specified name
      * @param certificateName name of the requested certificate
      * @return the requested certificate
      */
-    virtual Ptr<Certificate>
+    Ptr<IdentityCertificate>
     getCertificate (const Name & certificateName);
     
     /**
@@ -136,7 +174,7 @@ namespace security
      * @param certificateName name of the requested certificate
      * @return the requested certificate
      */
-    virtual Ptr<Certificate>
+    Ptr<IdentityCertificate>
     getAnyCertificate (const Name & certificateName);
 
     /**
@@ -144,14 +182,14 @@ namespace security
      * @param identity the name of the specified identity
      * @return the requested certificate name
      */
-    virtual Name
+    Name
     getDefaultCertificateNameByIdentity (const Name & identity);
     
     /**
      * @brief Get default certificate name of the default identity, which will be used when signing is based on identity and identity is not specified
      * @return the requested certificate name
      */
-    virtual Name
+    Name
     getDefaultCertificateName ();
     
     // /**
@@ -177,7 +215,7 @@ namespace security
      * @param certificateName the signing certificate name
      * @return the generated signature
      */
-    virtual Ptr<Signature>
+    Ptr<Signature>
     signByCertificate (const Blob & blob, const Name & certificateName);
     
     /**
@@ -185,11 +223,19 @@ namespace security
      * @param data the data packet to be signed, on return the Signature inside the data packet will be set
      * @param certificateName the signing certificate name
      */
-    virtual void
+    void
     signByCertificate (Data & data, const Name & certificateName);
 
     // void
     // loadDefaultIdentity();
+
+    /**
+     * @brief Generate a self-signed certificate for a public key
+     * @param keyName name of the public key
+     * @return the generated certificate
+     */
+    Ptr<IdentityCertificate>
+    selfSign (const Name & keyName);
 
   private:
 
@@ -204,16 +250,11 @@ namespace security
      * @param keySize the size of the key pair
      * @return name of the generated key
      */
-    virtual Name
+    Name
     generateKeyPair (const Name & identity, bool ksk = false, KeyType keyType = KEY_TYPE_RSA, int keySize = 2048);
 
-    /**
-     * @brief Generate a self-signed certificate for a public key
-     * @param keyName name of the public key
-     * @return the generated certificate
-     */
-    virtual Ptr<Data>
-    selfSign (const Name & keyName);
+    static Name
+    getKeyNameFromCertificatePrefix(const Name & certificatePrefix);
     
   private:
     Ptr<IdentityStorage> m_publicStorage;

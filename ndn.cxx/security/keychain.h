@@ -26,7 +26,6 @@
 #include "policy/policy-manager.h"
 #include "encryption/encryption-manager.h"
 #include "policy/policy-rule.h"
-#include "cache/certificate-cache.h"
 // #include "certificate/certificate.h"
 
 #include "ndn.cxx/wrapper/closure.h"
@@ -42,11 +41,6 @@ namespace ndn
 
 namespace security
 {
-
-  typedef boost::function<void (Ptr<Data>)> VerifiedCallback;
-  typedef boost::function<void ()> VerifyFailCallback;
-  typedef boost::function<void (Ptr<Data>)> RecursiveVerifiedCallback;
-
   /**
    * @brief Keychain class, the main class of security library
    *
@@ -65,8 +59,7 @@ namespace security
      */
     Keychain(Ptr<IdentityManager> identityManager, 
              Ptr<PolicyManager> policyManager, 
-             Ptr<EncryptionManager> encryptionManager,
-             Ptr<CertificateCache> certificateCache);
+             Ptr<EncryptionManager> encryptionManager);
 
     /**
      * @brief Destructor
@@ -83,14 +76,14 @@ namespace security
      * @param identity the name of the identity
      * @return the key name of the auto-generated KSK of the identity 
      */
-    virtual Name 
+    Name 
     createIdentity(const Name & identity);
 
     /**
      * @brief get the default identity name
      * @return the name of the default identity
      */
-    virtual Name
+    Name
     getDefaultIdentity ();
 
     /**
@@ -100,7 +93,7 @@ namespace security
      * @param keySize the size of the key
      * @return the generated key name 
      */
-    virtual Name
+    Name
     generateRSAKeyPair (const Name & identity, bool ksk = false, int keySize = 2048);
 
     /**
@@ -108,7 +101,7 @@ namespace security
      * @param keyName the name of the key
      * @param identity the name of the identity, if not specified the identity name can be inferred from the keyName
      */
-    virtual void
+    void
     setDefaultKeyForIdentity (const Name & keyName, const Name & identity = Name());
 
     /**
@@ -118,7 +111,7 @@ namespace security
      * @param keySize the size of the key
      * @return the generated key name
      */
-    virtual Name
+    Name
     generateRSAKeyPairAsDefault (const Name & identity, bool ksk = false, int keySize = 2048);
 
     /**
@@ -126,29 +119,29 @@ namespace security
      * @param keyName the name of the key
      * @returns signing request blob
      */
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     createSigningRequest(const Name & keyName);
 
     /**
-     * @brief Install a certificate into identity
+     * @brief Install an identity certificate into identity
      * @param certificate the certificate in terms of Data packet
      */
-    virtual void 
-    installCertificate(Ptr<Certificate> certificate);
+    void 
+    installIdentityCertificate(Ptr<IdentityCertificate> certificate);
 
     /**
      * @brief Set a certificate as the default certificate name of the corresponding key
      * @param certificateName the name of the certificate
      */
-    virtual void
-    setDefaultCertificateForKey(const Name & certificateName);
+    void
+    setDefaultCertificateForKey(const IdentityCertificate & certificate);
 
     /**
      * @brief Get certificate
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<Certificate> 
+    Ptr<Certificate> 
     getCertificate(const Name & certificateName);
 
     /**
@@ -156,61 +149,80 @@ namespace security
      * @param certificateName name of the certificate
      * @returns certificate that is valid 
      */
-    virtual Ptr<Certificate>
+    Ptr<Certificate>
     getAnyCertificate(const Name & certName);
+
+    /**
+     * @brief Get identity certificate
+     * @param certificateName name of the certificate
+     * @returns certificate that is valid 
+     */
+    Ptr<IdentityCertificate> 
+    getIdentityCertificate(const Name & certificateName);
+
+    /**
+     * @brief Get identity certificate even if it is not valid
+     * @param certificateName name of the certificate
+     * @returns certificate that is valid 
+     */
+    Ptr<IdentityCertificate> 
+    getAnyIdentityCertificate(const Name & certificateName);
 
     /**
      * @brief Revoke a key
      * @param keyName the name of the key that will be revoked
      */
-    virtual void 
+    void 
     revokeKey(const Name & keyName);
 
     /**
      * @brief Revoke a certificate
      * @param certificateName the name of the certificate that will be revoked
      */
-    virtual void 
+    void 
     revokeCertificate(const Name & certificateName);
 
     /*****************************************
      *           Policy Management           *
      *****************************************/
 
-    /**
-     * @brief Set a signing policy rule
-     * @param policy the signing policy rule
-     */
-    virtual void 
-    setSigningPolicyRule(Ptr<PolicyRule> policy);
+    Ptr<PolicyManager>
+    getPolicyManager();
 
-    /**
-     * @brief Set verification exemption rule
-     * @param exemption the verification exemption rule
-     */
-    virtual void
-    setVerificationExemption(Ptr<Regex> exemption);
+    // /**
+    //  * @brief Set a signing policy rule
+    //  * @param policy the signing policy rule
+    //  */
+    // virtual void 
+    // setSigningPolicyRule(Ptr<PolicyRule> policy);
 
-    /**
-     * @brief Set verification policy rule
-     * @param policy the verification policy rule
-     */
-    virtual void 
-    setVerificationPolicyRule(Ptr<PolicyRule> policy);
+    // /**
+    //  * @brief Set verification exemption rule
+    //  * @param exemption the verification exemption rule
+    //  */
+    // virtual void
+    // setVerificationExemption(Ptr<Regex> exemption);
 
-    /**
-     * @brief Set signing inference
-     * @param inference the siging inference
-     */
-    virtual void 
-    setSigningInference(Ptr<Regex> inference);
+    // /**
+    //  * @brief Set verification policy rule
+    //  * @param policy the verification policy rule
+    //  */
+    // virtual void 
+    // setVerificationPolicyRule(Ptr<PolicyRule> policy);
 
-    /**
-     * @brief Set trust anchor
-     * @param certificate the trust anchor
-     */
-    virtual void 
-    setTrustAnchor(const Certificate & certificate);
+    // /**
+    //  * @brief Set signing inference
+    //  * @param inference the siging inference
+    //  */
+    // virtual void 
+    // setSigningInference(Ptr<Regex> inference);
+
+    // /**
+    //  * @brief Set trust anchor
+    //  * @param certificate the trust anchor
+    //  */
+    // virtual void 
+    // setTrustAnchor(const Certificate & certificate);
 
     /*****************************************
      *              Sign/Verify              *
@@ -221,7 +233,7 @@ namespace security
      * @param data the data packet that will be signed, on return the Signature of data will be set
      * @param certificate the certificate whose name will be put into KeyLocator
      */
-    virtual void 
+    void 
     sign(Data & data, const Name & certificateName);
     
     /**
@@ -230,7 +242,7 @@ namespace security
      * @param certificate the certificate whose name will be put into KeyLocator
      * @return the Signature
      */
-    virtual Ptr<Signature> 
+    Ptr<Signature> 
     sign(const Blob & buf, const Name & certificateName);
 
     /**
@@ -238,7 +250,7 @@ namespace security
      * @param data the data packet that will be signed, on return the Signature of data will be set
      * @param identity the identity name
      */
-    virtual void 
+    void 
     signByIdentity(Data & data, const Name & identity);
 
     /**
@@ -247,7 +259,7 @@ namespace security
      * @param identity the identity name
      * @return the Signature
      */
-    virtual Ptr<Signature> 
+    Ptr<Signature> 
     signByIdentity (const Blob & blob, const Name & identity);
 
     /**
@@ -255,9 +267,13 @@ namespace security
      * @param data the data packet that will be verified
      * @param verifiedCallback the callback function that will be called if the target data has been verified
      * @param failureCallback the callback function that will be called if the target data cannot be verified
+     * @param stepCount a counter to track how many validation steps have been gone through
      */
-    virtual void 
-    verifyData(Ptr<Data> data, const VerifiedCallback & verifiedCallback, const VerifyFailCallback & failureCallback);
+    void 
+    verifyData(Ptr<Data> data, 
+               const DataCallback & verifiedCallback, 
+               const UnverifiedCallback& unverifiedCallback,
+               int stepCount = 0);
 
     /*****************************************
      *           Encrypt/Decrypt             *
@@ -268,7 +284,7 @@ namespace security
      * @param keyName the name of the generated key
      * @param keyType the type of the key, e.g. AES
      */
-    virtual void 
+    void 
     generateSymmetricKey(const Name & keyName, KeyType keyType);
 
     /**
@@ -279,7 +295,7 @@ namespace security
      * @param em the encryption mode
      * @return the encrypted blob
      */
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     encrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
 
     /**
@@ -290,7 +306,7 @@ namespace security
      * @param em the encryption mode
      * @return the decrypted blob
      */
-    virtual Ptr<Blob> 
+    Ptr<Blob> 
     decrypt(const Name & keyName, const Blob & blob, bool sym = true, EncryptMode em = EM_DEFAULT);
     
     /**
@@ -304,20 +320,20 @@ namespace security
     }
 
   private:  
-    /**
-     * @brief Single intermediate step of verification
-     * @param data the data packet that will be verified in this step
-     * @param isFirst if the target data packet is the original data packet, otherwise the data packet is a intermediate certificate
-     * @param stepCount the rest number of verification steps that can be executed
-     * @param recursiveVerifiedCallback the callback function that will be called if the target data packet is valid
-     * @param failureCallback the callback function that will be called if the target data cannot be verified
-     */
-    virtual void 
-    stepVerify(Ptr<Data> data, 
-               const bool isFirst,
-               const int stepCount, 
-               const RecursiveVerifiedCallback & recursiveVerifiedCallback, 
-               const VerifyFailCallback & failureCallback);
+    // /**
+    //  * @brief Single intermediate step of verification
+    //  * @param data the data packet that will be verified in this step
+    //  * @param isFirst if the target data packet is the original data packet, otherwise the data packet is a intermediate certificate
+    //  * @param stepCount the rest number of verification steps that can be executed
+    //  * @param recursiveVerifiedCallback the callback function that will be called if the target data packet is valid
+    //  * @param failureCallback the callback function that will be called if the target data cannot be verified
+    //  */
+    // virtual void 
+    // stepVerify(Ptr<Data> data, 
+    //            const bool isFirst,
+    //            const int stepCount, 
+    //            const RecursiveVerifiedCallback & recursiveVerifiedCallback, 
+    //            const VerifyFailCallback & failureCallback);
 
     /**
      * @brief Callback function that will be called if the interest for certificate times out
@@ -326,24 +342,25 @@ namespace security
      * @param retry the number of rest retrials
      * @param failureCallback the callback function that will be called if the retransmission eventaully fails
      */
-    virtual void
+    void
     onCertificateInterestTimeout(Ptr<Closure> closure, 
                                  Ptr<Interest> interest, 
                                  int retry, 
-                                 const VerifyFailCallback & failureCallback);
+                                 const UnverifiedCallback& unverifiedCallback,
+                                 Ptr<Data> data);
 
-    /**
-     * @brief Callback function that will be called if the certificate has been validated
-     * @param certificate the certificate that has been validated
-     * @param data the data packet that needs to be verified by the certificate
-     * @param preRecurVerifyCallback the callback function that will be called if the data packet can be validated
-     * @param failureCallback the callback function that will be called if the data packet cannot be validated
-     */
-    virtual void
-    onCertificateVerified(Ptr<Data>certificate, 
-                          Ptr<Data>data, 
-                          const RecursiveVerifiedCallback &preRecurVerifyCallback, 
-                          const VerifyFailCallback &failureCallback);
+    // /**
+    //  * @brief Callback function that will be called if the certificate has been validated
+    //  * @param certificate the certificate that has been validated
+    //  * @param data the data packet that needs to be verified by the certificate
+    //  * @param preRecurVerifyCallback the callback function that will be called if the data packet can be validated
+    //  * @param failureCallback the callback function that will be called if the data packet cannot be validated
+    //  */
+    // virtual void
+    // onCertificateVerified(Ptr<Data>certificate, 
+    //                       Ptr<Data>data, 
+    //                       const RecursiveVerifiedCallback &preRecurVerifyCallback, 
+    //                       const VerifyFailCallback &failureCallback);
 
     // virtual void
     // onOriginalCertVerified(Ptr<Certificate> cert, 
@@ -355,7 +372,6 @@ namespace security
     Ptr<IdentityManager> m_identityManager;
     Ptr<PolicyManager> m_policyManager;
     Ptr<EncryptionManager> m_encryptionManager;
-    Ptr<CertificateCache> m_certificateCache;
     const int m_maxStep;
     Wrapper* m_handler;
   };

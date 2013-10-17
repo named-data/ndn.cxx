@@ -17,7 +17,7 @@
 #include "ndn.cxx/security/policy/basic-policy-manager.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
 #include "ndn.cxx/security/encryption/basic-encryption-manager.h"
-#include "ndn.cxx/security/cache/basic-certificate-cache.h"
+#include "ndn.cxx/security/cache/ttl-certificate-cache.h"
 #include "ndn.cxx/regex/regex.h"
 #include <sqlite3.h>
 #include <boost/bind.hpp>
@@ -40,7 +40,7 @@ timeout(Ptr<Closure> closure, Ptr<Interest> interest)
 }
 
 static void
-verifiedError(Ptr<Interest> interest)
+verifiedError(Ptr<Data> data)
 {
   cout << "unverified" << endl;
 }
@@ -129,10 +129,10 @@ BOOST_AUTO_TEST_CASE(Real)
 
   Ptr<OSXPrivatekeyStorage> privateStorage = Ptr<OSXPrivatekeyStorage>::Create();
   Ptr<IdentityManager> identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
-  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage));
+  Ptr<CertificateCache> certificateCache = Ptr<CertificateCache>(new TTLCertificateCache());
+  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage, certificateCache, 10));
   Ptr<EncryptionManager> encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, "/Users/yuyingdi/Test/encryption.db"));
-  Ptr<CertificateCache> certificateCache = Ptr<CertificateCache>(new BasicCertificateCache());
-  Ptr<Keychain> keychain = Ptr<Keychain>(new Keychain(identityManager, policyManager, encryptionManager, certificateCache));
+  Ptr<Keychain> keychain = Ptr<Keychain>(new Keychain(identityManager, policyManager, encryptionManager));
 
   Ptr<Wrapper> wrapper = Ptr<Wrapper>(new Wrapper(keychain));
 
@@ -144,9 +144,7 @@ BOOST_AUTO_TEST_CASE(Real)
   Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(Name("/ndn/ucla.edu/yingdi/app/DSK-1376698615/ID-CERT/0")));
   Ptr<Closure> closure = Ptr<Closure> (new Closure(boost::bind(verifiedPrint, _1),
 						   boost::bind(timeout, _1, _2),
-						   boost::bind(verifiedError, _1),
-						   Closure::UnverifiedDataCallback()
-						   )
+						   boost::bind(verifiedError, _1))
 				       );
 
 

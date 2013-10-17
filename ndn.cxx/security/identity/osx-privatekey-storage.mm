@@ -78,7 +78,7 @@ namespace security
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
                                                       keyNameUri.c_str (), 
-                                                      keyNameUri.size ());
+                                                      kCFStringEncodingUTF8);
     
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(NULL,
                                                              3,
@@ -116,7 +116,7 @@ namespace security
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
                                                       keyNameUri.c_str (), 
-                                                      keyNameUri.size ());
+                                                      kCFStringEncodingUTF8);
 
     CFDictionaryAddValue(attrDict, kSecAttrKeyType, getSymKeyType(keyType));
     CFDictionaryAddValue(attrDict, kSecAttrKeySizeInBits, CFNumberCreate (kCFAllocatorDefault, kCFNumberSInt32Type, &keySize));
@@ -388,7 +388,7 @@ namespace security
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
                                                       keyNameUri.c_str (), 
-                                                      keyNameUri.size ());
+                                                      kCFStringEncodingUTF8);
     
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(NULL,
                                                                 3,
@@ -415,7 +415,7 @@ namespace security
 
     CFStringRef keyLabel = CFStringCreateWithCString (NULL, 
                                                       keyNameUri.c_str (), 
-                                                      keyNameUri.size ());
+                                                      kCFStringEncodingUTF8);
     
     CFMutableDictionaryRef attrDict = CFDictionaryCreateMutable(NULL,
                                                              5,

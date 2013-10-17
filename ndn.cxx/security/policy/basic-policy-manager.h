@@ -19,7 +19,9 @@
 #include "policy-manager.h"
 
 #include "ndn.cxx/regex/regex.h"
+#include "ndn.cxx/security/certificate/identity-certificate.h"
 #include "ndn.cxx/security/identity/privatekey-storage.h"
+#include "ndn.cxx/security/cache/certificate-cache.h"
 
 namespace ndn
 {
@@ -29,12 +31,15 @@ namespace security
   class BasicPolicyManager : public PolicyManager
   {
   public:
-    BasicPolicyManager (const string & policyPath, Ptr<PrivatekeyStorage> privatekeyStore);
+    BasicPolicyManager (const string & policyPath, 
+                        Ptr<PrivatekeyStorage> privatekeyStore, 
+                        Ptr<CertificateCache> certificateCache,
+                        const int & stepLimit);
 
     virtual
     ~BasicPolicyManager();
     
-    virtual void
+    void
     loadPolicy();
 
     void 
@@ -43,38 +48,44 @@ namespace security
     void 
     loadTrustAnchor(TiXmlElement * element);
 
-    virtual void 
+    void 
     setDefaultEncryptionKey(const Name & keyName, bool sym);
     
-    virtual void
+    void
     savePolicy(const Name & keyName = Name(), bool sym = true);
 
-    virtual void 
+    void 
     setSigningPolicyRule (Ptr<PolicyRule> policy);
 
-    virtual void 
+    void 
     setSigningInference(Ptr<Regex> inference);
 
-    virtual void
+    void
     setVerificationPolicyRule (Ptr<PolicyRule> policy);
 
-    virtual void
+    void
     setVerificationExemption(Ptr<Regex> exempt);
 
-    virtual void 
-    setTrustAnchor(const Certificate & certificate);
+    void 
+    setTrustAnchor(Ptr<IdentityCertificate> certificate);
 
-    virtual Ptr<const Certificate>
+    Ptr<const IdentityCertificate>
     getTrustAnchor(const Name & name);
 
     virtual bool
     requireVerify (const Data & data);
 
     virtual bool 
-    skipVerify (const Data & data);
+    skipVerifyAndTrust (const Data & data);
 
-    virtual bool 
-    checkVerificationPolicy(const Data & data);
+    // bool 
+    // checkVerificationPolicy(const Data & data);
+
+    virtual Ptr<ValidationRequest>
+    checkVerificationPolicy(Ptr<Data> data, 
+                            const int & stepCount, 
+                            const DataCallback& verifiedCallback,
+                            const UnverifiedCallback& unverifiedCallback);
 
     virtual bool 
     checkSigningPolicy(const Name & dataName, const Name & certName);
@@ -84,6 +95,18 @@ namespace security
 
     void
     displayPolicy ();
+
+  protected:
+    virtual void
+    onCertificateVerified(Ptr<Data> certificate, 
+                          Ptr<Data> data, 
+                          const DataCallback& verifiedCallback, 
+                          const UnverifiedCallback& unverifiedCallback);
+
+    virtual void
+    onCertificateUnverified(Ptr<Data>signCertificate, 
+                            Ptr<Data>data, 
+                            const UnverifiedCallback &unverifiedCallback);
 
   private:
     Ptr<Regex>
@@ -103,7 +126,10 @@ namespace security
     virtual void
     loadPolicyFromFile();
 
-  private:
+  protected:
+    Name m_defaultKeyName;
+    bool m_defaultSym;
+
     const string m_policyPath;
     bool m_policyChanged;
     bool m_policyLoaded;
@@ -114,7 +140,10 @@ namespace security
     vector< Ptr<PolicyRule> > m_signPolicies;
     vector< Ptr<PolicyRule> > m_mustFailSign;
     vector< Ptr<Regex> > m_signInference;
-    map<Name, Certificate> m_trustAnchors;
+    map<Name, Ptr<IdentityCertificate> > m_trustAnchors;
+    
+    int m_stepLimit;
+    Ptr<CertificateCache> m_certificateCache;
   };
 }
 

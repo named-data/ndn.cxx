@@ -87,7 +87,8 @@ int main(int argc, char** argv)
   if (vm.count("default_cert"))
     {
       Name certName(name);
-      Name keyName = publicStorage->getKeyNameForCertificate(certName);
+      Ptr<security::IdentityCertificate> identityCertificate = Ptr<security::IdentityCertificate>(new security::IdentityCertificate(*publicStorage->getCertificate(certName, false)));
+      Name keyName = identityCertificate->getPublicKeyName();
       publicStorage->setDefaultCertificateNameForKey (keyName, certName);
       return 0;
     }

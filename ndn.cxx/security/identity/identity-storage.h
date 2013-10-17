@@ -12,7 +12,7 @@
 #define NDN_IDENTITY_STORAGE_H
 
 #include "ndn.cxx/security/security-common.h"
-#include "ndn.cxx/security/certificate/certificate.h"
+#include "ndn.cxx/security/certificate/identity-certificate.h"
 
 using namespace boost::posix_time;
 
@@ -66,8 +66,8 @@ namespace security
      * @param ksk generate a KSK name if true, DSK name otherwise
      * @return the generated key name
      */
-    virtual Name 
-    getNewKeyName (const Name & identity, bool ksk) = 0;
+    Name 
+    getNewKeyName (const Name & identity, bool ksk);
 
     /**
      * @brief check if the specified key has already existed
@@ -76,13 +76,6 @@ namespace security
      */
     virtual bool 
     doesKeyExist (const Name & keyName) = 0;
-
-    /**
-     * @brief extract key name from certificate name
-     * @param certificateName the certificate name to be processed
-     */
-    virtual Name 
-    getKeyNameForCertificate (const Name & certificateName) = 0;
 
     /**
      * @brief add a public key in to identity storage
@@ -127,7 +120,7 @@ namespace security
      * @param certificate the certificate to be added
      */
     virtual void 
-    addCertificate (const Certificate & certificate) = 0;
+    addCertificate (Ptr<IdentityCertificate> certificate) = 0;
 
     /**
      * @brief get a certificate from identity storage
@@ -163,7 +156,7 @@ namespace security
      * @param identity
      * @return the default certificate name
      */
-    inline Name 
+    Name 
     getDefaultCertificateNameForIdentity (const Name & identity);
 
     /**
@@ -198,14 +191,6 @@ namespace security
     setDefaultCertificateNameForKey (const Name & keyName, const Name & certificateName) = 0;
 
   };
-
-  inline Name 
-  IdentityStorage::getDefaultCertificateNameForIdentity (const Name & identity)
-  {
-    Name keyName = getDefaultKeyNameForIdentity(identity);
-    
-    return getDefaultCertificateNameForKey(keyName);
-  }
 
 }//security
 

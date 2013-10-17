@@ -36,9 +36,9 @@ namespace security
   class Certificate : public Data
   {
   public:
-    enum CertificateType{
-      IDENTITY_CERT,
-    };
+    // enum CertificateType{
+    //    IDENTITY_CERTIFICATE,
+    // };
 
   public:
     /**
@@ -116,6 +116,9 @@ namespace security
     getPublicKeyInfo () const
     { return m_key; }
 
+    virtual Name 
+    getPublicKeyName () const = 0;
+
     /**
      * @brief check if the certificate is valid
      * @return true if current time is early than notBefore
@@ -137,7 +140,7 @@ namespace security
     void
     decode();
 
-  private:
+  protected:
     SubDescryptList m_subjectList;
     Time m_notBefore;
     Time m_notAfter;
