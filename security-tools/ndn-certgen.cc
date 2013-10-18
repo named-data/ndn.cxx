@@ -152,7 +152,8 @@ int main(int argc, char** argv)
   ostringstream oss;
   oss << ti.total_seconds();
   certName.append(oss.str());
-
+  cout<<"s1"<<endl;
+    cout<<certName.toUri()<<endl;
   Time notBefore;
   Time notAfter;
   try{
@@ -183,6 +184,7 @@ int main(int argc, char** argv)
     cerr << "Error in converting validity timestamp!" << endl;
     return 1;
   }
+  cout<<"s2"<<endl;
 
     
   if (0 == vm.count("request"))
@@ -197,7 +199,8 @@ int main(int argc, char** argv)
   Ptr<der::DerNode> node = der::DerNode::parse(reinterpret_cast<InputIterator &>(is));
   der::PublickeyVisitor pubkeyVisitor;
   Ptr<security::Publickey> publickey = boost::any_cast<Ptr<security::Publickey> >(node->accept(pubkeyVisitor));
-  
+  cout<<"s3"<<endl;
+
   if (0 == vm.count("subject_name"))
     {
       cout << "subject_name must be specified" << endl;
@@ -205,21 +208,28 @@ int main(int argc, char** argv)
     }
 
   security::CertificateSubDescrypt subDescryptName("2.5.4.41", sName);
-
   Ptr<security::IdentityCertificate> certificate = Create<security::IdentityCertificate>();
+//    cout<<"here"<<endl;
   certificate->setName(certName);
+    cout<<"t4"<<endl;
   certificate->setNotBefore(notBefore);
   certificate->setNotAfter(notAfter);
+    cout<<"tt4"<<endl;
   certificate->setPublicKeyInfo(*publickey);
   certificate->addSubjectDescription(subDescryptName);
-
+  cout<<"s5"<<endl;
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
-
+  cout<<"s6"<<endl;
   security::IdentityManager identityManager(publicStorage, privateStorage);
+  cout<<"s7"<<endl;
 
   Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name(signId));
+  cout<<signingCertificateName.toUri()<<endl;
+  cout<<"s8"<<endl;
+
   identityManager.signByCertificate(*certificate, signingCertificateName);
+    cout<<"s9"<<endl;
 
   Ptr<Blob> dataBlob = certificate->encodeToWire();
 

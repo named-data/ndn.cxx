@@ -218,7 +218,7 @@ int main(int argc, char** argv)
     }
     
     
-    Ptr<security::Certificate> certificate = Create<security::Certificate>();
+    Ptr<security::IdentityCertificate> certificate = Create<security::IdentityCertificate>();
     certificate->setName(certName);
     certificate->setNotBefore(notBefore);
     certificate->setNotAfter(notAfter);

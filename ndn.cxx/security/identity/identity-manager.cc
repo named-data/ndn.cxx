@@ -289,27 +289,32 @@ namespace security
 
   void
   IdentityManager::signByCertificate (Data & data, const Name & certName)
-  { 
+  {
+    cout<<"sbc 0"<<endl;
     Ptr<IdentityCertificate> certificate = getCertificate(certName);
     Name keyName = certificate->getPublicKeyName();
+    cout<<"sbc 0.5"<<endl;
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
 
     //For temporary usage, we support RSA + SHA256 only, but will support more.
     Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
-    
+      cout<<"sbc 1"<<endl;
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
     keyLocator.setKeyName (certName);
+      cout<<"sbc 2"<<endl;
     
     sha256Sig->setKeyLocator (keyLocator);
     sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
     
     data.setSignature(sha256Sig);
+      cout<<"sbc 3"<<endl;
 
     Ptr<Blob> unsignedData = data.encodeToUnsignedWire();
     Ptr<SignedBlob> signedBlobPtr = Ptr<SignedBlob>(new SignedBlob(unsignedData->buf(), unsignedData->size()));
     signedBlobPtr->setSignedPortion(0, unsignedData->size());
     data.setSignedBlob(signedBlobPtr);
+      cout<<"sbc 4"<<endl;
 
     // DERendec endec;
     // endec.printBlob(*unsignedData, "");
