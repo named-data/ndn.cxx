@@ -120,7 +120,7 @@ namespace security
     root->encode(start);
 
     Ptr<Blob> blob = blobStream.buf ();
-    Content content (blob->buf(), blob->size());
+    Content content (blob->buf(), blob->size(), Content::KEY);
     setContent (content);
   }
 
