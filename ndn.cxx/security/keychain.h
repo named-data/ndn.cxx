@@ -182,6 +182,10 @@ namespace security
     void 
     revokeCertificate(const Name & certificateName);
 
+    inline Ptr<IdentityManager>
+    getIdentityManager()
+    { return m_identityManager; }
+
     /*****************************************
      *           Policy Management           *
      *****************************************/
