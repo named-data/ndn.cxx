@@ -132,9 +132,9 @@ namespace der
 
     OID oid = boost::any_cast<OID>(children[0]->accept(simpleVisitor));
     bool critical = boost::any_cast<bool>(children[1]->accept(simpleVisitor));
-    const Blob & value = boost::any_cast<const Blob &>(children[2]->accept(simpleVisitor));
+    Ptr<Blob> value = boost::any_cast<Ptr<Blob> >(children[2]->accept(simpleVisitor));
 
-    security::CertificateExtension extension(oid, critical, value);
+    security::CertificateExtension extension(oid, critical, *value);
 
     certData->addExtension(extension);
   }
