@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(DumpCert)
 { 
   security::BasicIdentityStorage identityStorage;
 
-  Ptr<Data> data = identityStorage.getCertificate(Name("/ndn/KSK-1376698603/ID-CERT/0"), true);
+  Ptr<Data> data = identityStorage.getCertificate(Name("/ndn/KEY/KSK-1376698603/ID-CERT/0"), true);
 
   Ptr<Blob> dataBlob = data->encodeToWire();
 
@@ -411,7 +411,14 @@ BOOST_AUTO_TEST_CASE(DumpCert)
 
   Ptr<Data> readData = Data::decodeFromWire (readBlob);
 
-  // security::Certificate cert(*readData); 
+  security::IdentityCertificate cert(*readData);
+
+  cout << cert.getName().toUri() << endl;
+  boost::iostreams::stream
+    <boost::iostreams::array_source> ios (cert.content().buf(), cert.content().size());
+  Ptr<der::DerNode> root = der::DerNode::parse(reinterpret_cast<InputIterator &>(ios));
+  der::PrintVisitor printVisitor;
+  root->accept(printVisitor, string(""));
 
   // DERendec endec;
   
