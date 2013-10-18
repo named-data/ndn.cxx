@@ -212,6 +212,7 @@ int main(int argc, char** argv)
   certificate->setNotAfter(notAfter);
   certificate->setPublicKeyInfo(*publickey);
   certificate->addSubjectDescription(subDescryptName);
+  certificate->encode();
 
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
