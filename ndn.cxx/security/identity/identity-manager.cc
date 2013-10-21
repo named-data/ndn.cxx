@@ -185,7 +185,10 @@ namespace security
 
     Ptr<Blob> unsignedData = certificate->encodeToUnsignedWire();
 
-    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName);
+    Ptr<IdentityCertificate> signerCertificate = getCertificate(signerCertificateName);
+    Name signerkeyName = signerCertificate->getPublicKeyName();
+
+    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, signerkeyName);
     
     sha256Sig->setSignatureBits(*sigBits);
 
