@@ -14,7 +14,8 @@
 #include "ndn.cxx/wrapper/closure.h"
 #include "ndn.cxx/security/keychain.h"
 #include "ndn.cxx/security/identity/osx-privatekey-storage.h"
-#include "ndn.cxx/security/policy/basic-policy-manager.h"
+#include "ndn.cxx/security/policy/simple-policy-manager.h"
+#include "ndn.cxx/security/policy/identity-policy-rule.h"
 #include "ndn.cxx/security/identity/basic-identity-storage.h"
 #include "ndn.cxx/security/encryption/basic-encryption-manager.h"
 #include "ndn.cxx/security/cache/ttl-certificate-cache.h"
@@ -22,6 +23,7 @@
 #include <sqlite3.h>
 #include <boost/bind.hpp>
 #include <unistd.h>
+#include <fstream>
 
 using namespace ndn;
 
@@ -130,7 +132,28 @@ BOOST_AUTO_TEST_CASE(Real)
   Ptr<OSXPrivatekeyStorage> privateStorage = Ptr<OSXPrivatekeyStorage>::Create();
   Ptr<IdentityManager> identityManager = Ptr<IdentityManager>(new IdentityManager(Ptr<BasicIdentityStorage>::Create(), privateStorage));
   Ptr<CertificateCache> certificateCache = Ptr<CertificateCache>(new TTLCertificateCache());
-  Ptr<PolicyManager> policyManager = Ptr<PolicyManager>(new BasicPolicyManager("/Users/yuyingdi/Test/policy", privateStorage, certificateCache, 10));
+  Ptr<SimplePolicyManager> policyManager = Ptr<SimplePolicyManager>(new SimplePolicyManager(10, certificateCache));
+
+  policyManager->addVerificationPolicyRule(Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY>(<>*)<KSK-.*><ID-CERT>",
+											  "^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>",
+											  ">", "\\1\\2", "\\1", true)));
+  policyManager->addVerificationPolicyRule(Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>",
+											  "^([^<KEY>]*)<KEY>(<>*)<KSK-.*><ID-CERT>",
+											  "==", "\\1", "\\1\\2", true)));
+
+  ifstream is ("trust-anchor.data", ios::binary);
+  is.seekg (0, ios::end);
+  ifstream::pos_type size = is.tellg();
+  char * memblock = new char [size];    
+  is.seekg (0, ios::beg);
+  is.read (memblock, size);
+  is.close();
+
+  Ptr<Blob> readBlob = Ptr<Blob>(new Blob(memblock, size));
+  Ptr<Data> readData = Data::decodeFromWire (readBlob);
+  Ptr<IdentityCertificate> anchor = Ptr<IdentityCertificate>(new IdentityCertificate(*readData));   
+  policyManager->addTrustAnchor(anchor);
+
   Ptr<EncryptionManager> encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(privateStorage, "/Users/yuyingdi/Test/encryption.db"));
   Ptr<Keychain> keychain = Ptr<Keychain>(new Keychain(identityManager, policyManager, encryptionManager));
 
@@ -141,7 +164,7 @@ BOOST_AUTO_TEST_CASE(Real)
 
   publishAllCert(wrapper);
 
-  Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(Name("/ndn/ucla.edu/yingdi/app/DSK-1376698615/ID-CERT/0")));
+  Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(Name("/ndn/KEY/DSK-1376698604/ID-CERT/1382032856")));
   Ptr<Closure> closure = Ptr<Closure> (new Closure(boost::bind(verifiedPrint, _1),
 						   boost::bind(timeout, _1, _2),
 						   boost::bind(verifiedError, _1))
