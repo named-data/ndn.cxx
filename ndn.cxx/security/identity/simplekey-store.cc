@@ -84,7 +84,7 @@ namespace ndn
 		permissions(privateKeyName.c_str(), owner_read);
 		permissions(publicKeyName.c_str(), others_read|owner_read);
             }
-  	    return;
+            return;
         }
         
         Ptr<Publickey>
@@ -153,7 +153,7 @@ namespace ndn
                        strContents.length(), signature);
                     Ptr<Blob> ret = Ptr<Blob>(new Blob(signature, signature.size()));
                     return ret;
-            	}
+                }
             }
             catch(const CryptoPP::Exception& e)
             {
@@ -211,7 +211,7 @@ namespace ndn
                    throw SecException("symmetric key doesn't exist");
                    return NULL;
                 }
-            	string symKeyName = SimpleKeyStore::nameTransform(keyURI) + "_key.txt";
+                string symKeyName = SimpleKeyStore::nameTransform(keyURI) + "_key.txt";
                 string cipher, decoded, recovered;
                 Ptr<Blob> key_content = SimpleKeyStore::readSymetricKey(symKeyName);
                 string key = string(key_content->buf(),key_content->size());
@@ -300,7 +300,7 @@ namespace ndn
                      new StreamTransformationFilter(e,
                                                     new StringSink(cipher)
                                                     ) // StreamTransformationFilter
-                     ); // StringSource
+                                  ); // StringSource
                     Ptr<Blob> ret = Ptr<Blob>(new Blob(cipher.c_str (), cipher.size()));
                     return ret;
                 }
