@@ -292,6 +292,7 @@ namespace security
   {
     cout<<"sbc 0"<<endl;
     Ptr<IdentityCertificate> certificate = getCertificate(certName);
+      cout<<"sbc 0.23"<<endl;
     Name keyName = certificate->getPublicKeyName();
     cout<<"sbc 0.5"<<endl;
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());

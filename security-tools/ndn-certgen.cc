@@ -211,30 +211,25 @@ int main(int argc, char** argv)
   Ptr<security::IdentityCertificate> certificate = Create<security::IdentityCertificate>();
 //    cout<<"here"<<endl;
   certificate->setName(certName);
-    cout<<"t4"<<endl;
   certificate->setNotBefore(notBefore);
   certificate->setNotAfter(notAfter);
-    cout<<"tt4"<<endl;
   certificate->setPublicKeyInfo(*publickey);
   certificate->addSubjectDescription(subDescryptName);
-  cout<<"s5"<<endl;
+    certificate->encode();
   Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
   Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
-  cout<<"s6"<<endl;
   security::IdentityManager identityManager(publicStorage, privateStorage);
-  cout<<"s7"<<endl;
 
   Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name(signId));
-  cout<<signingCertificateName.toUri()<<endl;
-  cout<<"s8"<<endl;
 
   identityManager.signByCertificate(*certificate, signingCertificateName);
-    cout<<"s9"<<endl;
 
   Ptr<Blob> dataBlob = certificate->encodeToWire();
 
   string outputFileName = getOutputFileName(certName.toUri());
   ofstream ofs(outputFileName.c_str());
+    Content c = certificate->getContent();
+    cout<<"type: "<<c.getType()<<endl;
 
   ofs << "-----BEGIN NDN ID CERT-----\n";
   string encoded;

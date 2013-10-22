@@ -107,25 +107,19 @@ int main(int argc, char** argv)
     }
     if (string(argv[1]) == "sign") //argv[2] the content to be signed argv[3] the signID
     {
-        cout<<"1"<<endl;
     Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
     Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
-        cout<<"2"<<endl;
     
     security::IdentityManager identityManager(publicStorage, privateStorage);
     Blob b(argv[2],strlen(argv[2]));
     Name signingCertificateName = identityManager.getDefaultCertificateNameByIdentity(Name(argv[3]));
-        cout<<"3"<<endl;
 
 //        cout<<signingCertificateName.toUri()<<endl;
 //    Name certName("/ndn/ucla.edu/xingyu/DSK-1379111405/ID-CERT/1379112388");
 //    Name keyName = publicStorage->getKeyNameForCertificate(signingCertificateName);
     Ptr<security::IdentityCertificate> certificate = identityManager.getCertificate(signingCertificateName);
-        cout<<"3.5"<<endl;
     Name keyName = certificate->getPublicKeyName();
         
-        cout<<"4"<<endl;
-
     Ptr<Blob> sigBits = privateStorage->sign (b, keyName.toUri());
 
 //    cout<<string(sigBits->buf(),sigBits->size())<<endl;
@@ -153,7 +147,7 @@ int main(int argc, char** argv)
     
     if (string(argv[1]) == "nack") //argv[2] user key name argv[3] signer ID
     {
-/*        Content nack_pkt("", 0, Content::NACK);
+        Content nack_pkt("", 0, Content::NACK);
         Ptr<security::BasicIdentityStorage> publicStorage = Ptr<security::BasicIdentityStorage>::Create();
         Ptr<security::OSXPrivatekeyStorage> privateStorage = Ptr<security::OSXPrivatekeyStorage>::Create();
         
@@ -184,7 +178,7 @@ int main(int argc, char** argv)
                                   new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded), true, 64));
         ofs << encoded;
         ofs << "-----END NDN ID CERT-----\n";
-        ofs.close();*/
+        ofs.close();
 //        cout<<c.getType()<<endl;
         
     }
