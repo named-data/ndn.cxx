@@ -132,6 +132,27 @@ def build (bld):
         install_prefix = None,
         )
 
+    ndn_cert_gen_opt = bld.program (
+        target = "ndn-certgen-opt",
+        features = "cxx cxxprogram",
+        defines = "WAF",
+        source = ['security-tools/ndn-certgen-opt.cc'],
+        use = 'LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
+        includes = ".",
+        install_prefix = None,
+        )
+
+    ndn_cert_gen_opt = bld.program (
+        target = "opt-tool",
+        features = "cxx cxxprogram",
+        defines = "WAF",
+        source = ['security-tools/opt-tool.cc'],
+        use = 'LOG4CXX ndn.cxx BOOST_PROGRAM_OPTIONS',
+        includes = ".",
+        install_prefix = None,
+        )
+
+
     ndn_sign_req = bld.program (
         target = "ndn-sign-req",
         features = "cxx cxxprogram",
