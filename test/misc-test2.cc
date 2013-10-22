@@ -16,7 +16,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "ndn.cxx/security/identity/osx-privatekey-store.h"
+#include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/identity/simplekey-store.h"
 #include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/publickey.h"
