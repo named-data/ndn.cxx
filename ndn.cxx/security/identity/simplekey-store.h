@@ -82,8 +82,10 @@ namespace ndn
             virtual bool
             doesKeyExist(const Name & keyName, KeyClass keyClass);
             
-            std::string 
+            std::string
             nameTransform(const string &keyName);
+            
+        private:
             
             Ptr<Blob>
             readSymetricKey(const string &filename);
@@ -91,8 +93,8 @@ namespace ndn
             void maintainMapping(string str1,string str2);
             void
             writeSymetricKey(const string &filename, const Blob & pData);
-        private:
-        	  std::string currentDir;
+
+            std::string currentDir;
         };
         
     }//security
