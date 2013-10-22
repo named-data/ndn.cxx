@@ -246,28 +246,28 @@ namespace ndn
             string keyURI = keyName.toUri();
             if (!sym)
             {
-            	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
-        	  { 
-                      throw security::SecException("public key doesn't exist");
-        	      return NULL;
-        	  }
-                  try
-                  {
-                      AutoSeededRandomPool rng;
-                      CryptoPP::ByteQueue bytes;
-                      string publicKeyName = SimpleKeyStore::nameTransform(keyURI) + "_pub.txt";
-                      FileSource file(publicKeyName.c_str(), true, new Base64Decoder);
-                      file.TransferTo(bytes);
-                      bytes.MessageEnd();
-                      RSA::PublicKey publicKey;
-                      publicKey.Load(bytes);
+                if(!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PUBLIC))
+                { 
+                  throw security::SecException("public key doesn't exist");
+                  return NULL;
+        	}
+                try
+                {
+                  AutoSeededRandomPool rng;
+                  CryptoPP::ByteQueue bytes;
+                  string publicKeyName = SimpleKeyStore::nameTransform(keyURI) + "_pub.txt";
+                  FileSource file(publicKeyName.c_str(), true, new Base64Decoder);
+                  file.TransferTo(bytes);
+                  bytes.MessageEnd();
+                  RSA::PublicKey publicKey;
+                  publicKey.Load(bytes);
                 
-                      string cipher;
-                      RSAES_OAEP_SHA_Encryptor e( publicKey );
+                  string cipher;
+                  RSAES_OAEP_SHA_Encryptor e( publicKey );
                 
-                      StringSource( plain, true, new PK_EncryptorFilter( rng, e,new StringSink( cipher )));
-                      Ptr<Blob> ret = Ptr<Blob>(new Blob(cipher.c_str (), cipher.size()));
-                      return ret;
+                  StringSource( plain, true, new PK_EncryptorFilter( rng, e,new StringSink( cipher )));
+                  Ptr<Blob> ret = Ptr<Blob>(new Blob(cipher.c_str (), cipher.size()));
+                  return ret;
                 }            		
                 catch(const CryptoPP::Exception& e)
                 {
