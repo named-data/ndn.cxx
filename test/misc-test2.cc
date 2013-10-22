@@ -18,7 +18,6 @@
 
 #include "ndn.cxx/security/identity/osx-privatekey-storage.h"
 #include "ndn.cxx/security/identity/simplekey-store.h"
-#include "ndn.cxx/security/certificate/certificate-data.h"
 #include "ndn.cxx/security/certificate/publickey.h"
 
 using namespace std;
