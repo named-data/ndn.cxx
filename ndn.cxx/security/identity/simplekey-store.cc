@@ -174,31 +174,30 @@ namespace ndn
             string keyURI = keyName.toUri();
             if (!sym)
             {
-            	  if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
-                  {
-                    throw SecException("private key doesn't exist");
-        	    return NULL;
-                  }
-                  try
-                  {
-                      AutoSeededRandomPool rng;
- 	    	      CryptoPP::ByteQueue bytes;
-                      string privateKeyName = SimpleKeyStore::nameTransform(keyURI) + "_priv.txt";
-                      FileSource file(privateKeyName.c_str(), true, new Base64Decoder);
-                      file.TransferTo(bytes);
-                      bytes.MessageEnd();
-                      RSA::PrivateKey privateKey;
-                      privateKey.Load(bytes);
-                      string recovered;
-                      RSAES_OAEP_SHA_Decryptor d( privateKey );
-                
-                      StringSource( string(pData.buf(), pData.size()), true,
+                if(!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_PRIVATE))
+                {
+                  throw SecException("private key doesn't exist");
+                  return NULL;
+                }
+                try
+                {
+                  AutoSeededRandomPool rng; 	    	 
+                  CryptoPP::ByteQueue bytes;                  
+                  string privateKeyName = SimpleKeyStore::nameTransform(keyURI) + "_priv.txt";                  
+                  FileSource file(privateKeyName.c_str(), true, new Base64Decoder);                  
+                  file.TransferTo(bytes);                  
+                  bytes.MessageEnd();                  
+                  RSA::PrivateKey privateKey;                  
+                  privateKey.Load(bytes);                  
+                  string recovered;                  
+                  RSAES_OAEP_SHA_Decryptor d( privateKey );                                              
+                  StringSource( string(pData.buf(), pData.size()), true,
                              new PK_DecryptorFilter( rng, d,
                                                     new StringSink( recovered )
                                                     )
                              );
-                      Ptr<Blob> ret = Ptr<Blob>(new Blob(recovered.c_str (), recovered.size()));
-                      return ret;
+                  Ptr<Blob> ret = Ptr<Blob>(new Blob(recovered.c_str (), recovered.size()));  
+                  return ret;
                 }
                 catch(const CryptoPP::Exception& e)
                 {
