@@ -90,6 +90,9 @@ namespace security
 
     static bool
     verifySignature(const Data & data, const Publickey & publickey);
+
+    static bool 
+    verifySignature(const Blob& unsignedData, const Blob& sigBits, const Publickey& publickey);
   };
 
 }//security

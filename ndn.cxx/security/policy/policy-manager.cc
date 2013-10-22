@@ -25,6 +25,35 @@ namespace ndn
 
 namespace security
 {
+
+  bool 
+  PolicyManager::verifySignature(const Blob & unsignedData, const Blob& sigBits, const Publickey & publickey)
+  {
+    using namespace CryptoPP;
+
+    bool result = false;
+    
+    DigestAlgorithm digestAlg = DIGEST_SHA256; //For temporary, should be assigned by Signature.getAlgorithm();
+    KeyType keyType = KEY_TYPE_RSA; //For temporary, should be assigned by Publickey.getKeyType();
+    if(KEY_TYPE_RSA == keyType)
+      {
+        RSA::PublicKey pubKey;
+        ByteQueue queue;
+
+        queue.Put((const byte*)publickey.getKeyBlob ().buf (), publickey.getKeyBlob ().size ());
+        pubKey.Load(queue);
+
+        if(DIGEST_SHA256 == digestAlg)
+          {
+            RSASS<PKCS1v15, SHA256>::Verifier verifier (pubKey);
+            result = verifier.VerifyMessage((const byte*) unsignedData.buf(), unsignedData.size(), (const byte*)sigBits.buf(), sigBits.size());            
+            _LOG_DEBUG("Signature verified? " << boolalpha << result);            
+          }
+      }
+   
+    return result;
+  }
+
   bool 
   PolicyManager::verifySignature(const Data & data, const Publickey & publickey)
   {
