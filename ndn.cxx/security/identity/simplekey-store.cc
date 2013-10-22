@@ -157,7 +157,6 @@ namespace ndn
             }
             catch(const CryptoPP::Exception& e)
             {
-              cerr << e.what() << endl;
               return NULL;
             }
             return NULL;
@@ -203,7 +202,6 @@ namespace ndn
                 }
                 catch(const CryptoPP::Exception& e)
                 {
-                    cerr << e.what() << endl;
                     return NULL;
                 }
             }
@@ -282,7 +280,7 @@ namespace ndn
                 if  (!SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_SYMMETRIC))
                 {
                   throw SecException("symmetric key doesn't exist");
-        	  return 0;
+        	  return NULL;
                 }
                 string symKeyName = SimpleKeyStore::nameTransform(keyURI) + "_key.txt";
                 string cipher, decoded;
@@ -331,7 +329,7 @@ namespace ndn
               if ( SimpleKeyStore::doesKeyExist(keyName, KEY_CLASS_SYMMETRIC))
               {
                 throw security::SecException("symmetric key exists");
-        	return ;
+        	return;
               }
 
               if (keyType == KEY_TYPE_AES)
