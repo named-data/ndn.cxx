@@ -292,14 +292,13 @@ namespace security
 
   void
   IdentityManager::signByCertificate (Data & data, const Name & certName)
-  { 
+  {
     Ptr<IdentityCertificate> certificate = getCertificate(certName);
     Name keyName = certificate->getPublicKeyName();
     Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
 
     //For temporary usage, we support RSA + SHA256 only, but will support more.
     Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
-    
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
     keyLocator.setKeyName (certName);

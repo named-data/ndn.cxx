@@ -201,7 +201,7 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    cout<<"keybits  "<<keyBits<<endl;
+//    cout<<"keybits  "<<keyBits<<endl;
     
     
     Ptr<Blob> keyBlob = getKeyBlobFromString(keyBits);
@@ -218,7 +218,7 @@ int main(int argc, char** argv)
     }
     
     
-    Ptr<security::Certificate> certificate = Create<security::Certificate>();
+    Ptr<security::IdentityCertificate> certificate = Create<security::IdentityCertificate>();
     certificate->setName(certName);
     certificate->setNotBefore(notBefore);
     certificate->setNotAfter(notAfter);
@@ -243,6 +243,8 @@ int main(int argc, char** argv)
     
     string outputFileName = getOutputFileName(certName.toUri());
     ofstream ofs(outputFileName.c_str());
+    
+  //  certificate->printCertificate();
     
     ofs << "-----BEGIN NDN ID CERT-----\n";
     string encoded;
