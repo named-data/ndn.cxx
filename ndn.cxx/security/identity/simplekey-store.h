@@ -15,9 +15,6 @@
 
 #include "privatekey-storage.h"
 
-#include <CoreFoundation/CoreFoundation.h>
-#include <Security/Security.h>
-#include <CoreServices/CoreServices.h>
 
 namespace ndn
 {

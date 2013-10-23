@@ -440,7 +440,7 @@ namespace ndn
         }
         
         void 
-        SimpleKeyStore::writeSymetricKey(const string &filename, const const Blob & pData)
+        SimpleKeyStore::writeSymetricKey(const string &filename, const Blob & pData)
         {
             ofstream file (filename.c_str());
             string key_content = string(pData.buf(),pData.size());
