@@ -24,6 +24,11 @@ namespace security
   IdentityCertificate::IdentityCertificate()
     : Certificate()
   {}
+
+  IdentityCertificate::IdentityCertificate(const IdentityCertificate& identityCertificate)
+    : Certificate(identityCertificate)
+    , m_publicKeyName(identityCertificate.m_publicKeyName)
+  {}
     
   IdentityCertificate::IdentityCertificate(const Data& data)
     : Certificate(data)

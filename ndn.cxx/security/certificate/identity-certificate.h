@@ -23,6 +23,8 @@ namespace security
   {
   public:
     IdentityCertificate();
+
+    IdentityCertificate(const IdentityCertificate& identityCertificate);
     
     IdentityCertificate(const Data& data);
 
