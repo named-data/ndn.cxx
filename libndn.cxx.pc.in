@@ -2,7 +2,7 @@ prefix=@PREFIX@
 libdir=@LIBDIR@
 includedir=@INCLUDEDIR@
 
-Name: libccnx-cpp
+Name: libndn.cxx
 Description: C++ NDN API (currently a wrapper on top of CCNx C library)
 Version: @VERSION@
 Libs: -L${libdir} -lndn.cxx
