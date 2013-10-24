@@ -32,7 +32,7 @@ namespace security
 {
 
   OSXPrivatekeyStorage::OSXPrivatekeyStorage (const string & keychainName)
-    : m_keychainName("" == keychainName ?  "NDN.keychain" : keychainName)
+    : m_keychainName("" == keychainName ?  "login.keychain" : keychainName)
   {
     OSStatus res = SecKeychainCreate (m_keychainName.c_str (), //Keychain path
                                       0,                       //Keychain password length
