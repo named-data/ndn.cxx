@@ -109,7 +109,6 @@ BOOST_AUTO_TEST_CASE (Advanced)
   BOOST_REQUIRE_THROW (Name ("http:/test"), error::Name);
 
   BOOST_CHECK_EQUAL (Name ("ndn:///").toUri (), "/");
-  BOOST_CHECK_EQUAL (Name ("ccnx:///").toUri (), "/");
   BOOST_CHECK_EQUAL (Name ("/").toUri (), "/");
   BOOST_CHECK_EQUAL (Name ("///").toUri (), "/");
   BOOST_CHECK_EQUAL (Name ("////////////////////////////////////////////////").toUri (), "/");

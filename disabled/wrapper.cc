@@ -13,7 +13,7 @@
 #include "wrapper.h"
 
 extern "C" {
-#include <ccn/fetch.h>
+#include <ndn/fetch.h>
 }
 #include <poll.h>
 #include <boost/throw_exception.hpp>
@@ -27,7 +27,7 @@ extern "C" {
 #include "executor/executor.h"
 
 #include "logging.h"
-#include "ndn.cxx/wire/ccnb.h"
+#include "ndn.cxx/wire/ndnb.h"
 
 
 INIT_LOGGER ("ndn.Wrapper");
@@ -41,64 +41,64 @@ using namespace boost;
 namespace ndn {
 
 // hack to enable fake signatures
-// min length for signature field is 16, as defined in ccn_buf_decoder.c:728
+// min length for signature field is 16, as defined in ndn_buf_decoder.c:728
 const int DEFAULT_SIGNATURE_SIZE = 16;
 
-// Although ccn_buf_decoder.c:745 defines minimum length 16, something else is checking and only 32-byte fake value is accepted by ccnd
+// Although ndn_buf_decoder.c:745 defines minimum length 16, something else is checking and only 32-byte fake value is accepted by ndnd
 const int PUBLISHER_KEY_SIZE = 32;
 
 static int
-ccn_encode_garbage_Signature(struct ccn_charbuf *buf)
+ndn_encode_garbage_Signature(struct ndn_charbuf *buf)
 {
     int res = 0;
 
-    res |= ccn_charbuf_append_tt(buf, CCN_DTAG_Signature, CCN_DTAG);
+    res |= ndn_charbuf_append_tt(buf, NDN_DTAG_Signature, NDN_DTAG);
 
-    // Let's cheat more.  Default signing algorithm in ccnd is SHA256, so we just need add 32 bytes of garbage
+    // Let's cheat more.  Default signing algorithm in ndnd is SHA256, so we just need add 32 bytes of garbage
     static char garbage [DEFAULT_SIGNATURE_SIZE];
 
     // digest and witness fields are optional, so use default ones
 
-    res |= ccn_charbuf_append_tt(buf, CCN_DTAG_SignatureBits, CCN_DTAG);
-    res |= ccn_charbuf_append_tt(buf, DEFAULT_SIGNATURE_SIZE, CCN_BLOB);
-    res |= ccn_charbuf_append(buf, garbage, DEFAULT_SIGNATURE_SIZE);
-    res |= ccn_charbuf_append_closer(buf);
+    res |= ndn_charbuf_append_tt(buf, NDN_DTAG_SignatureBits, NDN_DTAG);
+    res |= ndn_charbuf_append_tt(buf, DEFAULT_SIGNATURE_SIZE, NDN_BLOB);
+    res |= ndn_charbuf_append(buf, garbage, DEFAULT_SIGNATURE_SIZE);
+    res |= ndn_charbuf_append_closer(buf);
 
-    res |= ccn_charbuf_append_closer(buf);
+    res |= ndn_charbuf_append_closer(buf);
 
     return(res == 0 ? 0 : -1);
 }
 
 static int
-ccn_pack_unsigned_ContentObject(struct ccn_charbuf *buf,
-                                const struct ccn_charbuf *Name,
-                                const struct ccn_charbuf *SignedInfo,
+ndn_pack_unsigned_ContentObject(struct ndn_charbuf *buf,
+                                const struct ndn_charbuf *Name,
+                                const struct ndn_charbuf *SignedInfo,
                                 const void *data,
                                 size_t size)
 {
     int res = 0;
-    struct ccn_charbuf *content_header;
+    struct ndn_charbuf *content_header;
     size_t closer_start;
 
-    content_header = ccn_charbuf_create();
-    res |= ccn_charbuf_append_tt(content_header, CCN_DTAG_Content, CCN_DTAG);
+    content_header = ndn_charbuf_create();
+    res |= ndn_charbuf_append_tt(content_header, NDN_DTAG_Content, NDN_DTAG);
     if (size != 0)
-        res |= ccn_charbuf_append_tt(content_header, size, CCN_BLOB);
+        res |= ndn_charbuf_append_tt(content_header, size, NDN_BLOB);
     closer_start = content_header->length;
-    res |= ccn_charbuf_append_closer(content_header);
+    res |= ndn_charbuf_append_closer(content_header);
     if (res < 0)
         return(-1);
 
-    res |= ccn_charbuf_append_tt(buf, CCN_DTAG_ContentObject, CCN_DTAG);
+    res |= ndn_charbuf_append_tt(buf, NDN_DTAG_ContentObject, NDN_DTAG);
 
-    res |= ccn_encode_garbage_Signature(buf);
+    res |= ndn_encode_garbage_Signature(buf);
 
-    res |= ccn_charbuf_append_charbuf(buf, Name);
-    res |= ccn_charbuf_append_charbuf(buf, SignedInfo);
-    res |= ccnb_append_tagged_blob(buf, CCN_DTAG_Content, data, size);
-    res |= ccn_charbuf_append_closer(buf);
+    res |= ndn_charbuf_append_charbuf(buf, Name);
+    res |= ndn_charbuf_append_charbuf(buf, SignedInfo);
+    res |= ndnb_append_tagged_blob(buf, NDN_DTAG_Content, data, size);
+    res |= ndn_charbuf_append_closer(buf);
 
-    ccn_charbuf_destroy(&content_header);
+    ndn_charbuf_destroy(&content_header);
     return(res == 0 ? 0 : -1);
 }
 
@@ -113,21 +113,21 @@ Wrapper::Wrapper()
 }
 
 void
-Wrapper::connectCcnd()
+Wrapper::connectNdnd()
 {
   if (m_handle != 0) {
-    ccn_disconnect (m_handle);
-    //ccn_destroy (&m_handle);
+    ndn_disconnect (m_handle);
+    //ndn_destroy (&m_handle);
   }
   else
     {
-      m_handle = ccn_create ();
+      m_handle = ndn_create ();
     }
 
   UniqueRecLock lock(m_mutex);
-  if (ccn_connect(m_handle, NULL) < 0)
+  if (ndn_connect(m_handle, NULL) < 0)
   {
-    BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("connection to ccnd failed"));
+    BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("connection to ndnd failed"));
   }
   m_connected = true;
 
@@ -154,8 +154,8 @@ Wrapper::~Wrapper()
 void
 Wrapper::start () // called automatically in constructor
 {
-  connectCcnd();
-  m_thread = thread (&Wrapper::ccnLoop, this);
+  connectNdnd();
+  m_thread = thread (&Wrapper::ndnLoop, this);
   m_executor->start();
 }
 
@@ -174,14 +174,14 @@ Wrapper::shutdown () // called in destructor, but can called manually
     {
       m_thread.join ();
 
-      ccn_disconnect (m_handle);
-      //ccn_destroy (&m_handle);
+      ndn_disconnect (m_handle);
+      //ndn_destroy (&m_handle);
       m_connected = false;
     }
 }
 
 void
-Wrapper::ccnLoop ()
+Wrapper::ndnLoop ()
 {
   static boost::mt19937 randomGenerator (static_cast<unsigned int> (std::time (0)));
   static boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rangeUniformRandom (randomGenerator, uniform_int<> (0,1000));
@@ -193,16 +193,16 @@ Wrapper::ccnLoop ()
           int res = 0;
           {
             UniqueRecLock lock(m_mutex);
-            res = ccn_run (m_handle, 0);
+            res = ndn_run (m_handle, 0);
           }
 
           if (!m_running) break;
 
           if (res < 0) {
-            _LOG_ERROR ("ccn_run returned negative status: " << res);
+            _LOG_ERROR ("ndn_run returned negative status: " << res);
 
             BOOST_THROW_EXCEPTION (Error::ndnOperation()
-                                   << errmsg_info_str("ccn_run returned error"));
+                                   << errmsg_info_str("ndn_run returned error"));
           }
 
 
@@ -210,22 +210,22 @@ Wrapper::ccnLoop ()
           {
             UniqueRecLock lock(m_mutex);
 
-            pfds[0].fd = ccn_get_connection_fd (m_handle);
+            pfds[0].fd = ndn_get_connection_fd (m_handle);
             pfds[0].events = POLLIN;
-            if (ccn_output_is_pending (m_handle))
+            if (ndn_output_is_pending (m_handle))
               pfds[0].events |= POLLOUT;
           }
 
           int ret = poll (pfds, 1, 1);
           if (ret < 0)
             {
-              BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("ccnd socket failed (probably ccnd got stopped)"));
+              BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("ndnd socket failed (probably ndnd got stopped)"));
             }
         }
         catch (Error::ndnOperation &e)
         {
           m_connected = false;
-          // probably ccnd has been stopped
+          // probably ndnd has been stopped
           // try reconnect with sleep
           int interval = 1;
           int maxInterval = 32;
@@ -235,8 +235,8 @@ Wrapper::ccnLoop ()
             {
               this_thread::sleep (boost::get_system_time () +  time::Seconds (interval) + time::Milliseconds (rangeUniformRandom ()));
 
-              connectCcnd ();
-              _LOG_DEBUG("reconnect to ccnd succeeded");
+              connectNdnd ();
+              _LOG_DEBUG("reconnect to ndnd succeeded");
               break;
             }
             catch (Error::ndnOperation &e)
@@ -275,9 +275,9 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
       }
   }
 
-  ccn_charbuf *content = ccn_charbuf_create();
+  ndn_charbuf *content = ndn_charbuf_create();
 
-  struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
+  struct ndn_signing_params sp = NDN_SIGNING_PARAMS_INIT;
   sp.freshness = freshness;
 
   Name keyName;
@@ -286,7 +286,7 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
   {
     // use default key name
     CharbufPtr defaultKeyNamePtr = boost::make_shared<Charbuf>();
-    ccn_get_public_key_and_name(m_handle, &sp, NULL, NULL, defaultKeyNamePtr->getBuf());
+    ndn_get_public_key_and_name(m_handle, &sp, NULL, NULL, defaultKeyNamePtr->getBuf());
     keyName = Name(*defaultKeyNamePtr);
 
     _LOG_DEBUG ("DEFAULT KEY NAME: " << keyName);
@@ -296,31 +296,31 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
     keyName = keyNameParam;
   }
 
-  if (sp.template_ccnb == NULL)
+  if (sp.template_ndnb == NULL)
   {
-    sp.template_ccnb = ccn_charbuf_create();
-    ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
+    sp.template_ndnb = ndn_charbuf_create();
+    ndn_charbuf_append_tt(sp.template_ndnb, NDN_DTAG_SignedInfo, NDN_DTAG);
   }
   // no idea what the following 3 lines do, but it was there
-  else if (sp.template_ccnb->length > 0) {
-      sp.template_ccnb->length--;
+  else if (sp.template_ndnb->length > 0) {
+      sp.template_ndnb->length--;
   }
-  ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
-  ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
+  ndn_charbuf_append_tt(sp.template_ndnb, NDN_DTAG_KeyLocator, NDN_DTAG);
+  ndn_charbuf_append_tt(sp.template_ndnb, NDN_DTAG_KeyName, NDN_DTAG);
 
   charbuf_stream keyStream;
-  wire::Ccnb::appendName (keyStream, keyName);
+  wire::Ndnb::appendName (keyStream, keyName);
   
-  ccn_charbuf_append(sp.template_ccnb, keyStream.buf ().getBuf ()->buf, keyStream.buf ().getBuf ()->length);
-  ccn_charbuf_append_closer(sp.template_ccnb); // </KeyName>
-  ccn_charbuf_append_closer(sp.template_ccnb); // </KeyLocator>
-  sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
-  ccn_charbuf_append_closer(sp.template_ccnb); // </SignedInfo>
+  ndn_charbuf_append(sp.template_ndnb, keyStream.buf ().getBuf ()->buf, keyStream.buf ().getBuf ()->length);
+  ndn_charbuf_append_closer(sp.template_ndnb); // </KeyName>
+  ndn_charbuf_append_closer(sp.template_ndnb); // </KeyLocator>
+  sp.sp_flags |= NDN_SP_TEMPL_KEY_LOCATOR;
+  ndn_charbuf_append_closer(sp.template_ndnb); // </SignedInfo>
 
   charbuf_stream nameStream;
-  wire::Ccnb::appendName (nameStream, name);
+  wire::Ndnb::appendName (nameStream, name);
   
-  if (ccn_sign_content(m_handle, content, nameStream.buf ().getBuf (), &sp, buf, len) != 0)
+  if (ndn_sign_content(m_handle, content, nameStream.buf ().getBuf (), &sp, buf, len) != 0)
   {
     BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("sign content failed"));
   }
@@ -328,19 +328,19 @@ Wrapper::createContentObject(const Name  &name, const void *buf, size_t len, int
   Bytes bytes;
   readRaw(bytes, content->buf, content->length);
 
-  ccn_charbuf_destroy (&content);
-  if (sp.template_ccnb != NULL)
+  ndn_charbuf_destroy (&content);
+  if (sp.template_ndnb != NULL)
   {
-    ccn_charbuf_destroy (&sp.template_ccnb);
+    ndn_charbuf_destroy (&sp.template_ndnb);
   }
 
   return bytes;
 }
 
 int
-Wrapper::putToCcnd (const Bytes &contentObject)
+Wrapper::putToNdnd (const Bytes &contentObject)
 {
-  _LOG_TRACE (">> putToCcnd");
+  _LOG_TRACE (">> putToNdnd");
   UniqueRecLock lock(m_mutex);
   if (!m_running || !m_connected)
     {
@@ -349,14 +349,14 @@ Wrapper::putToCcnd (const Bytes &contentObject)
     }
 
 
-  if (ccn_put(m_handle, head(contentObject), contentObject.size()) < 0)
+  if (ndn_put(m_handle, head(contentObject), contentObject.size()) < 0)
   {
-    _LOG_ERROR ("ccn_put failed");
-    // BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("ccnput failed"));
+    _LOG_ERROR ("ndn_put failed");
+    // BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("ndnput failed"));
   }
   else
     {
-      _LOG_DEBUG ("<< putToCcnd");
+      _LOG_DEBUG ("<< putToNdnd");
     }
 
   return 0;
@@ -367,7 +367,7 @@ Wrapper::publishData (const Name &name, const unsigned char *buf, size_t len, in
 {
   _LOG_TRACE ("publishData: " << name);
   Bytes co = createContentObject(name, buf, len, freshness, keyName);
-  return putToCcnd(co);
+  return putToNdnd(co);
 }
 
 int
@@ -383,32 +383,32 @@ Wrapper::publishUnsignedData(const Name &name, const unsigned char *buf, size_t 
       }
   }
 
-  ccn_charbuf *content = ccn_charbuf_create();
-  ccn_charbuf *signed_info = ccn_charbuf_create();
+  ndn_charbuf *content = ndn_charbuf_create();
+  ndn_charbuf *signed_info = ndn_charbuf_create();
 
   static char fakeKey[PUBLISHER_KEY_SIZE];
 
-  int res = ccn_signed_info_create(signed_info,
+  int res = ndn_signed_info_create(signed_info,
                                    fakeKey, PUBLISHER_KEY_SIZE,
                                    NULL,
-                                   CCN_CONTENT_DATA,
+                                   NDN_CONTENT_DATA,
                                    freshness,
                                    NULL,
-                                   NULL  // ccnd is happy with absent key locator and key itself... ha ha
+                                   NULL  // ndnd is happy with absent key locator and key itself... ha ha
                                    );
 
   charbuf_stream nameStream;
-  wire::Ccnb::appendName (nameStream, name);
+  wire::Ndnb::appendName (nameStream, name);
 
-  ccn_pack_unsigned_ContentObject(content, nameStream.buf ().getBuf (), signed_info, buf, len);
+  ndn_pack_unsigned_ContentObject(content, nameStream.buf ().getBuf (), signed_info, buf, len);
 
   Bytes bytes;
   readRaw(bytes, content->buf, content->length);
 
-  ccn_charbuf_destroy (&content);
-  ccn_charbuf_destroy (&signed_info);
+  ndn_charbuf_destroy (&content);
+  ndn_charbuf_destroy (&signed_info);
 
-  return putToCcnd (bytes);
+  return putToNdnd (bytes);
 }
 
 
@@ -419,10 +419,10 @@ deleterInInterestTuple (tuple<Wrapper::InterestCallback *, ExecutorPtr> *tuple)
   delete tuple;
 }
 
-static ccn_upcall_res
-incomingInterest(ccn_closure *selfp,
-                 ccn_upcall_kind kind,
-                 ccn_upcall_info *info)
+static ndn_upcall_res
+incomingInterest(ndn_closure *selfp,
+                 ndn_upcall_kind kind,
+                 ndn_upcall_info *info)
 {
   Wrapper::InterestCallback *f;
   ExecutorPtr executor;
@@ -431,32 +431,32 @@ incomingInterest(ccn_closure *selfp,
 
   switch (kind)
     {
-    case CCN_UPCALL_FINAL: // effective in unit tests
+    case NDN_UPCALL_FINAL: // effective in unit tests
       // delete closure;
       executor->execute (bind (deleterInInterestTuple, realData));
 
       delete selfp;
-      _LOG_TRACE ("<< incomingInterest with CCN_UPCALL_FINAL");
-      return CCN_UPCALL_RESULT_OK;
+      _LOG_TRACE ("<< incomingInterest with NDN_UPCALL_FINAL");
+      return NDN_UPCALL_RESULT_OK;
 
-    case CCN_UPCALL_INTEREST:
-      _LOG_TRACE (">> incomingInterest upcall: " << Name(info->interest_ccnb, info->interest_comps));
+    case NDN_UPCALL_INTEREST:
+      _LOG_TRACE (">> incomingInterest upcall: " << Name(info->interest_ndnb, info->interest_comps));
       break;
 
     default:
-      _LOG_TRACE ("<< incomingInterest with CCN_UPCALL_RESULT_OK: " << Name(info->interest_ccnb, info->interest_comps));
-      return CCN_UPCALL_RESULT_OK;
+      _LOG_TRACE ("<< incomingInterest with NDN_UPCALL_RESULT_OK: " << Name(info->interest_ndnb, info->interest_comps));
+      return NDN_UPCALL_RESULT_OK;
     }
 
   InterestPtr interest = make_shared<Interest> (info->pi);
-  interest->setName (Name (info->interest_ccnb, info->interest_comps));
+  interest->setName (Name (info->interest_ndnb, info->interest_comps));
 
   executor->execute (bind (*f, interest));
   // this will be run in executor
   // (*f) (interest);
   // closure->runInterestCallback(interest);
 
-  return CCN_UPCALL_RESULT_OK;
+  return NDN_UPCALL_RESULT_OK;
 }
 
 static void
@@ -466,10 +466,10 @@ deleterInDataTuple (tuple<Closure *, ExecutorPtr, InterestPtr> *tuple)
   delete tuple;
 }
 
-static ccn_upcall_res
-incomingData(ccn_closure *selfp,
-             ccn_upcall_kind kind,
-             ccn_upcall_info *info)
+static ndn_upcall_res
+incomingData(ndn_closure *selfp,
+             ndn_upcall_kind kind,
+             ndn_upcall_info *info)
 {
   // Closure *cp = static_cast<Closure *> (selfp->data);
   Closure *cp;
@@ -480,54 +480,54 @@ incomingData(ccn_closure *selfp,
 
   switch (kind)
     {
-    case CCN_UPCALL_FINAL:  // effecitve in unit tests
+    case NDN_UPCALL_FINAL:  // effecitve in unit tests
       executor->execute (bind (deleterInDataTuple, realData));
 
       cp = NULL;
       delete selfp;
-      _LOG_TRACE ("<< incomingData with CCN_UPCALL_FINAL");
-      return CCN_UPCALL_RESULT_OK;
+      _LOG_TRACE ("<< incomingData with NDN_UPCALL_FINAL");
+      return NDN_UPCALL_RESULT_OK;
 
-    case CCN_UPCALL_CONTENT:
-      _LOG_TRACE (">> incomingData content upcall: " << Name (info->content_ccnb, info->content_comps));
+    case NDN_UPCALL_CONTENT:
+      _LOG_TRACE (">> incomingData content upcall: " << Name (info->content_ndnb, info->content_comps));
       break;
 
     // this is the case where the intentionally unsigned packets coming (in Encapsulation case)
-    case CCN_UPCALL_CONTENT_BAD:
-      _LOG_TRACE (">> incomingData content bad upcall: " << Name (info->content_ccnb, info->content_comps));
+    case NDN_UPCALL_CONTENT_BAD:
+      _LOG_TRACE (">> incomingData content bad upcall: " << Name (info->content_ndnb, info->content_comps));
       break;
 
-    // always ask ccnd to try to fetch the key
-    case CCN_UPCALL_CONTENT_UNVERIFIED:
-      _LOG_TRACE (">> incomingData content unverified upcall: " << Name (info->content_ccnb, info->content_comps));
+    // always ask ndnd to try to fetch the key
+    case NDN_UPCALL_CONTENT_UNVERIFIED:
+      _LOG_TRACE (">> incomingData content unverified upcall: " << Name (info->content_ndnb, info->content_comps));
       break;
 
-    case CCN_UPCALL_INTEREST_TIMED_OUT: {
+    case NDN_UPCALL_INTEREST_TIMED_OUT: {
       if (cp != NULL)
       {
-        Name interestName (info->interest_ccnb, info->interest_comps);
-        _LOG_TRACE ("<< incomingData timeout: " << Name (info->interest_ccnb, info->interest_comps));
+        Name interestName (info->interest_ndnb, info->interest_comps);
+        _LOG_TRACE ("<< incomingData timeout: " << Name (info->interest_ndnb, info->interest_comps));
         executor->execute (bind (&Closure::runTimeoutCallback, cp, interestName, *cp, interest));
       }
       else
         {
-          _LOG_TRACE ("<< incomingData timeout, but callback is not set...: " << Name (info->interest_ccnb, info->interest_comps));
+          _LOG_TRACE ("<< incomingData timeout, but callback is not set...: " << Name (info->interest_ndnb, info->interest_comps));
         }
-      return CCN_UPCALL_RESULT_OK;
+      return NDN_UPCALL_RESULT_OK;
     }
 
     default:
       _LOG_TRACE(">> unknown upcall type");
-      return CCN_UPCALL_RESULT_OK;
+      return NDN_UPCALL_RESULT_OK;
     }
 
-  PcoPtr pco = make_shared<ParsedContentObject> (info->content_ccnb, info->pco->offset[CCN_PCO_E]);
+  PcoPtr pco = make_shared<ParsedContentObject> (info->content_ndnb, info->pco->offset[NDN_PCO_E]);
 
   // this will be run in executor
   executor->execute (bind (&Closure::runDataCallback, cp, pco->name (), pco));
   _LOG_TRACE (">> incomingData");
 
-  return CCN_UPCALL_RESULT_OK;
+  return NDN_UPCALL_RESULT_OK;
 }
 
 int Wrapper::sendInterest (const Interest &interest, const Closure &closure)
@@ -542,7 +542,7 @@ int Wrapper::sendInterest (const Interest &interest, const Closure &closure)
       }
   }
 
-  ccn_closure *dataClosure = new ccn_closure;
+  ndn_closure *dataClosure = new ndn_closure;
 
   // Closure *myClosure = new ExecutorClosure(closure, m_executor);
   Closure *myClosure = closure.dup ();
@@ -553,17 +553,17 @@ int Wrapper::sendInterest (const Interest &interest, const Closure &closure)
   UniqueRecLock lock(m_mutex);
 
   charbuf_stream nameStream;
-  wire::Ccnb::appendName (nameStream, interest.getName ());
+  wire::Ndnb::appendName (nameStream, interest.getName ());
 
   charbuf_stream interestStream;
-  wire::Ccnb::appendInterest (interestStream, interest);
+  wire::Ndnb::appendInterest (interestStream, interest);
 
-  if (ccn_express_interest (m_handle, nameStream.buf ().getBuf (),
+  if (ndn_express_interest (m_handle, nameStream.buf ().getBuf (),
                             dataClosure,
                             interestStream.buf ().getBuf ()
                             ) < 0)
   {
-    _LOG_ERROR ("<< sendInterest: ccn_express_interest FAILED!!!");
+    _LOG_ERROR ("<< sendInterest: ndn_express_interest FAILED!!!");
   }
 
   return 0;
@@ -578,7 +578,7 @@ int Wrapper::setInterestFilter (const Name &prefix, const InterestCallback &inte
     return -1;
   }
 
-  ccn_closure *interestClosure = new ccn_closure;
+  ndn_closure *interestClosure = new ndn_closure;
 
   // interestClosure->data = new ExecutorInterestClosure(interestCallback, m_executor);
 
@@ -586,12 +586,12 @@ int Wrapper::setInterestFilter (const Name &prefix, const InterestCallback &inte
   interestClosure->p = &incomingInterest;
 
   charbuf_stream prefixStream;
-  wire::Ccnb::appendName (prefixStream, prefix);
+  wire::Ndnb::appendName (prefixStream, prefix);
 
-  int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), interestClosure);
+  int ret = ndn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), interestClosure);
   if (ret < 0)
   {
-    _LOG_ERROR ("<< setInterestFilter: ccn_set_interest_filter FAILED");
+    _LOG_ERROR ("<< setInterestFilter: ndn_set_interest_filter FAILED");
   }
 
   if (record)
@@ -613,9 +613,9 @@ Wrapper::clearInterestFilter (const Name &prefix, bool record/* = true*/)
     return;
 
   charbuf_stream prefixStream;
-  wire::Ccnb::appendName (prefixStream, prefix);
+  wire::Ndnb::appendName (prefixStream, prefix);
 
-  int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), 0);
+  int ret = ndn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), 0);
   if (ret < 0)
   {
   }
@@ -631,8 +631,8 @@ Wrapper::clearInterestFilter (const Name &prefix, bool record/* = true*/)
 Name
 Wrapper::getLocalPrefix ()
 {
-  struct ccn * tmp_handle = ccn_create ();
-  int res = ccn_connect (tmp_handle, NULL);
+  struct ndn * tmp_handle = ndn_create ();
+  int res = ndn_connect (tmp_handle, NULL);
   if (res < 0)
     {
       return Name();
@@ -640,27 +640,27 @@ Wrapper::getLocalPrefix ()
 
   string retval = "";
 
-  struct ccn_charbuf *templ = ccn_charbuf_create();
-  ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
-  ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
-  ccn_charbuf_append_closer(templ); /* </Name> */
+  struct ndn_charbuf *templ = ndn_charbuf_create();
+  ndn_charbuf_append_tt(templ, NDN_DTAG_Interest, NDN_DTAG);
+  ndn_charbuf_append_tt(templ, NDN_DTAG_Name, NDN_DTAG);
+  ndn_charbuf_append_closer(templ); /* </Name> */
   // XXX - use pubid if possible
-  ccn_charbuf_append_tt(templ, CCN_DTAG_MaxSuffixComponents, CCN_DTAG);
-  ccnb_append_number(templ, 1);
-  ccn_charbuf_append_closer(templ); /* </MaxSuffixComponents> */
-  ccnb_tagged_putf(templ, CCN_DTAG_Scope, "%d", 2);
-  ccn_charbuf_append_closer(templ); /* </Interest> */
+  ndn_charbuf_append_tt(templ, NDN_DTAG_MaxSuffixComponents, NDN_DTAG);
+  ndnb_append_number(templ, 1);
+  ndn_charbuf_append_closer(templ); /* </MaxSuffixComponents> */
+  ndnb_tagged_putf(templ, NDN_DTAG_Scope, "%d", 2);
+  ndn_charbuf_append_closer(templ); /* </Interest> */
 
-  struct ccn_charbuf *name = ccn_charbuf_create ();
-  res = ccn_name_from_uri (name, "/local/ndn/prefix");
+  struct ndn_charbuf *name = ndn_charbuf_create ();
+  res = ndn_name_from_uri (name, "/local/ndn/prefix");
   if (res < 0) {
   }
   else
     {
-      struct ccn_fetch *fetch = ccn_fetch_new (tmp_handle);
+      struct ndn_fetch *fetch = ndn_fetch_new (tmp_handle);
 
-      struct ccn_fetch_stream *stream = ccn_fetch_open (fetch, name, "/local/ndn/prefix",
-                                                        NULL, 4, CCN_V_HIGHEST, 0);
+      struct ndn_fetch_stream *stream = ndn_fetch_open (fetch, name, "/local/ndn/prefix",
+                                                        NULL, 4, NDN_V_HIGHEST, 0);
       if (stream == NULL) {
       }
       else
@@ -670,7 +670,7 @@ Wrapper::getLocalPrefix ()
           int counter = 0;
           char buf[256];
           while (true) {
-            res = ccn_fetch_read (stream, buf, sizeof(buf));
+            res = ndn_fetch_read (stream, buf, sizeof(buf));
 
             if (res == 0) {
               break;
@@ -678,34 +678,34 @@ Wrapper::getLocalPrefix ()
 
             if (res > 0) {
               os << string(buf, res);
-            } else if (res == CCN_FETCH_READ_NONE) {
+            } else if (res == NDN_FETCH_READ_NONE) {
               if (counter < 2)
                 {
-                  ccn_run(tmp_handle, 1000);
+                  ndn_run(tmp_handle, 1000);
                   counter ++;
                 }
               else
                 {
                   break;
                 }
-            } else if (res == CCN_FETCH_READ_END) {
+            } else if (res == NDN_FETCH_READ_END) {
               break;
-            } else if (res == CCN_FETCH_READ_TIMEOUT) {
+            } else if (res == NDN_FETCH_READ_TIMEOUT) {
               break;
             } else {
               break;
             }
           }
           retval = os.str ();
-          stream = ccn_fetch_close(stream);
+          stream = ndn_fetch_close(stream);
         }
-      fetch = ccn_fetch_destroy(fetch);
+      fetch = ndn_fetch_destroy(fetch);
     }
 
-  ccn_charbuf_destroy (&name);
+  ndn_charbuf_destroy (&name);
 
-  ccn_disconnect (tmp_handle);
-  ccn_destroy (&tmp_handle);
+  ndn_disconnect (tmp_handle);
+  ndn_destroy (&tmp_handle);
 
   boost::algorithm::trim(retval);
   return Name(retval);

@@ -33,7 +33,7 @@ public:
     OTHER
   };
   ParsedContentObject(const unsigned char *data, size_t len, bool verified = false);
-  ParsedContentObject(const unsigned char *data, const ccn_parsed_ContentObject &pco, bool verified = false);
+  ParsedContentObject(const unsigned char *data, const ndn_parsed_ContentObject &pco, bool verified = false);
   ParsedContentObject(const Bytes &bytes, bool verified = false);
   ParsedContentObject(const ParsedContentObject &other, bool verified = false);
   virtual ~ParsedContentObject();
@@ -68,7 +68,7 @@ public:
   const unsigned char *
   msg() const { return head(m_bytes); }
 
-  const ccn_parsed_ContentObject *
+  const ndn_parsed_ContentObject *
   pco() const { return &m_pco; }
 
 private:
@@ -76,8 +76,8 @@ private:
   init(const unsigned char *data, size_t len);
 
 protected:
-  ccn_parsed_ContentObject m_pco;
-  ccn_indexbuf *m_comps;
+  ndn_parsed_ContentObject m_pco;
+  ndn_indexbuf *m_comps;
   Bytes m_bytes;
   bool m_verified;
   bool m_integrityChecked;

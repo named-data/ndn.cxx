@@ -15,9 +15,12 @@
 #include "wrapper.h"
 
 
+#define ndn ndn_client
 extern "C" {
-#include <ccn/fetch.h>
+#include <ndn/fetch.h>
 }
+#undef ndn
+
 #include <poll.h>
 #include <boost/throw_exception.hpp>
 #include <boost/random.hpp>
@@ -31,7 +34,7 @@ extern "C" {
 #include "executor/executor.h"
 
 #include "logging.h"
-#include "ndn.cxx/wire/ccnb.h"
+#include "ndn.cxx/wire/ndnb.h"
 
 INIT_LOGGER ("ndn.Wrapper");
 
@@ -55,21 +58,21 @@ namespace ndn {
   }
 
   void
-  Wrapper::connectCcnd()
+  Wrapper::connectNdnd()
   {
     if (m_handle != 0) {
-      ccn_disconnect (m_handle);
-      //ccn_destroy (&m_handle);
+      ndn_disconnect (m_handle);
+      //ndn_destroy (&m_handle);
     }
     else
       {
-        m_handle = ccn_create ();
+        m_handle = ndn_create ();
       }
 
     UniqueRecLock lock(m_mutex);
-    if (ccn_connect(m_handle, NULL) < 0)
+    if (ndn_connect(m_handle, NULL) < 0)
       {
-        BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("connection to ccnd failed"));
+        BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("connection to ndnd failed"));
       }
     m_connected = true;
     
@@ -96,8 +99,8 @@ namespace ndn {
   void
   Wrapper::start () // called automatically in constructor
   {
-    connectCcnd();
-    m_thread = thread (&Wrapper::ccnLoop, this);
+    connectNdnd();
+    m_thread = thread (&Wrapper::ndnLoop, this);
     m_executor->start();
   }
 
@@ -116,14 +119,14 @@ namespace ndn {
       {
         m_thread.join ();
 
-        ccn_disconnect (m_handle);
-      //ccn_destroy (&m_handle);
+        ndn_disconnect (m_handle);
+      //ndn_destroy (&m_handle);
         m_connected = false;
       }
   }
 
   void
-  Wrapper::ccnLoop ()
+  Wrapper::ndnLoop ()
   {
     static boost::mt19937 randomGenerator (static_cast<unsigned int> (std::time (0)));
     static boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rangeUniformRandom (randomGenerator, uniform_int<> (0,1000));
@@ -135,16 +138,16 @@ namespace ndn {
             int res = 0;
             {
               UniqueRecLock lock(m_mutex);
-              res = ccn_run (m_handle, 0);
+              res = ndn_run (m_handle, 0);
             }
 
             if (!m_running) break;
             
             if (res < 0) {
-              _LOG_ERROR ("ccn_run returned negative status: " << res);
+              _LOG_ERROR ("ndn_run returned negative status: " << res);
               
               BOOST_THROW_EXCEPTION (Error::ndnOperation()
-                                     << errmsg_info_str("ccn_run returned error"));
+                                     << errmsg_info_str("ndn_run returned error"));
             }
 
 
@@ -152,22 +155,22 @@ namespace ndn {
             {
               UniqueRecLock lock(m_mutex);
 
-              pfds[0].fd = ccn_get_connection_fd (m_handle);
+              pfds[0].fd = ndn_get_connection_fd (m_handle);
               pfds[0].events = POLLIN;
-              if (ccn_output_is_pending (m_handle))
+              if (ndn_output_is_pending (m_handle))
                 pfds[0].events |= POLLOUT;
             }
 
             int ret = poll (pfds, 1, 1);
             if (ret < 0)
               {
-                BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("ccnd socket failed (probably ccnd got stopped)"));
+                BOOST_THROW_EXCEPTION (Error::ndnOperation() << errmsg_info_str("ndnd socket failed (probably ndnd got stopped)"));
               }
           }
         catch (Error::ndnOperation &e)
           {
             m_connected = false;
-            // probably ccnd has been stopped
+            // probably ndnd has been stopped
             // try reconnect with sleep
             int interval = 1;
             int maxInterval = 32;
@@ -177,8 +180,8 @@ namespace ndn {
                   {
                     this_thread::sleep (boost::get_system_time () +  time::Seconds (interval) + time::Milliseconds (rangeUniformRandom ()));
 
-                    connectCcnd ();
-                    _LOG_DEBUG("reconnect to ccnd succeeded");
+                    connectNdnd ();
+                    _LOG_DEBUG("reconnect to ndnd succeeded");
                     break;
                   }
                 catch (Error::ndnOperation &e)
@@ -206,9 +209,9 @@ namespace ndn {
   }
 
   int
-  Wrapper::putToCcnd (const Blob & dataBlob)
+  Wrapper::putToNdnd (const Blob & dataBlob)
   {
-    _LOG_TRACE (">> putToCcnd");
+    _LOG_TRACE (">> putToNdnd");
     UniqueRecLock lock(m_mutex);
     if (!m_running || !m_connected)
       {
@@ -217,14 +220,14 @@ namespace ndn {
       }
 
 
-    if (ccn_put(m_handle, dataBlob.buf(), dataBlob.size()) < 0)
+    if (ndn_put(m_handle, dataBlob.buf(), dataBlob.size()) < 0)
       {
-        _LOG_ERROR ("ccn_put failed");
-        // BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("ccnput failed"));
+        _LOG_ERROR ("ndn_put failed");
+        // BOOST_THROW_EXCEPTION(Error::ndnOperation() << errmsg_info_str("ndnput failed"));
       }
     else
       {
-        _LOG_DEBUG ("<< putToCcnd");
+        _LOG_DEBUG ("<< putToNdnd");
       }
 
     return 0;
@@ -235,7 +238,7 @@ namespace ndn {
   {
     _LOG_TRACE("publishDataByCert: " << data.getName ());
     m_keychain->sign(data, certificateName);
-    return putToCcnd(*data.encodeToWire());
+    return putToNdnd(*data.encodeToWire());
   }
 
   int 
@@ -243,7 +246,7 @@ namespace ndn {
   {
     _LOG_TRACE("publishDataByCert: " << data.getName ());
     m_keychain->signByIdentity(data, identityName);
-    return putToCcnd(*data.encodeToWire());
+    return putToNdnd(*data.encodeToWire());
   }
 
   int
@@ -281,10 +284,10 @@ namespace ndn {
     delete tuple;
   }
 
-  static ccn_upcall_res
-  incomingInterest(ccn_closure *selfp,
-                   ccn_upcall_kind kind,
-                   ccn_upcall_info *info)
+  static ndn_upcall_res
+  incomingInterest(ndn_closure *selfp,
+                   ndn_upcall_kind kind,
+                   ndn_upcall_info *info)
   {
     Wrapper::InterestCallback *f;
     Ptr<Executor> executor;
@@ -293,32 +296,32 @@ namespace ndn {
 
     switch (kind)
       {
-      case CCN_UPCALL_FINAL: // effective in unit tests
+      case NDN_UPCALL_FINAL: // effective in unit tests
         // delete closure;
         executor->execute (bind (deleteInInterestTuple, realData));
 
         delete selfp;
-        _LOG_TRACE ("<< incomingInterest with CCN_UPCALL_FINAL");
-        return CCN_UPCALL_RESULT_OK;
+        _LOG_TRACE ("<< incomingInterest with NDN_UPCALL_FINAL");
+        return NDN_UPCALL_RESULT_OK;
 
-      case CCN_UPCALL_INTEREST:
-        _LOG_TRACE (">> incomingInterest upcall: " << Name(info->interest_ccnb, info->interest_comps));
+      case NDN_UPCALL_INTEREST:
+        _LOG_TRACE (">> incomingInterest upcall: " << Name(info->interest_ndnb, info->interest_comps));
         break;
 
       default:
-        _LOG_TRACE ("<< incomingInterest with CCN_UPCALL_RESULT_OK: " << Name(info->interest_ccnb, info->interest_comps));
-        return CCN_UPCALL_RESULT_OK;
+        _LOG_TRACE ("<< incomingInterest with NDN_UPCALL_RESULT_OK: " << Name(info->interest_ndnb, info->interest_comps));
+        return NDN_UPCALL_RESULT_OK;
       }
 
     Ptr<Interest> interest = Ptr<Interest>( new Interest(info->pi));
-    interest->setName (Name (info->interest_ccnb, info->interest_comps));
+    interest->setName (Name (info->interest_ndnb, info->interest_comps));
 
     executor->execute (bind (*f, interest));
     // this will be run in executor
     // (*f) (interest);
     // closure->runInterestCallback(interest);
 
-    return CCN_UPCALL_RESULT_OK;
+    return NDN_UPCALL_RESULT_OK;
   }
 
   static void
@@ -340,10 +343,10 @@ namespace ndn {
     executor->execute (bind (unverifiedCallback, data));
   }
 
-  static ccn_upcall_res
-  incomingData(ccn_closure *selfp,
-               ccn_upcall_kind kind,
-               ccn_upcall_info *info)
+  static ndn_upcall_res
+  incomingData(ndn_closure *selfp,
+               ndn_upcall_kind kind,
+               ndn_upcall_info *info)
   {
     // Closure *cp = static_cast<Closure *> (selfp->data);
     Ptr<Closure> cp;
@@ -361,47 +364,47 @@ namespace ndn {
 
     switch (kind)
       {
-      case CCN_UPCALL_FINAL:  // effecitve in unit tests
+      case NDN_UPCALL_FINAL:  // effecitve in unit tests
         executor->execute (bind (deleteInDataTuple, realData));
 
         cp = NULL;
         delete selfp;
-        _LOG_TRACE ("<< incomingData with CCN_UPCALL_FINAL");
-        return CCN_UPCALL_RESULT_OK;
+        _LOG_TRACE ("<< incomingData with NDN_UPCALL_FINAL");
+        return NDN_UPCALL_RESULT_OK;
 
-      case CCN_UPCALL_CONTENT:
-        _LOG_TRACE (">> incomingData content upcall: " << Name (info->content_ccnb, info->content_comps));
+      case NDN_UPCALL_CONTENT:
+        _LOG_TRACE (">> incomingData content upcall: " << Name (info->content_ndnb, info->content_comps));
         break;
 
         // this is the case where the intentionally unsigned packets coming (in Encapsulation case)
-      case CCN_UPCALL_CONTENT_BAD:
-        _LOG_TRACE (">> incomingData content bad upcall: " << Name (info->content_ccnb, info->content_comps));
+      case NDN_UPCALL_CONTENT_BAD:
+        _LOG_TRACE (">> incomingData content bad upcall: " << Name (info->content_ndnb, info->content_comps));
         break;
 
-        // always ask ccnd to try to fetch the key
-      case CCN_UPCALL_CONTENT_UNVERIFIED:
-        _LOG_TRACE (">> incomingData content unverified upcall: " << Name (info->content_ccnb, info->content_comps));
+        // always ask ndnd to try to fetch the key
+      case NDN_UPCALL_CONTENT_UNVERIFIED:
+        _LOG_TRACE (">> incomingData content unverified upcall: " << Name (info->content_ndnb, info->content_comps));
         break;
 
-      case CCN_UPCALL_INTEREST_TIMED_OUT: {
+      case NDN_UPCALL_INTEREST_TIMED_OUT: {
         if (cp != NULL)
           {
-            Name interestName (info->interest_ccnb, info->interest_comps);
-            _LOG_TRACE ("<< incomingData timeout: " << Name (info->interest_ccnb, info->interest_comps));
+            Name interestName (info->interest_ndnb, info->interest_comps);
+            _LOG_TRACE ("<< incomingData timeout: " << Name (info->interest_ndnb, info->interest_comps));
             executor->execute (bind (cp->m_timeoutCallback, cp, interest));
           }
         else
           {
-            _LOG_TRACE ("<< incomingData timeout, but callback is not set...: " << Name (info->interest_ccnb, info->interest_comps));
+            _LOG_TRACE ("<< incomingData timeout, but callback is not set...: " << Name (info->interest_ndnb, info->interest_comps));
           }
-        return CCN_UPCALL_RESULT_OK;
+        return NDN_UPCALL_RESULT_OK;
       }
       default:
         _LOG_TRACE(">> unknown upcall type");
-        return CCN_UPCALL_RESULT_OK;
+        return NDN_UPCALL_RESULT_OK;
       }
 
-    Ptr<Blob> blob = Ptr<Blob> (new Blob(info->content_ccnb, info->pco->offset[CCN_PCO_E]));
+    Ptr<Blob> blob = Ptr<Blob> (new Blob(info->content_ndnb, info->pco->offset[NDN_PCO_E]));
     Ptr<Data> data = Data::decodeFromWire(blob);
 
 
@@ -412,7 +415,7 @@ namespace ndn {
  
    _LOG_TRACE (">> incomingData");
     
-    return CCN_UPCALL_RESULT_OK;
+    return NDN_UPCALL_RESULT_OK;
   }
 
   int Wrapper::sendInterest (Ptr<Interest> interestPtr, Ptr<Closure> closurePtr)
@@ -427,7 +430,7 @@ namespace ndn {
         }
     }
     
-    ccn_closure *dataClosure = new ccn_closure;
+    ndn_closure *dataClosure = new ndn_closure;
     
     // Closure *myClosure = new ExecutorClosure(closure, m_executor);
     Ptr<Closure> myClosure = Ptr<Closure>(new Closure(*closurePtr));
@@ -438,17 +441,17 @@ namespace ndn {
     UniqueRecLock lock(m_mutex);
 
     charbuf_stream nameStream;
-    wire::Ccnb::appendName (nameStream, interestPtr->getName ());
+    wire::Ndnb::appendName (nameStream, interestPtr->getName ());
   
     charbuf_stream interestStream;
-    wire::Ccnb::appendInterest (interestStream, *interestPtr);
+    wire::Ndnb::appendInterest (interestStream, *interestPtr);
 
-    if (ccn_express_interest (m_handle, nameStream.buf ().getBuf (),
+    if (ndn_express_interest (m_handle, nameStream.buf ().getBuf (),
                               dataClosure,
                               interestStream.buf ().getBuf ()
                               ) < 0)
       {
-        _LOG_ERROR ("<< sendInterest: ccn_express_interest FAILED!!!");
+        _LOG_ERROR ("<< sendInterest: ndn_express_interest FAILED!!!");
       }
 
     return 0;
@@ -463,7 +466,7 @@ namespace ndn {
         return -1;
       }
 
-    ccn_closure *interestClosure = new ccn_closure;
+    ndn_closure *interestClosure = new ndn_closure;
     
     // interestClosure->data = new ExecutorInterestClosure(interestCallback, m_executor);
 
@@ -471,12 +474,12 @@ namespace ndn {
     interestClosure->p = &incomingInterest;
 
     charbuf_stream prefixStream;
-    wire::Ccnb::appendName (prefixStream, prefix);
+    wire::Ndnb::appendName (prefixStream, prefix);
 
-    int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), interestClosure);
+    int ret = ndn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), interestClosure);
     if (ret < 0)
       {
-        _LOG_ERROR ("<< setInterestFilter: ccn_set_interest_filter FAILED");
+        _LOG_ERROR ("<< setInterestFilter: ndn_set_interest_filter FAILED");
       }
 
     if (record)
@@ -498,9 +501,9 @@ namespace ndn {
       return;
 
     charbuf_stream prefixStream;
-    wire::Ccnb::appendName (prefixStream, prefix);
+    wire::Ndnb::appendName (prefixStream, prefix);
     
-    int ret = ccn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), 0);
+    int ret = ndn_set_interest_filter (m_handle, prefixStream.buf ().getBuf (), 0);
     if (ret < 0)
       {
       }

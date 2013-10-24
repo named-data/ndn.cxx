@@ -37,7 +37,7 @@ namespace ndn {
   class Wrapper
   {
   public:
-    const static int MAX_FRESHNESS = 2147; // max value for ccnx
+    const static int MAX_FRESHNESS = 2147; // max value for ndnx
     const static int DEFAULT_FRESHNESS = 60;
     typedef boost::function<void (Ptr<Interest>)> InterestCallback;
 
@@ -107,7 +107,7 @@ namespace ndn {
     // createContentObject(const Name &name, const void *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &keyNameParam=Name());
 
     int
-    putToCcnd (const Blob &contentObject);
+    putToNdnd (const Blob &contentObject);
 
     // bool
     // verify(PcoPtr &pco, double maxWait = 1 /*seconds*/);
@@ -126,11 +126,11 @@ namespace ndn {
 
   protected:
     void
-    connectCcnd();
+    connectNdnd();
 
     /// @cond include_hidden
     void
-    ccnLoop ();
+    ndnLoop ();
     
     /// @endcond
 
@@ -142,7 +142,7 @@ namespace ndn {
     typedef boost::recursive_mutex RecLock;
     typedef boost::unique_lock<RecLock> UniqueRecLock;
 
-    ccn* m_handle;
+    ndn_client* m_handle;
     RecLock m_mutex;
     boost::thread m_thread;
     bool m_running;

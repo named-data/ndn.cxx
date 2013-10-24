@@ -8,7 +8,7 @@
  * Author: Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#include "ndn.cxx/wire/ccnb.h"
+#include "ndn.cxx/wire/ndnb.h"
 #include "ndn.cxx/interest.h"
 
 #include <unistd.h>
@@ -49,13 +49,13 @@ BOOST_AUTO_TEST_CASE (Basic)
   i.setMinSuffixComponents (2);
   i.setMaxSuffixComponents (2);
   i.setInterestLifetime (posix_time::seconds (10));
-  i.setScope (Interest::SCOPE_LOCAL_CCND);
+  i.setScope (Interest::SCOPE_LOCAL_NDND);
   i.setAnswerOriginKind (Interest::AOK_STALE);
   i.setChildSelector (Interest::CHILD_RIGHT);
   // i.setPublisherPublicKeyDigest (?);
 
   ostringstream os;
-  wire::Ccnb::appendInterest (os, i);
+  wire::Ndnb::appendInterest (os, i);
   string Interest0 = os.str ();
   BOOST_CHECK_EQUAL_COLLECTIONS (Interest0.begin (), Interest0.end (),
                                  Interest1.begin (), Interest1.end ());
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE (Basic)
   BOOST_CHECK_EQUAL (boost::lexical_cast<string> (i.getExclude ()), "alex zhenkai0 ----> zhenkai1 loooooooooooooong ----> ");
 
   os.str (""); os.clear ();
-  wire::Ccnb::appendInterest (os, i);
+  wire::Ndnb::appendInterest (os, i);
   Interest0 = os.str ();
   BOOST_CHECK_EQUAL_COLLECTIONS (Interest0.begin (), Interest0.end (),
                                  Interest3.begin (), Interest3.end ());
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE (Basic)
 //   i.setInterestLifetime (posix_time::seconds (10));
 
 //   charbuf_stream stream;
-//   wire::Ccnb::appendInterest (stream, i);
+//   wire::Ndnb::appendInterest (stream, i);
 
 //   BOOST_CHECK_EQUAL_COLLECTIONS (reinterpret_cast<char*> (stream.buf ().getBuf ()->buf),
 //                                  reinterpret_cast<char*> (stream.buf ().getBuf ()->buf+stream.buf ().getBuf ()->length),

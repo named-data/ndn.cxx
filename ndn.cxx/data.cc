@@ -10,7 +10,7 @@
 
 #include "data.h"
 
-#include "wire/ccnb/wire-ccnb-data.h"
+#include "wire/ndnb/wire-ndnb-data.h"
 
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
@@ -35,7 +35,7 @@ namespace ndn {
   {
     blob_stream blobStream;
   
-    wire::ccnb::Data::SerializeUnsigned (*this, reinterpret_cast<OutputIterator &> (blobStream));
+    wire::ndnb::Data::SerializeUnsigned (*this, reinterpret_cast<OutputIterator &> (blobStream));
 
     return blobStream.buf ();
   }
@@ -43,7 +43,7 @@ namespace ndn {
     void
   Data::encodeToUnsignedWire (std::ostream &os) const
   {
-    wire::ccnb::Data::SerializeUnsigned (*this, reinterpret_cast<OutputIterator &> (os));  
+    wire::ndnb::Data::SerializeUnsigned (*this, reinterpret_cast<OutputIterator &> (os));  
   }
 
   Ptr<Blob>
@@ -51,7 +51,7 @@ namespace ndn {
   {
     blob_stream blobStream;
   
-    wire::ccnb::Data::Serialize (*this, reinterpret_cast<OutputIterator &> (blobStream));
+    wire::ndnb::Data::Serialize (*this, reinterpret_cast<OutputIterator &> (blobStream));
 
     return blobStream.buf ();
   }
@@ -59,7 +59,7 @@ namespace ndn {
   void
   Data::encodeToWire (std::ostream &os) const
   {
-    wire::ccnb::Data::Serialize (*this, reinterpret_cast<OutputIterator &> (os));  
+    wire::ndnb::Data::Serialize (*this, reinterpret_cast<OutputIterator &> (os));  
   }
   
   Ptr<ndn::Data>
@@ -78,7 +78,7 @@ namespace ndn {
 
     data->setSignature(Create<signature::Sha256WithRsa> ());
 
-    wire::ccnb::Data::Deserialize (data, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
+    wire::ndnb::Data::Deserialize (data, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
 
     return data;
   }
@@ -90,7 +90,7 @@ namespace ndn {
     Ptr<ndn::Data> data = Create<ndn::Data> ();
     data->setSignature(Create<signature::Sha256WithRsa> ());
 
-    wire::ccnb::Data::Deserialize (data, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
+    wire::ndnb::Data::Deserialize (data, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
 
     return data;
   }

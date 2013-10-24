@@ -76,7 +76,7 @@ publishCert(Ptr<Interest> interestPtr, Ptr<Wrapper> wrapper)
   if(sqlite3_step(stmt) == SQLITE_ROW)
     {
       Blob dataBlob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0));    
-      wrapper->putToCcnd(dataBlob);
+      wrapper->putToNdnd(dataBlob);
     }
 
   sqlite3_close (fakeDB);
@@ -94,7 +94,7 @@ publishAllCert(Ptr<Wrapper> wrapper)
   while(sqlite3_step(stmt) == SQLITE_ROW)
     {
       Blob dataBlob(sqlite3_column_blob(stmt, 0), sqlite3_column_bytes(stmt, 0));    
-      wrapper->putToCcnd(dataBlob);
+      wrapper->putToNdnd(dataBlob);
     }
 
   sqlite3_close (fakeDB);

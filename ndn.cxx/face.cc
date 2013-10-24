@@ -73,12 +73,12 @@ Face::clearInterestFilter (Face::registered_prefix filter)
 } // ndn
 
 // void
-// CcnxWrapper::OnInterest (const Ptr<const ndn::Interest> &interest, Ptr<Packet> packet)
+// NdnxWrapper::OnInterest (const Ptr<const ndn::Interest> &interest, Ptr<Packet> packet)
 // {
 //   ndn::App::OnInterest (interest, packet);
 
 //   // the app cannot set several filters for the same prefix
-//   CcnxFilterEntryContainer<InterestCallback>::iterator entry = m_interestCallbacks.longest_prefix_match (interest->GetName ());
+//   NdnxFilterEntryContainer<InterestCallback>::iterator entry = m_interestCallbacks.longest_prefix_match (interest->GetName ());
 //   if (entry == m_interestCallbacks.end ())
 //     {
 //       _LOG_DEBUG ("No Interest callback set");
@@ -89,13 +89,13 @@ Face::clearInterestFilter (Face::registered_prefix filter)
 // }
 
 // void
-// CcnxWrapper::OnContentObject (const Ptr<const ndn::ContentObject> &contentObject,
+// NdnxWrapper::OnContentObject (const Ptr<const ndn::ContentObject> &contentObject,
 //                               Ptr<Packet> payload)
 // {
 //   ndn::App::OnContentObject (contentObject, payload);
 //   NS_LOG_DEBUG ("<< D " << contentObject->GetName ());
 
-//   CcnxFilterEntryContainer<RawDataCallback>::iterator entry = m_dataCallbacks.longest_prefix_match (contentObject->GetName ());
+//   NdnxFilterEntryContainer<RawDataCallback>::iterator entry = m_dataCallbacks.longest_prefix_match (contentObject->GetName ());
 //   if (entry == m_dataCallbacks.end ())
 //     {
 //       _LOG_DEBUG ("No Data callback set");

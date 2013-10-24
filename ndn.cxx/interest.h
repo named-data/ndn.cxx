@@ -47,13 +47,13 @@ public:
    * Temporary use, should be removed!
    */
   /**
-   * @brief Create an interest based on ccn_parsed_interest data structure
-   * @param interest pointer to ccn_parsed_interest data structure
+   * @brief Create an interest based on ndn_parsed_interest data structure
+   * @param interest pointer to ndn_parsed_interest data structure
    *
-   * This method will create an interest with empty name, since ccn_parsed_interest structure
+   * This method will create an interest with empty name, since ndn_parsed_interest structure
    * has limited amount of information
    */
-  Interest (const ccn_parsed_interest *interest);
+  Interest (const ndn_parsed_interest *interest);
 
   /**
    * @brief Set interest name
@@ -154,7 +154,7 @@ public:
   enum Scope
     {
       NO_SCOPE = 255,        ///< @brief Interest scope is not defined
-      SCOPE_LOCAL_CCND = 0,  ///< @brief Interest scope is only toward local NDN daemon
+      SCOPE_LOCAL_NDND = 0,  ///< @brief Interest scope is only toward local NDN daemon
       SCOPE_LOCAL_HOST = 1,  ///< @brief Interest scope is within local host (any local application only)
       SCOPE_NEXT_HOST = 2    ///< @brief Interest scope is within local host and immediate neighboring node
     };
@@ -172,7 +172,7 @@ public:
    *
    * MaxSuffixComponents refer to the number of name components beyond those in the prefix,
    * and counting the implicit digest, that may occur in the matching ContentObject.
-   * For more information, see http://www.ccnx.org/releases/latest/doc/technical/InterestMessage.html
+   * For more information, see http://www.ndnx.org/releases/latest/doc/technical/InterestMessage.html
    **/
   inline uint32_t
   getMaxSuffixComponents () const;
@@ -190,7 +190,7 @@ public:
    *
    * MinSuffixComponents refer to the number of name components beyond those in the prefix,
    * and counting the implicit digest, that may occur in the matching ContentObject.
-   * For more information, see http://www.ccnx.org/releases/latest/doc/technical/InterestMessage.html
+   * For more information, see http://www.ndnx.org/releases/latest/doc/technical/InterestMessage.html
    **/
   inline uint32_t
   getMinSuffixComponents () const;
@@ -217,7 +217,7 @@ public:
    * Often a given interest will match more than one ContentObject within a given content store.
    * The ChildSelector provides a way of expressing a preference for which of these should be returned.
    * If the value is false, the leftmost child is preferred. If true, the rightmost child is preferred.
-   * \see http://www.ccnx.org/releases/latest/doc/technical/InterestMessage.html for more information.
+   * \see http://www.ndnx.org/releases/latest/doc/technical/InterestMessage.html for more information.
    */
   inline Interest &
   setChildSelector (uint8_t child);

@@ -12,7 +12,7 @@
 
 #include "osx-privatekey-storage.h"
 
-#include "ndn.cxx/wire/ccnb.h"
+#include "ndn.cxx/wire/ndnb.h"
 
 #include "ndn.cxx/security/exception.h"
 

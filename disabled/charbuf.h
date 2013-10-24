@@ -30,16 +30,16 @@ class Charbuf
 {
 public:
   Charbuf();
-  Charbuf(ccn_charbuf *buf);
+  Charbuf(ndn_charbuf *buf);
   Charbuf(const Charbuf &other);
   Charbuf(const void *buf, size_t length);
   ~Charbuf();
 
   // expose internal data structure, use with caution!!
-  ccn_charbuf *
+  ndn_charbuf *
   getBuf() { return m_buf; }
 
-  const ccn_charbuf *
+  const ndn_charbuf *
   getBuf() const { return m_buf; }
 
   const unsigned char *
@@ -51,10 +51,10 @@ public:
   { return m_buf->length; }
 
 private:
-  void init(ccn_charbuf *buf);
+  void init(ndn_charbuf *buf);
 
 protected:
-  ccn_charbuf *m_buf;
+  ndn_charbuf *m_buf;
 };
 
 namespace iostreams

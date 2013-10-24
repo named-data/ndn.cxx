@@ -8,12 +8,11 @@ def options(opt):
     opt.add_option('--test', action='store_true',default=False,dest='_test',help='''build unit tests''')
     opt.add_option('--log4cxx', action='store_true',default=False,dest='log4cxx',help='''Compile with log4cxx logging support''')
 
-    opt.load('compiler_c compiler_cxx boost ccnx doxygen gnu_dirs c_osx')
-    opt.load('tinyxml', tooldir=['waf-tools'])
-    opt.load('cryptopp', tooldir=['waf-tools'])
+    opt.load('compiler_c compiler_cxx gnu_dirs c_osx')
+    opt.load('boost doxygen ndnx tinyxml cryptopp', tooldir=['waf-tools'])
 
 def configure(conf):
-    conf.load("compiler_c compiler_cxx boost ccnx gnu_dirs tinyxml doxygen c_osx cryptopp")
+    conf.load("compiler_c compiler_cxx boost ndnx gnu_dirs tinyxml doxygen c_osx cryptopp")
 
     if conf.options.debug:
         conf.define ('_DEBUG', 1)
@@ -36,19 +35,12 @@ def configure(conf):
 
     conf.define ("NDN_CXX_VERSION", VERSION)
 
+    conf.check_ndnx ()
+    conf.check_openssl ()
+    
     conf.check_cfg(package='sqlite3', args=['--cflags', '--libs'], uselib_store='SQLITE3', mandatory=True)
     conf.check_cfg(package='libevent', args=['--cflags', '--libs'], uselib_store='LIBEVENT', mandatory=True)
     conf.check_cfg(package='libevent_pthreads', args=['--cflags', '--libs'], uselib_store='LIBEVENT_PTHREADS', mandatory=True)
-
-    if not conf.check_cfg(package='openssl', args=['--cflags', '--libs'], uselib_store='SSL', mandatory=False):
-        libcrypto = conf.check_cc(lib='crypto',
-                                  header_name='openssl/crypto.h',
-                                  define_name='HAVE_SSL',
-                                  uselib_store='SSL')
-    else:
-        conf.define ("HAVE_SSL", 1)
-    if not conf.get_define ("HAVE_SSL"):
-        conf.fatal ("Cannot find SSL libraries")
 
     conf.check_cfg(package="libcrypto",  args=['--cflags', '--libs'], uselib_store='CRYPTO', mandatory=True)
 
@@ -58,7 +50,6 @@ def configure(conf):
 
     conf.check_tinyxml(path=conf.options.tinyxml_dir)
     conf.check_cryptopp(path=conf.options.cryptopp_dir)
-    conf.check_doxygen(mandatory=False)
 
     conf.check_boost(lib='system test iostreams filesystem thread date_time regex program_options')
 
@@ -66,8 +57,6 @@ def configure(conf):
     if int(boost_version[0]) < 1 or int(boost_version[1]) < 46:
         Logs.error ("Minumum required boost version is 1.46")
         return
-
-    conf.check_ccnx (path=conf.options.ccnx_dir)
 
     if conf.options._test:
         conf.define ('_TESTS', 1)
@@ -101,7 +90,7 @@ def build (bld):
                                     'ndn.cxx/**/*.mm',
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
-        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL CCNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
+        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL NDNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
         includes = ".",
         )
 

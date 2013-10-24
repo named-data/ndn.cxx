@@ -53,11 +53,10 @@ Name::Name (const string &uri)
 
       i = firstSlash;
 
-      if (!boost::iequals (schema, "ccnx:") &&
-          !boost::iequals (schema, "ndn:"))
+      if (!boost::iequals (schema, "ndn:"))
         {
           BOOST_THROW_EXCEPTION (error::Name ()
-                                 << error::msg ("URI schema is not supported (only ccnx: or ndn: is allowed)")
+                                 << error::msg ("URI schema is not supported (only ndn: is allowed)")
                                  << error::msg (schema));
         }
     }
@@ -100,13 +99,13 @@ Name::Name (const string &uri)
   /*
    * Temporary use only
    */
-Name::Name (const unsigned char *data, const ccn_indexbuf *comps)
+Name::Name (const unsigned char *data, const ndn_indexbuf *comps)
 {
   for (unsigned int i = 0; i < comps->n - 1; i++)
   {
     const unsigned char *compPtr;
     size_t size;
-    ccn_name_comp_get(data, comps, i, &compPtr, &size);
+    ndn_name_comp_get(data, comps, i, &compPtr, &size);
 
     append (name::Component (compPtr, size));
   }

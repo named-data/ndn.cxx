@@ -33,7 +33,7 @@ void OnInterest (ndn::InterestPtr interest)
 int
 main (int argc, char **argv)
 {
-  InterestBaseName = ndn::Name ("ccnx:/my-local-prefix/simple-fetch/file");
+  InterestBaseName = ndn::Name ("/my-local-prefix/simple-fetch/file");
 
   handler.setInterestFilter (InterestBaseName, OnInterest);
   

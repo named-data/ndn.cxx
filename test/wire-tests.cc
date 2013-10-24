@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE (InterestTest)
   Interest i;
   i.setName (Name ("/hello/world"));
 
-  ofstream of ("interest.ccnb");
+  ofstream of ("interest.ndnb");
   i.encodeToWire (of);
   
   BOOST_CHECK_EQUAL (1, 1);

@@ -18,7 +18,7 @@ namespace ndn
 {
 
 /**
- * @brief Class implementing logic to work with pkcs12 CCNx keystore file (.ccnx_keystore)
+ * @brief Class implementing logic to work with pkcs12 NDNx keystore file (.ndnx_keystore)
  */
 class KeychainKeystoreOpenssl : public virtual Keychain
 {

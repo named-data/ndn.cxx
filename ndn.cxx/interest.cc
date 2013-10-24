@@ -12,7 +12,7 @@
 
 #include "interest.h"
 #include <boost/lexical_cast.hpp>
-#include "wire/ccnb/wire-ccnb-interest.h"
+#include "wire/ndnb/wire-ndnb-interest.h"
 
 using namespace std;
 
@@ -57,9 +57,9 @@ Interest::Interest (const Interest &other)
 
   /*
    * !!!
-   * Interest::Interest (const ccn_parsed_interest *pi) is for temporary use, should be removed!!
+   * Interest::Interest (const ndn_parsed_interest *pi) is for temporary use, should be removed!!
    */
-Interest::Interest (const ccn_parsed_interest *pi)
+Interest::Interest (const ndn_parsed_interest *pi)
   : m_maxSuffixComponents (Interest::ncomps)
   , m_minSuffixComponents (Interest::ncomps)
   , m_answerOriginKind (AOK_DEFAULT)
@@ -111,7 +111,7 @@ Interest::encodeToWire ()
 {
   blob_stream blobStream;
   
-  wire::ccnb::Interest::Serialize (*this, reinterpret_cast<OutputIterator &> (blobStream));
+  wire::ndnb::Interest::Serialize (*this, reinterpret_cast<OutputIterator &> (blobStream));
 
   return blobStream.buf ();
 }
@@ -119,7 +119,7 @@ Interest::encodeToWire ()
 void
 Interest::encodeToWire (std::ostream &os)
 {
-  wire::ccnb::Interest::Serialize (*this, reinterpret_cast<OutputIterator &> (os));  
+  wire::ndnb::Interest::Serialize (*this, reinterpret_cast<OutputIterator &> (os));  
 }
 
 Ptr<ndn::Interest>
@@ -129,7 +129,7 @@ Interest::decodeFromWire (Ptr<const Blob> buffer)
     <boost::iostreams::array_source> is (buffer->buf (), buffer->size ());
 
   Ptr<ndn::Interest> interest = Create<ndn::Interest> ();
-  wire::ccnb::Interest::Deserialize (interest, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
+  wire::ndnb::Interest::Deserialize (interest, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
 
   return interest;
 }
@@ -138,7 +138,7 @@ Ptr<ndn::Interest>
 Interest::decodeFromWire (std::istream &is)
 {
   Ptr<ndn::Interest> interest = Create<ndn::Interest> ();
-  wire::ccnb::Interest::Deserialize (interest, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
+  wire::ndnb::Interest::Deserialize (interest, reinterpret_cast<InputIterator &> (is)); // crazy, but safe
 
   return interest;
 }

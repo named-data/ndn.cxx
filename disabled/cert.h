@@ -63,7 +63,7 @@ public:
   std::string
   affilication() { return m_meta.affiliation; }
 
-  ccn_pkey *
+  ndn_pkey *
   pkey() { return m_pkey; }
 
   VALIDITY
@@ -88,7 +88,7 @@ private:
   Name m_name;
   Hash m_keyHash; // publisherPublicKeyHash
   Bytes m_rawKeyBytes;
-  ccn_pkey *m_pkey;
+  ndn_pkey *m_pkey;
   Meta m_meta;
 };
 

@@ -31,8 +31,8 @@ static const unsigned char ROOT_KEY_DIGEST[ROOT_KEY_DIGEST_LEN] = {0xa7, 0xd9, 0
 0x56, 0xc5, 0xa6, 0x92, 0xb4, 0x44, 0x93, 0x6e, 0x56, 0x70, 0x9d, 0x52, 0x6f, 0x70,
 0xed, 0x39, 0xef, 0xb5, 0xe2, 0x3, 0x29, 0xa5, 0x53, 0x3e, 0x68};
 
-Verifier::Verifier(Wrapper *ccnx)
-         : m_ccnx(ccnx)
+Verifier::Verifier(Wrapper *ndnx)
+         : m_ndnx(ndnx)
          , m_rootKeyDigest(ROOT_KEY_DIGEST, ROOT_KEY_DIGEST_LEN)
 {
 }
@@ -103,8 +103,8 @@ Verifier::verify(PcoPtr pco, double maxWait)
   interest.setChildSelector (Interest::CHILD_RIGHT)
     .setInterestLifetime(maxWait);
 
-  PcoPtr keyObject = m_ccnx->get(Interest (interest).setName (keyName), maxWait);
-  PcoPtr metaObject = m_ccnx->get(Interest (interest).setName (metaName), maxWait);
+  PcoPtr keyObject = m_ndnx->get(Interest (interest).setName (keyName), maxWait);
+  PcoPtr metaObject = m_ndnx->get(Interest (interest).setName (metaName), maxWait);
   if (!keyObject || !metaObject )
   {
     _LOG_ERROR("can not fetch key or meta");
@@ -128,7 +128,7 @@ Verifier::verify(PcoPtr pco, double maxWait)
     return false;
   }
 
-  // check pco is actually signed by this key (i.e. we don't trust the publisherPublicKeyDigest given by ccnx c lib)
+  // check pco is actually signed by this key (i.e. we don't trust the publisherPublicKeyDigest given by ndnx c lib)
   if (! (*pco->publisherPublicKeyDigest() == cert->keyDigest()))
   {
     _LOG_ERROR("key digest does not match the publisher public key digest of the content object");

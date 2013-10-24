@@ -32,7 +32,7 @@ class Verifier;
 class Wrapper
 {
 public:
-  const static int MAX_FRESHNESS = 2147; // max value for ccnx
+  const static int MAX_FRESHNESS = 2147; // max value for ndnx
   const static int DEFAULT_FRESHNESS = 60;
   typedef boost::function<void (InterestPtr)> InterestCallback;
 
@@ -82,7 +82,7 @@ public:
   createContentObject(const Name &name, const void *buf, size_t len, int freshness = DEFAULT_FRESHNESS, const Name &keyNameParam=Name());
 
   int
-  putToCcnd (const Bytes &contentObject);
+  putToNdnd (const Bytes &contentObject);
 
   bool
   verify(PcoPtr &pco, double maxWait = 1 /*seconds*/);
@@ -95,11 +95,11 @@ private:
 
 protected:
   void
-  connectCcnd();
+  connectNdnd();
 
   /// @cond include_hidden
   void
-  ccnLoop ();
+  ndnLoop ();
 
   /// @endcond
 
@@ -111,7 +111,7 @@ protected:
   typedef boost::recursive_mutex RecLock;
   typedef boost::unique_lock<RecLock> UniqueRecLock;
 
-  ccn* m_handle;
+  ndn* m_handle;
   RecLock m_mutex;
   boost::thread m_thread;
   bool m_running;

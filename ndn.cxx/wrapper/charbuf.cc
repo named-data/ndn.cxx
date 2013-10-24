@@ -18,12 +18,12 @@ using namespace std;
 namespace ndn {
 
   void
-  Charbuf::init(ccn_charbuf *buf)
+  Charbuf::init(ndn_charbuf *buf)
   {
     if (buf != NULL)
       {
-        m_buf = ccn_charbuf_create();
-        ccn_charbuf_reserve(m_buf, buf->length);
+        m_buf = ndn_charbuf_create();
+        ndn_charbuf_reserve(m_buf, buf->length);
         memcpy(m_buf->buf, buf->buf, buf->length);
         m_buf->length = buf->length;
       }
@@ -32,10 +32,10 @@ namespace ndn {
   Charbuf::Charbuf()
     : m_buf(NULL)
   {
-    m_buf = ccn_charbuf_create();
+    m_buf = ndn_charbuf_create();
   }
 
-  Charbuf::Charbuf(ccn_charbuf *buf)
+  Charbuf::Charbuf(ndn_charbuf *buf)
     : m_buf(NULL)
   {
     init(buf);
@@ -49,15 +49,15 @@ namespace ndn {
 
   Charbuf::Charbuf(const void *buf, size_t length)
   {
-    m_buf = ccn_charbuf_create ();
-    ccn_charbuf_reserve (m_buf, length);
+    m_buf = ndn_charbuf_create ();
+    ndn_charbuf_reserve (m_buf, length);
     memcpy (m_buf->buf, buf, length);
     m_buf->length = length;
   }
 
   Charbuf::~Charbuf()
   {
-    ccn_charbuf_destroy (&m_buf);
+    ndn_charbuf_destroy (&m_buf);
   }
 
   namespace iostreams
@@ -71,7 +71,7 @@ namespace ndn {
     std::streamsize
     charbuf_append_device::write (const char_type* s, std::streamsize n)
     {
-      ccn_charbuf_append (container.getBuf (), s, n);
+      ndn_charbuf_append (container.getBuf (), s, n);
       return n;
     }
 

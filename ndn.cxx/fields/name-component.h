@@ -62,7 +62,7 @@ public:
    *         <0 If *this comes before other in the canonical ordering
    *         >0 If *this comes after in the canonical ordering
    *
-   * @see http://www.ccnx.org/releases/latest/doc/technical/CanonicalOrder.html
+   * @see http://www.ndnx.org/releases/latest/doc/technical/CanonicalOrder.html
    */
   int
   compare (const Component &other) const;
@@ -70,7 +70,7 @@ public:
   /**
    * @brief Apply canonical ordering on component comparison (less or equal)
    *
-   * @see http://www.ccnx.org/releases/latest/doc/technical/CanonicalOrder.html
+   * @see http://www.ndnx.org/releases/latest/doc/technical/CanonicalOrder.html
    */
   inline bool
   operator <= (const Component &other) const;
@@ -78,7 +78,7 @@ public:
   /**
    * @brief Apply canonical ordering on component comparison (less)
    *
-   * @see http://www.ccnx.org/releases/latest/doc/technical/CanonicalOrder.html
+   * @see http://www.ndnx.org/releases/latest/doc/technical/CanonicalOrder.html
    */
   inline bool
   operator < (const Component &other) const;
@@ -86,7 +86,7 @@ public:
   /**
    * @brief Apply canonical ordering on component comparison (greater or equal)
    *
-   * @see http://www.ccnx.org/releases/latest/doc/technical/CanonicalOrder.html
+   * @see http://www.ndnx.org/releases/latest/doc/technical/CanonicalOrder.html
    */
   inline bool
   operator >= (const Component &other) const;
@@ -94,7 +94,7 @@ public:
   /**
    * @brief Apply canonical ordering on component comparison (greater)
    *
-   * @see http://www.ccnx.org/releases/latest/doc/technical/CanonicalOrder.html
+   * @see http://www.ndnx.org/releases/latest/doc/technical/CanonicalOrder.html
    */
   inline bool
   operator > (const Component &other) const;

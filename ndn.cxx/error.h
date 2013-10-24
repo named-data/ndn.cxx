@@ -47,7 +47,7 @@ struct Component       : public virtual boost::exception, public virtual std::ex
 struct Exclude         : public virtual boost::exception, public virtual std::exception {}; ///< @brief An error with Exclude
 struct KeyLocator      : public virtual boost::exception, public virtual std::exception {}; ///< @brief An error with KeyLocator
 namespace wire {
-struct Ccnb            : public virtual boost::exception, public virtual std::exception {}; ///< @brief An error with wire::Ccnb encoding
+struct Ndnb            : public virtual boost::exception, public virtual std::exception {}; ///< @brief An error with wire::Ndnb encoding
 }
 struct Keychain        : public virtual boost::exception, public virtual std::exception {}; ///< @brief An error with security::Keychain
 

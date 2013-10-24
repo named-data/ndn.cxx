@@ -56,7 +56,7 @@ public:
    */
   Name (const std::string &url);
 
-  Name (const unsigned char *data, const ccn_indexbuf *comps);
+  Name (const unsigned char *data, const ndn_indexbuf *comps);
 
   /**
    * @brief Create a name from a container of elements [begin, end)

@@ -38,7 +38,7 @@ class Wrapper;
 class Verifier
 {
 public:
-  Verifier(Wrapper *ccnx);
+  Verifier(Wrapper *ndnx);
   ~Verifier();
 
   bool verify(PcoPtr pco, double maxWait);
@@ -46,7 +46,7 @@ public:
 private:
 
 private:
-  Wrapper *m_ccnx;
+  Wrapper *m_ndnx;
   Hash m_rootKeyDigest;
   typedef std::map<Hash, CertPtr> CertCache;
   CertCache m_certCache;

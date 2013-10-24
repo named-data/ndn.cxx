@@ -60,7 +60,7 @@ public:
    * @param size size of the memory buffer
    * @param timestamp content generation timestamp
    * @param type type of content (default is Content::DATA)
-   * @param freshness amount of time the content is considered "fresh" (default is 2147 seconds, maximum possible value for CCNx)
+   * @param freshness amount of time the content is considered "fresh" (default is 2147 seconds, maximum possible value for NDNx)
    * @param finalBlock name of the final DATA
    *
    * Use the other version of the constructor, if timestamp needs to be automatically generated
@@ -76,7 +76,7 @@ public:
    * @param buffer pointer to first byte of the memory buffer
    * @param size size of the memory buffer
    * @param type type of content (default is Content::DATA)
-   * @param freshness amount of time the content is considered "fresh" (default is 2147 seconds, maximum possible value for CCNx)
+   * @param freshness amount of time the content is considered "fresh" (default is 2147 seconds, maximum possible value for NDNx)
    * @param finalBlock name of the final DATA
    *
    * This method automatically sets timestamp of the created content to the current time (UTC clock)

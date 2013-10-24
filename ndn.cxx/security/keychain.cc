@@ -11,7 +11,7 @@
 #include "keychain.h"
 
 #include "ndn.cxx/wrapper/wrapper.h"
-#include "ndn.cxx/wire/ccnb.h"
+#include "ndn.cxx/wire/ndnb.h"
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
