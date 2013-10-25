@@ -175,6 +175,15 @@ namespace security
     virtual void 
     setDefaultCertificateNameForKey (const Name & keyName, const Name & certificateName);
 
+    virtual vector<Name>
+    getAllIdentities(bool isDefault);
+
+    virtual vector<Name>
+    getAllKeyNames(bool isDefault);
+    
+    virtual vector<Name>
+    getAllCertificateName(bool isDefault);
+
   private:
 
     virtual void

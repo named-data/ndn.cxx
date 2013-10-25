@@ -190,6 +190,16 @@ namespace security
     virtual void 
     setDefaultCertificateNameForKey (const Name & keyName, const Name & certificateName) = 0;
 
+
+    virtual vector<Name>
+    getAllIdentities(bool isDefault) = 0;
+
+    virtual vector<Name>
+    getAllKeyNames(bool isDefault) = 0;
+    
+    virtual vector<Name>
+    getAllCertificateName(bool isDefault) = 0;
+
   };
 
 }//security

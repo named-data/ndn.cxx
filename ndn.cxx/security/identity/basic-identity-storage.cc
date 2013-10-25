@@ -630,6 +630,60 @@ namespace security
     sqlite3_finalize (stmt);
   }
 
+  vector<Name>
+  BasicIdentityStorage::getAllIdentities(bool isDefault)
+  {
+    sqlite3_stmt *stmt;
+    if(isDefault)
+      sqlite3_prepare_v2 (m_db, "SELECT identity_name FROM Identity WHERE default_identity=1", -1, &stmt, 0);
+    else
+      sqlite3_prepare_v2 (m_db, "SELECT identity_name FROM Identity WHERE default_identity=0", -1, &stmt, 0);
+
+    vector<Name> nameList;
+    while(sqlite3_step (stmt) == SQLITE_ROW)
+        nameList.push_back(Name(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0))));
+        
+    sqlite3_finalize (stmt);        
+    return nameList;
+  }
+
+  vector<Name>
+  BasicIdentityStorage::getAllKeyNames(bool isDefault)
+  {
+    sqlite3_stmt *stmt;
+    if(isDefault)
+      sqlite3_prepare_v2 (m_db, "SELECT identity_name, key_identifier FROM Key WHERE default_key=1", -1, &stmt, 0);
+    else
+      sqlite3_prepare_v2 (m_db, "SELECT identity_name, key_identifier FROM Key WHERE default_key=0", -1, &stmt, 0);
+
+    vector<Name> nameList;
+    while(sqlite3_step (stmt) == SQLITE_ROW)
+      {
+        Name keyName(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
+        keyName.append(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)), sqlite3_column_bytes (stmt, 1)));
+        nameList.push_back(keyName);
+      } 
+    sqlite3_finalize (stmt);        
+    return nameList;
+  }
+    
+  vector<Name>
+  BasicIdentityStorage::getAllCertificateName(bool isDefault)
+  {
+    sqlite3_stmt *stmt;
+    if(isDefault)
+      sqlite3_prepare_v2 (m_db, "SELECT cert_name FROM Certificate WHERE default_cert=1", -1, &stmt, 0);
+    else
+      sqlite3_prepare_v2 (m_db, "SELECT cert_name FROM Certificate WHERE default_cert=0", -1, &stmt, 0);
+
+    vector<Name> nameList;
+    while(sqlite3_step (stmt) == SQLITE_ROW)
+        nameList.push_back(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
+
+    sqlite3_finalize (stmt);        
+    return nameList;
+  }
+
 }//security
 
 }//ndn
