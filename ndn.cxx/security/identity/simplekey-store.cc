@@ -34,11 +34,20 @@ namespace ndn
     
     namespace security
     {
-        SimpleKeyStore::SimpleKeyStore(const string & _dir )
+        SimpleKeyStore::SimpleKeyStore(const string & dir )
         {
-            currentDir = _dir;
-            boost::filesystem::path dir(_dir.c_str());
-            boost::filesystem::create_directory(dir);
+          if(dir.empty())
+            {
+              boost::filesystem::path identityDir = boost::filesystem::path(getenv("HOME")) / ".ndn-identity" / "keys";
+              boost::filesystem::create_directories (identityDir);
+              currentDir = string(identityDir.c_str ());
+            }
+          else
+            {
+              currentDir = dir;           
+              boost::filesystem::path identityDir(dir.c_str());
+              boost::filesystem::create_directory(identityDir);
+            }
         };
 
         /**

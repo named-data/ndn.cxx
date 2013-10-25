@@ -31,8 +31,9 @@ namespace security
     typedef vector< Ptr<Regex> > RegexList;
 
   public:
-    SimplePolicyManager(const int & stepLimit,
-                        Ptr<CertificateCache> certificateCache);
+
+    SimplePolicyManager(const int & stepLimit = 10,
+                        Ptr<CertificateCache> certificateCache = NULL);
 
     virtual 
     ~SimplePolicyManager() {}

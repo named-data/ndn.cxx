@@ -7,6 +7,10 @@ def options(opt):
     opt.add_option('--debug',action='store_true',default=False,dest='debug',help='''debugging mode''')
     opt.add_option('--test', action='store_true',default=False,dest='_test',help='''build unit tests''')
     opt.add_option('--log4cxx', action='store_true',default=False,dest='log4cxx',help='''Compile with log4cxx logging support''')
+    opt.add_option('--private_storage', dest='private_storage', default='opt', help='''simple for SimplePrivatekeyStorage; osx for OSXPrivatekeyStorage; opt for optimal one based on system (default)''')
+    opt.add_option('--public_storage', dest='public_storage', default='opt', help='''basic for BasicIdentityStorage; opt for optimal one based on system (default)''')
+    opt.add_option('--policy_manager', dest='policy_manager', default='opt', help='''none for NoVerifyPolicyManager; opt for optimal one based on system (default)''')
+    opt.add_option('--encrypt_manager', dest='encrypt_manager', default='opt', help='''basic for BasicEncryptionManager; opt for optimal one based on system (default)''')
 
     opt.load('compiler_c compiler_cxx gnu_dirs c_osx')
     opt.load('boost doxygen ndnx tinyxml cryptopp', tooldir=['waf-tools'])
@@ -33,6 +37,8 @@ def configure(conf):
         conf.check_cxx(framework_name='Security',   uselib_store='OSX_SECURITY',   define_name='HAVE_SECURITY',
                        use="OSX_COREFOUNDATION", mandatory=True, compile_filename='test.mm')
 
+    conf.check_security_parameter()
+        
     conf.define ("NDN_CXX_VERSION", VERSION)
 
     conf.check_ndnx ()
@@ -128,6 +134,37 @@ def add_supported_cxxflags(self, cxxflags):
 
     self.end_msg (' '.join (supportedFlags))
     self.env.CXXFLAGS += supportedFlags
+    
+@Configure.conf
+def check_security_parameter(self):
+    """
+    Check the security parameters
+    """
+    if self.options.private_storage == 'simple':
+        self.define ('USE_SIMPLE_PRIVATEKEY_STORAGE', 1)
+    elif self.options.private_storage == 'osx':
+        self.define ('USE_OSX_PRIVATEKEY_STORAGE', 1)
+    else:
+        if Utils.unversioned_sys_platform () == "darwin":
+            self.define ('USE_OSX_PRIVATEKEY_STORAGE', 1)
+        else:
+            self.define ('USE_SIMPLE_PRIVATEKEY_STORAGE', 1)
+
+    if self.options.public_storage == 'basic':
+        self.define ('USE_BASIC_IDENTITY_STORAGE', 1)
+    else:
+        self.define ('USE_BASIC_IDENTITY_STORAGE', 1)
+
+    if self.options.policy_manager == 'none':
+        self.define ('USE_NO_VERIFY_POLICY_MANAGER', 1)
+    else:
+        self.define ('USE_SIMPLE_POLICY_MANAGER', 1)
+
+    if self.options.encrypt_manager == 'basic':
+        self.define ('USE_BASIC_ENCRYPTION_MANAGER', 1)
+    else:
+        self.define ('USE_BASIC_ENCRYPTION_MANAGER', 1)
+        
 
 
 # doxygen docs

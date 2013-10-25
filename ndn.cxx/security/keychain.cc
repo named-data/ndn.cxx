@@ -7,7 +7,7 @@
  *
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
-
+#include "config.h"
 #include "keychain.h"
 
 #include "ndn.cxx/wrapper/wrapper.h"
@@ -16,11 +16,21 @@
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
 #include "exception.h"
-#include "identity/basic-identity-storage.h"
-#include "policy/policy-rule.h"
-#include "policy/basic-policy-manager.h"
+
+#ifdef USE_SIMPLE_POLICY_MANAGER
+#include "policy/simple-policy-manager.h"
+#include "policy/identity-policy-rule.h"
+#endif
+
+#ifdef USE_NO_VERIFY_POLICY_MANAGER
+#include "policy/no-verify-policy-manager.h"
+#endif
+
+#ifdef USE_BASIC_ENCRYPTION_MANAGER
 #include "encryption/basic-encryption-manager.h"
-#include "cache/basic-certificate-cache.h"
+#endif
+
+
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bind.hpp>
@@ -37,13 +47,44 @@ namespace ndn
 
 namespace security
 {
+  Keychain::Keychain()
+    : m_identityManager(Ptr<IdentityManager>::Create())
+  {
+#ifdef USE_SIMPLE_POLICY_MANAGER
+    Ptr<SimplePolicyManager> policyManager = Ptr<SimplePolicyManager>(new SimplePolicyManager());
+    Ptr<IdentityPolicyRule> rule1 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY>(<>*)<KSK-.*><ID-CERT>",
+                                                                                  "^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>",
+                                                                                  ">", "\\1\\2", "\\1", true));
+    Ptr<IdentityPolicyRule> rule2 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>",
+                                                                                   "^([^<KEY>]*)<KEY>(<>*)<KSK-.*><ID-CERT>",
+                                                                                   "==", "\\1", "\\1\\2", true));
+    Ptr<IdentityPolicyRule> rule3 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^(<>*)$", 
+                                                                                   "^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>", 
+                                                                                   ">", "\\1", "\\1", true));
+    policyManager->addVerificationPolicyRule(rule1);
+    policyManager->addVerificationPolicyRule(rule2);
+    policyManager->addVerificationPolicyRule(rule3);
+    
+    policyManager->addSigningPolicyRule(rule3);
+
+    m_policyManager = policyManager;
+#endif
+
+#ifdef USE_NO_VERIFY_POLICY_MANAGER
+    m_policyManager = Ptr<NoVerifyPolicyManager>::Create();
+#endif
+
+#ifdef USE_BASIC_ENCRYPTION_MANAGER
+    m_encryptionManager = Ptr<EncryptionManager>(new BasicEncryptionManager(m_identityManager->getPrivateStorage(), "/tmp/encryption.db"));
+#endif
+  }
+
   Keychain::Keychain(Ptr<IdentityManager> identityManager, 
                      Ptr<PolicyManager> policyManager, 
                      Ptr<EncryptionManager> encryptionManager)
     : m_identityManager(identityManager)
     , m_policyManager(policyManager)
     , m_encryptionManager(encryptionManager)
-    , m_maxStep(100)
   {}
 
   Name
@@ -130,9 +171,9 @@ namespace security
     //TODO: Implement
   }
 
-  Ptr<PolicyManager>
-  Keychain::getPolicyManager()
-  { return m_policyManager; }
+  // Ptr<PolicyManager>
+  // Keychain::getPolicyManager()
+  // { return m_policyManager; }
 
   // void 
   // Keychain::setSigningPolicyRule(Ptr<PolicyRule> policy)

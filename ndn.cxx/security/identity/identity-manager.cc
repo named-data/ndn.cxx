@@ -7,13 +7,21 @@
  *
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
-
+#include "config.h"
 #include "identity-manager.h"
 
 #include "ndn.cxx/fields/key-locator.h"
 #include "ndn.cxx/fields/signature-sha256-with-rsa.h"
 
 #include "ndn.cxx/security/exception.h"
+
+#include "basic-identity-storage.h"
+
+#ifdef USE_OSX_PRIVATEKEY_STORAGE
+#include "osx-privatekey-storage.h"
+#else
+#include "simplekey-store.h"
+#endif
 
 #include <ctime>
 #include <boost/filesystem.hpp>
@@ -33,6 +41,17 @@ namespace ndn
 
 namespace security
 {
+  IdentityManager::IdentityManager()
+  {
+    m_publicStorage = Ptr<BasicIdentityStorage>::Create();
+
+#ifdef USE_OSX_PRIVATEKEY_STORAGE
+    m_privateStorage = Ptr<OSXPrivatekeyStorage>::Create();
+#else
+    m_privateStorage = Ptr<SimpleKeyStore>::Create();
+#endif
+  }
+
   IdentityManager::IdentityManager (Ptr<IdentityStorage> publicStorage, Ptr<PrivatekeyStorage> privateStorage)
     :m_publicStorage(publicStorage),
      m_privateStorage(privateStorage)

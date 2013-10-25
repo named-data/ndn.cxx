@@ -32,6 +32,11 @@ namespace security
   {
   public:
     /**
+     * @brief default constructor
+     */
+    IdentityManager();
+
+    /**
      * @brief Constructor 
      * @param publicStorage storage for identities, public keys, and certificates
      * @param privateStorage storage for private keys and some system symmetric keys
@@ -236,6 +241,14 @@ namespace security
      */
     Ptr<IdentityCertificate>
     selfSign (const Name & keyName);
+
+    inline Ptr<IdentityStorage> 
+    getPublicStorage()
+    { return m_publicStorage; }
+
+    inline Ptr<PrivatekeyStorage> 
+    getPrivateStorage()
+    { return m_privateStorage; }
 
   private:
 

@@ -12,6 +12,7 @@
 
 #include "identity-policy-rule.h"
 #include "ndn.cxx/security/exception.h"
+#include "ndn.cxx/security/cache/ttl-certificate-cache.h"
 
 #include <boost/bind.hpp>
 #include <cryptopp/rsa.h>
@@ -32,7 +33,10 @@ namespace security
 					   Ptr<CertificateCache> certificateCache)
     : m_stepLimit(stepLimit)
     , m_certificateCache(certificateCache)
-  {}
+  {
+    if(m_certificateCache == NULL)
+      m_certificateCache = Ptr<CertificateCache>(new TTLCertificateCache());
+  }
 
   bool
   SimplePolicyManager::requireVerify (const Data & data)

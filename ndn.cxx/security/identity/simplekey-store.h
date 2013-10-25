@@ -26,7 +26,7 @@ namespace ndn
         public:
             
             
-            SimpleKeyStore(const string & dir = "./");
+            SimpleKeyStore(const string & dir = "");
             /**
              * @brief destructor of PrivateKeyStore
              */

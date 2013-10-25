@@ -20,13 +20,10 @@
 #include "ndn.cxx/fields/name.h"
 #include "ndn.cxx/fields/blob.h"
 #include "ndn.cxx/fields/signature.h"
-#include "ndn.cxx/regex/regex.h"
 
 #include "identity/identity-manager.h"
 #include "policy/policy-manager.h"
 #include "encryption/encryption-manager.h"
-#include "policy/policy-rule.h"
-// #include "certificate/certificate.h"
 
 #include "ndn.cxx/wrapper/closure.h"
 
@@ -51,6 +48,12 @@ namespace security
    */
   class Keychain{
   public:
+    
+    /**
+     * @brief default constructor
+     */
+    Keychain();
+    
     /**
      * @brief Constructor
      * @param privateStorage the storage for private keys and some secret keys
@@ -182,16 +185,13 @@ namespace security
     void 
     revokeCertificate(const Name & certificateName);
 
-    inline Ptr<IdentityManager>
-    getIdentityManager()
-    { return m_identityManager; }
+    // inline Ptr<IdentityManager>
+    // getIdentityManager()
+    // { return m_identityManager; }
 
     /*****************************************
      *           Policy Management           *
      *****************************************/
-
-    Ptr<PolicyManager>
-    getPolicyManager();
 
     // /**
     //  * @brief Set a signing policy rule
@@ -317,11 +317,35 @@ namespace security
      * @brief Set the wrapper which will be used to fetch required certificates
      * @param wrapper the wrapper
      */
-    void
+    
+
+    /******************************/
+    /*      Getter/Setter         */
+    /******************************/
+
+    inline Ptr<IdentityManager> 
+    getIdentityManager()
+    { return m_identityManager; }
+
+    inline Ptr<PolicyManager> 
+    getPolicyManager()
+    { return m_policyManager; }
+
+    inline Ptr<EncryptionManager> 
+    getEncryptionManager()
+    { return m_encryptionManager; }
+
+    inline void 
+    setPolicyManager(Ptr<PolicyManager> policyManager)
+    { m_policyManager = policyManager; }
+
+    inline void
+    setEncryptionManager(Ptr<EncryptionManager> encryptionManager)
+    { m_encryptionManager = encryptionManager; }
+
+    inline void
     setWrapper(Wrapper * wrapper)
-    {
-      m_handler = wrapper;
-    }
+    { m_handler = wrapper; }
 
   private:  
     // /**
@@ -376,7 +400,6 @@ namespace security
     Ptr<IdentityManager> m_identityManager;
     Ptr<PolicyManager> m_policyManager;
     Ptr<EncryptionManager> m_encryptionManager;
-    const int m_maxStep;
     Wrapper* m_handler;
   };
   
