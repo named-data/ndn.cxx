@@ -40,6 +40,12 @@ public:
     : std::vector<char> (reinterpret_cast<const char*> (buf), reinterpret_cast<const char*> (buf) + length)
   {
   }
+
+  template <class InputIterator>
+  Blob (InputIterator first, InputIterator last)
+    : std::vector<char> (first, last)
+  {
+  }
   
   /**
    * @brief Get pointer to the first byte of the binary blob
