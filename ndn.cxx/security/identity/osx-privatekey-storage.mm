@@ -34,6 +34,8 @@ namespace security
   OSXPrivatekeyStorage::OSXPrivatekeyStorage (const string & keychainName)
     : m_keychainName("" == keychainName ?  "login.keychain" : keychainName)
   {
+    // Note that in non-debug mode, the library always uses default keychain selected by the user
+#ifdef _DEBUG
     OSStatus res = SecKeychainCreate (m_keychainName.c_str (), //Keychain path
                                       0,                       //Keychain password length
                                       NULL,                    //Keychain password
@@ -57,6 +59,7 @@ namespace security
       _LOG_DEBUG ("Fail to set default keychain: " << res);
       throw SecException("Fail to set default keychain");
     }
+#endif
   }
 
   OSXPrivatekeyStorage::~OSXPrivatekeyStorage (){
