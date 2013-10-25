@@ -115,7 +115,7 @@ namespace ndnb {
     {
       Ndnb::AppendBlockHeader(start, NdnbParser::NDN_DTAG_Signature, NdnbParser::NDN_DTAG); //<Signature>
       {
-        Ndnb::AppendString(start, NdnbParser::NDN_DTAG_DigestAlgorithm, sha256sig->getDigestAlgorithm()); //<DigestAlgorithm>
+        // Ndnb::AppendString(start, NdnbParser::NDN_DTAG_DigestAlgorithm, sha256sig->getDigestAlgorithm()); //<DigestAlgorithm>
         Ndnb::AppendTaggedBlobWithPadding(start, 
                                           NdnbParser::NDN_DTAG_SignatureBits, 
                                           16, 
