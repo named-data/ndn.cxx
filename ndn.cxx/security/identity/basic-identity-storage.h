@@ -180,9 +180,15 @@ namespace security
 
     virtual vector<Name>
     getAllKeyNames(bool isDefault);
+
+    virtual vector<Name>
+    getAllKeyNamesOfIdentity(const Name& identity, bool isDefault);
     
     virtual vector<Name>
-    getAllCertificateName(bool isDefault);
+    getAllCertificateNames(bool isDefault);
+
+    virtual vector<Name>
+    getAllCertificateNamesOfKey(const Name& keyName, bool isDefault);
 
   private:
 

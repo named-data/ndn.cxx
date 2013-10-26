@@ -196,9 +196,15 @@ namespace security
 
     virtual vector<Name>
     getAllKeyNames(bool isDefault) = 0;
+
+    virtual vector<Name>
+    getAllKeyNamesOfIdentity(const Name& identity, bool isDefault) = 0;
     
     virtual vector<Name>
-    getAllCertificateName(bool isDefault) = 0;
+    getAllCertificateNames(bool isDefault) = 0;
+    
+    virtual vector<Name>
+    getAllCertificateNamesOfKey(const Name& keyName, bool isDefault) = 0;
 
   };
 

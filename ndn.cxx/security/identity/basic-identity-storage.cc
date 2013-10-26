@@ -666,15 +666,58 @@ namespace security
     sqlite3_finalize (stmt);        
     return nameList;
   }
+
+  vector<Name>
+  BasicIdentityStorage::getAllKeyNamesOfIdentity(const Name& identity, bool isDefault)
+  {
+    sqlite3_stmt *stmt;
+    if(isDefault)
+      sqlite3_prepare_v2 (m_db, "SELECT key_identifier FROM Key WHERE default_key=1 and identity_name=?", -1, &stmt, 0);
+    else
+      sqlite3_prepare_v2 (m_db, "SELECT key_identifier FROM Key WHERE default_key=0 and identity_name=?", -1, &stmt, 0);
+    
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (),  SQLITE_TRANSIENT);
+
+    vector<Name> nameList;
+    while(sqlite3_step (stmt) == SQLITE_ROW)
+      {
+        Name keyName(identity);
+        keyName.append(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
+        nameList.push_back(keyName);
+      } 
+    sqlite3_finalize (stmt);        
+    return nameList;
+  }
     
   vector<Name>
-  BasicIdentityStorage::getAllCertificateName(bool isDefault)
+  BasicIdentityStorage::getAllCertificateNames(bool isDefault)
   {
     sqlite3_stmt *stmt;
     if(isDefault)
       sqlite3_prepare_v2 (m_db, "SELECT cert_name FROM Certificate WHERE default_cert=1", -1, &stmt, 0);
     else
       sqlite3_prepare_v2 (m_db, "SELECT cert_name FROM Certificate WHERE default_cert=0", -1, &stmt, 0);
+
+    vector<Name> nameList;
+    while(sqlite3_step (stmt) == SQLITE_ROW)
+        nameList.push_back(string(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0)), sqlite3_column_bytes (stmt, 0)));
+
+    sqlite3_finalize (stmt);        
+    return nameList;
+  }
+
+  vector<Name>
+  BasicIdentityStorage::getAllCertificateNamesOfKey(const Name& keyName, bool isDefault)
+  {
+    sqlite3_stmt *stmt;
+    if(isDefault)
+      sqlite3_prepare_v2 (m_db, "SELECT cert_name FROM Certificate WHERE default_cert=1 and identity_name=? and key_identifier=?", -1, &stmt, 0);
+    else
+      sqlite3_prepare_v2 (m_db, "SELECT cert_name FROM Certificate WHERE default_cert=0 and identity_name=? and key_identifier=?", -1, &stmt, 0);
+
+    Name identity = keyName.getSubName(0, keyName.size()-1);
+    sqlite3_bind_text(stmt, 1, identity.toUri().c_str(),  identity.toUri().size (),  SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, keyName.get(-1).toUri().c_str(), keyName.get(-1).toUri().size(), SQLITE_TRANSIENT);
 
     vector<Name> nameList;
     while(sqlite3_step (stmt) == SQLITE_ROW)
