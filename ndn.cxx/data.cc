@@ -19,7 +19,7 @@
 INIT_LOGGER ("ndn.Data");
 
 namespace ndn {
-  const int MAGIC_SIGNED_BLOB_OFFSET = 2 + (2 + (2 + (2 + 22) + 1) + (2 + (2 + 256) + 1) + 1);
+  const int MAGIC_SIGNED_BLOB_OFFSET = 2 + (2 + (2 + (2 + 256) + 1) + 1);
   const int LAST_CLOSER_SIZE = 1;
 
   Data::Data ()
