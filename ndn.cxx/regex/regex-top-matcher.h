@@ -47,7 +47,7 @@ namespace regex
     fromXmlElement(TiXmlElement * element);
 
     static Ptr<RegexTopMatcher>
-    fromName(const Name& name);
+    fromName(const Name& name, bool hasAnchor=false);
 
   protected:
     virtual void 

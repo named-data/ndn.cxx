@@ -238,7 +238,7 @@ namespace regex
   }
 
   Ptr<RegexTopMatcher>
-  RegexTopMatcher::fromName(const Name& name)
+  RegexTopMatcher::fromName(const Name& name, bool hasAnchor)
   {
     Name::const_iterator it = name.begin();
     string regexStr("^");
@@ -249,6 +249,9 @@ namespace regex
 	regexStr.append(convertSpecialChar(it->toUri()));
 	regexStr.append(">");
       }
+
+    if(hasAnchor)
+      regexStr.append("$");
 
     return Ptr<RegexTopMatcher>(new RegexTopMatcher(regexStr));
   }
