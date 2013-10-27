@@ -52,14 +52,14 @@ namespace security
   {
 #ifdef USE_SIMPLE_POLICY_MANAGER
     Ptr<SimplePolicyManager> policyManager = Ptr<SimplePolicyManager>(new SimplePolicyManager());
-    Ptr<IdentityPolicyRule> rule1 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY>(<>*)<KSK-.*><ID-CERT>",
-                                                                                  "^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>",
+    Ptr<IdentityPolicyRule> rule1 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY>(<>*)<ksk-.*><ID-CERT>",
+                                                                                  "^([^<KEY>]*)<KEY><dsk-.*><ID-CERT>",
                                                                                   ">", "\\1\\2", "\\1", true));
-    Ptr<IdentityPolicyRule> rule2 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>",
-                                                                                   "^([^<KEY>]*)<KEY>(<>*)<KSK-.*><ID-CERT>",
+    Ptr<IdentityPolicyRule> rule2 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^([^<KEY>]*)<KEY><dsk-.*><ID-CERT>",
+                                                                                   "^([^<KEY>]*)<KEY>(<>*)<ksk-.*><ID-CERT>",
                                                                                    "==", "\\1", "\\1\\2", true));
     Ptr<IdentityPolicyRule> rule3 = Ptr<IdentityPolicyRule>(new IdentityPolicyRule("^(<>*)$", 
-                                                                                   "^([^<KEY>]*)<KEY><DSK-.*><ID-CERT>", 
+                                                                                   "^([^<KEY>]*)<KEY><dsk-.*><ID-CERT>", 
                                                                                    ">", "\\1", "\\1", true));
     policyManager->addVerificationPolicyRule(rule1);
     policyManager->addVerificationPolicyRule(rule2);

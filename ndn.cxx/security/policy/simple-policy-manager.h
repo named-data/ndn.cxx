@@ -163,7 +163,10 @@ namespace security
 
   inline void  
   SimplePolicyManager::addTrustAnchor(Ptr<IdentityCertificate> certificate)
-  { m_trustAnchors.insert(pair<Name, Ptr<IdentityCertificate> >(certificate->getName(), certificate)); }
+  {
+    Name certName = certificate->getName();
+    m_trustAnchors.insert(pair<Name, Ptr<IdentityCertificate> >(certName.getPrefix(certName.size()-1), certificate)); 
+  }
 
 }//security
 

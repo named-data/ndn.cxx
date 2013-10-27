@@ -196,6 +196,7 @@ namespace security
 
 
               Ptr<Interest> interest = Ptr<Interest>(new Interest(sha256sig->getKeyLocator().getKeyName()));
+              interest->setChildSelector(Interest::CHILD_RIGHT);
 
               Ptr<ValidationRequest> nextStep = Ptr<ValidationRequest>(new ValidationRequest(interest, 
                                                                                              recursiveVerifiedCallback,
