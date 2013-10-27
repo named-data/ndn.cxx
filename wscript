@@ -26,10 +26,11 @@ def configure(conf):
                                                  '-g3',
                                                  '-Wno-unused-private-field', # only clang supports
                                                  '-fcolor-diagnostics',       # only clang supports
-                                                 '-Qunused-arguments'         # only clang supports
+                                                 '-Qunused-arguments',        # only clang supports
+                                                 '-Wno-tautological-compare',    # suppress warnings from CryptoPP
                                                  ])
     else:
-        conf.add_supported_cxxflags (cxxflags = ['-O3', '-g'])
+        conf.add_supported_cxxflags (cxxflags = ['-O3', '-g', '-Wno-tautological-compare'])
 
     if Utils.unversioned_sys_platform () == "darwin":
         conf.check_cxx(framework_name='CoreFoundation', uselib_store='OSX_COREFOUNDATION', mandatory=True, compile_filename='test.mm')

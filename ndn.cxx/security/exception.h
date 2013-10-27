@@ -14,44 +14,48 @@
 #include <exception>
 #include <string>
 
-using namespace std;
+namespace ndn {
+namespace security {
 
-namespace ndn
+
+class SecException : public std::exception
 {
+public:
+  SecException(const std::string & errMsg) throw()
+  : m_errMsg(errMsg)
+  {
+  }
+  ~SecException() throw()
+  {
+  }
 
-namespace security
+  const char* what() const throw()
+  {
+    return m_errMsg.c_str();
+  }
+    
+private:
+  const std::string m_errMsg;
+};
+
+class UnrecognizedKeyFormatException : public SecException
 {
-
-  class SecException : public exception
-  {
-  public:
-    SecException(const string & errMsg) throw();
-    
-    ~SecException() throw();
-    
-    inline string Msg() {return m_errMsg;}
-    
-  private:
-    const string m_errMsg;
-  };
-
-  class UnrecognizedKeyFormatException : public SecException
-  {
-  public:
-    UnrecognizedKeyFormatException(const string & errMsg)
+public:
+  UnrecognizedKeyFormatException(const std::string & errMsg)
     :SecException(errMsg)
-    {}
-  };
+  {}
+};
 
-  class UnrecognizedDigestAlgoException : public SecException
-  {
-  public:
-    UnrecognizedDigestAlgoException(const string & errMsg)
+class UnrecognizedDigestAlgoException : public SecException
+{
+public:
+  UnrecognizedDigestAlgoException(const std::string & errMsg)
     :SecException(errMsg)
-    {}
-  };
+  {}
+};
+
+
 } //security
-
 } //ndn
 
-#endif
+#endif // NDN_SECURITY_EXCEPTION_H
