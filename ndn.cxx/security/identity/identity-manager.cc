@@ -68,13 +68,6 @@ namespace security
 	_LOG_DEBUG("Create Default RSA key pair");
 	Name keyName = generateRSAKeyPairAsDefault(identity, true);
 
-	_LOG_DEBUG("Create self-signed certificate");
-	Ptr<IdentityCertificate> selfCert = selfSign(keyName); 
-	
-	_LOG_DEBUG("Add self-signed certificate as default");
-
-	addCertificateAsDefault(selfCert);
-
         return keyName;
       }
     else
@@ -145,7 +138,7 @@ namespace security
     return m_publicStorage->getDefaultIdentity();
   }
 
-  Name
+  Ptr<IdentityCertificate>
   IdentityManager::createIdentityCertificate (const Name& certificatePrefix,
                                               const Name& signerCertificateName,
                                               const Time& notBefore,
@@ -161,10 +154,7 @@ namespace security
                                                                      signerCertificateName,
                                                                      notBefore,
                                                                      notAfter);
-
-    m_publicStorage->addCertificate(certificate);
-    
-    return certificate->getName();
+    return certificate;
   }
 
   Ptr<IdentityCertificate>
@@ -178,11 +168,7 @@ namespace security
     Name keyName = getKeyNameFromCertificatePrefix(certificatePrefix);
     
     Name certificateName = certificatePrefix;
-    TimeInterval ti = time::NowUnixTimestamp();
-    ostringstream oss;
-    oss << ti.total_seconds();
-
-    certificateName.append("ID-CERT").append(oss.str());
+    certificateName.append("ID-CERT").appendVersion();
      
     certificate->setName(certificateName);
     certificate->setNotBefore(notBefore);
@@ -195,7 +181,7 @@ namespace security
 
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
-    keyLocator.setKeyName (signerCertificateName);
+    keyLocator.setKeyName (signerCertificateName.getPrefix(signerCertificateName.size()-1));
     
     sha256Sig->setKeyLocator (keyLocator);
     sha256Sig->setPublisherKeyDigest (*publickey.getDigest ());
@@ -205,6 +191,9 @@ namespace security
     Ptr<Blob> unsignedData = certificate->encodeToUnsignedWire();
 
     Ptr<IdentityCertificate> signerCertificate = getCertificate(signerCertificateName);
+    if(NULL == signerCertificate)
+      throw SecException("signing certificate does not exist");
+
     Name signerkeyName = signerCertificate->getPublicKeyName();
 
     Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, signerkeyName);
@@ -275,32 +264,24 @@ namespace security
     return m_publicStorage->getDefaultCertificateNameForIdentity(getDefaultIdentity());
   }
 
-  // Ptr<Signature>
-  // IdentityManager::signByIdentity (const Blob & blob, const Name & identity)
-  // {
-  //   return signByCertificate(blob, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
-  // }
-
-  // void
-  // IdentityManager::signByIdentity (Data & data, const Name & identity)
-  // {
-  //   signByCertificate(data, m_publicStorage->getDefaultCertificateNameForIdentity(identity));
-  // }
-
   Ptr<Signature>
   IdentityManager::signByCertificate (const Blob & blob, const Name & certName)
   {   
     Ptr<IdentityCertificate> certificate = getCertificate(certName);
+
+    if(NULL == certificate)
+      throw SecException("Certificate does not exists");
+    
     Name keyName = certificate->getPublicKeyName();
-    Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
-    Ptr<Blob> sigBits = m_privateStorage->sign (blob, keyName.toUri());
+    Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName);
+    Ptr<Blob> sigBits = m_privateStorage->sign (blob, keyName);
 
     //For temporary usage, we support RSA + SHA256 only, but will support more.
     Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
 
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
-    keyLocator.setKeyName (certName);
+    keyLocator.setKeyName (certName.getPrefix(certName.size()-1));
     
     sha256Sig->setKeyLocator (keyLocator);
     sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
@@ -313,14 +294,18 @@ namespace security
   IdentityManager::signByCertificate (Data & data, const Name & certName)
   {
     Ptr<IdentityCertificate> certificate = getCertificate(certName);
+    
+    if(NULL == certificate)
+      throw SecException("Certificate does not exists");
+    
     Name keyName = certificate->getPublicKeyName();
-    Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName.toUri());
+    Ptr<Publickey> publickey = m_privateStorage->getPublickey (keyName);
 
     //For temporary usage, we support RSA + SHA256 only, but will support more.
     Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
-    keyLocator.setKeyName (certName);
+    keyLocator.setKeyName (certName.getPrefix(certName.size()-1));
     
     sha256Sig->setKeyLocator (keyLocator);
     sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
@@ -335,7 +320,7 @@ namespace security
     // DERendec endec;
     // endec.printBlob(*unsignedData, "");
     
-    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName.toUri());
+    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName);
 
     sha256Sig->setSignatureBits(*sigBits);
   }
@@ -344,9 +329,11 @@ namespace security
   IdentityManager::selfSign (const Name & keyName)
   {
     Ptr<IdentityCertificate> certificate = Create<IdentityCertificate>();
+
+    TimeInterval ti = time::NowUnixTimestamp();
     
     Name certificateName = keyName.getSubName(0, keyName.size()-1);
-    certificateName.append("KEY").append(keyName.get(keyName.size()-1)).append("ID-CERT").append("0");
+    certificateName.append("KEY").append(keyName.get(keyName.size()-1)).append("ID-CERT").appendVersion();
     certificate->setName(certificateName);
 
     Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
@@ -370,7 +357,7 @@ namespace security
 
     KeyLocator keyLocator;    
     keyLocator.setType (KeyLocator::KEYNAME);
-    keyLocator.setKeyName (certificateName);
+    keyLocator.setKeyName (certificateName.getPrefix(certificateName.size()-1));
     
     sha256Sig->setKeyLocator (keyLocator);
     sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());

@@ -54,8 +54,8 @@ namespace security
     Ptr<der::DerNode> 
     toDER ();
 
-    string
-    getOidStr ()
+    const string
+    getOidStr () const
     {
       return m_oid.toString();
     }

@@ -71,6 +71,10 @@ namespace security
     void 
     addSubjectDescription (const CertificateSubDescrypt & description) 
     { m_subjectList.push_back(description); }
+
+    inline const SubDescryptList& 
+    getSubjectDescriptionList()
+    { return m_subjectList; }
    
     /**
      * @brief add certificate extension
@@ -79,6 +83,10 @@ namespace security
     void 
     addExtension (const CertificateExtension & extension) 
     { m_extnList.push_back(extension); }
+
+    inline const ExtensionList&
+    getExtensionList()
+    { return m_extnList;}
 
     void 
     setNotBefore (const Time & notBefore)

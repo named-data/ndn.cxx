@@ -28,12 +28,13 @@ namespace security
     string keyIdStr;
     
     if (ksk)
-      keyIdStr = ("KSK-" + oss.str());
+      keyIdStr = ("ksk-" + oss.str());
     else
-      keyIdStr = ("DSK-" + oss.str());
+      keyIdStr = ("dsk-" + oss.str());
 
 
-    Name keyName = Name(identity).append(keyIdStr);
+    Name keyName = identity;
+    keyName.append(keyIdStr);
 
     if(doesKeyExist(keyName))
       throw SecException("Key name has already existed");

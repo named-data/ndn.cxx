@@ -114,9 +114,9 @@ namespace security
      * @param signerCertificateName the name of signing certificate
      * @param notBefore the notBefore value in the validity field of the generated certificate
      * @param notAfter the notAfter vallue in validity field of the generated certificate
-     * @return the name of generated identity certificate
+     * @return the generated identity certificate
      */
-    Name
+    Ptr<IdentityCertificate>
     createIdentityCertificate (const Name& keyName,
                                const Name& signerCertificateName,
                                const Time& notBefore,
