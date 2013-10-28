@@ -67,8 +67,8 @@ namespace security
     }
     
   protected:
-    const PolicyType m_type;
-    const bool m_isPositive;
+    PolicyType m_type;
+    bool m_isPositive;
   };
 
 }//security
