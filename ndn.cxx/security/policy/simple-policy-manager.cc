@@ -113,12 +113,20 @@ namespace security
     Ptr<IdentityCertificate> certificate = Ptr<IdentityCertificate>(new IdentityCertificate(*signCertificate));
 
     if(!certificate->isTooLate() && !certificate->isTooEarly())
-      m_certificateCache->insertCertificate(certificate);
+      {
+        m_certificateCache->insertCertificate(certificate);
 
-    if(verifySignature(*data, certificate->getPublicKeyInfo()))
-      verifiedCallback(data);
+        if(verifySignature(*data, certificate->getPublicKeyInfo()))
+          {
+            verifiedCallback(data);
+            return;
+          }
+      }
     else
-      unverifiedCallback(data);
+      {
+        unverifiedCallback(data);
+        return;
+      }
   }
 
   void

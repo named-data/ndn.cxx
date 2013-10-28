@@ -24,8 +24,14 @@ namespace security
   }
   
   Ptr<Certificate>
-  BasicCertificateCache::getCertificate(const Name & certificateName)
+  BasicCertificateCache::getCertificate(const Name & certName, bool hasVersion)
   {
+    Name certificateName;
+    if(hasVersion)
+      certificateName = certName.getPrefix(certName.size()-1);
+    else
+      certificateName = certName;
+
     map<Name, Ptr<Certificate> >::iterator it = m_cache.find(certificateName);
 
     if(it == m_cache.end())

@@ -31,7 +31,7 @@ namespace security
     insertCertificate(Ptr<Certificate> certificate) = 0;
 
     virtual Ptr<Certificate> 
-    getCertificate(const Name & certificateName) = 0;
+    getCertificate(const Name & certificateName, bool hasVersion=false) = 0;
   };
 }
 

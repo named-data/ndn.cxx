@@ -64,7 +64,7 @@ namespace security
     insertCertificate(Ptr<Certificate> certificate);
 
     virtual Ptr<Certificate> 
-    getCertificate(const Name & certificateName);
+    getCertificate(const Name & certificateName, bool hasVersion=false);
 
     void
     printContent();

@@ -67,7 +67,7 @@ namespace security
   void
   TTLCertificateCache::insertCertificate(Ptr<Certificate> certificate)
   {
-    Name name = certificate->getName();
+    Name name = certificate->getName().getPrefix(certificate->getName().size()-1);
     Time expire = time::Now() + certificate->getContent().getFreshness();
     
     {
@@ -94,8 +94,13 @@ namespace security
   }
 
   Ptr<Certificate> 
-  TTLCertificateCache::getCertificate(const Name & certificateName)
+  TTLCertificateCache::getCertificate(const Name & certName, bool hasVersion)
   {
+    Name certificateName;
+    if(hasVersion)
+      certificateName = certName.getPrefix(certName.size()-1);
+    else
+      certificateName = certName;
     {
       UniqueRecLock lock(m_mutex);
       Cache::iterator it = m_cache.find(certificateName);
