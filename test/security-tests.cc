@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(CertificateGeneration)
 
     Name cathy_dsk_cert_name = generateCertificate(identityManager, Name("/ndn/ucla.edu/cathy"), cathy_ksk_cert_name, false, notBefore, notAfter);
 
-  }catch(security::SecException& e){
-    cerr << e.Msg() << endl;
+  }catch(exception& e){
+    cerr << e.what() << endl;
   }
 }
 

@@ -345,8 +345,8 @@ BOOST_AUTO_TEST_CASE (SignVerify)
     // 						 SignatureVerificationFilter::THROW_EXCEPTION
     // 						 ) // SignatureVerificationFilter
     // 		 ); // StringSource
-  }catch (security::SecException & e){
-    cerr << e.Msg() << endl;
+  }catch (std::exception & e){
+    cerr << e.what() << endl;
   }
 
 
