@@ -16,7 +16,11 @@ def options(opt):
     opt.load('boost doxygen ndnx tinyxml cryptopp', tooldir=['waf-tools'])
 
 def configure(conf):
-    conf.load("compiler_c compiler_cxx boost ndnx gnu_dirs tinyxml doxygen c_osx cryptopp")
+    conf.load("compiler_c compiler_cxx boost ndnx gnu_dirs tinyxml c_osx cryptopp")
+    try:
+        conf.load("doxygen")
+    except:
+        pass
 
     if conf.options.debug:
         conf.define ('_DEBUG', 1)
@@ -94,7 +98,6 @@ def build (bld):
         target="ndn.cxx",
         features=['cxx', 'cxxshlib'],
         source = bld.path.ant_glob(['ndn.cxx/**/*.cpp', 'ndn.cxx/**/*.cc',
-                                    'ndn.cxx/**/*.mm',
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
         use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL NDNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
@@ -103,7 +106,7 @@ def build (bld):
 
     if Utils.unversioned_sys_platform () == "darwin":
         libndn_cxx.mac_app = True
-        libndn_cxx.source += bld.path.ant_glob (['platforms/osx/**/*.mm'])
+        libndn_cxx.source += bld.path.ant_glob (['ndn.cxx/**/*.mm', 'platforms/osx/**/*.mm'])
         libndn_cxx.use += " OSX_COREFOUNDATION OSX_SECURITY"
 
     # Unit tests
