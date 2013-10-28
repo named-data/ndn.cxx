@@ -13,13 +13,8 @@
 #include "ndn.cxx/wrapper/wrapper.h"
 #include "ndn.cxx/wrapper/closure.h"
 #include "ndn.cxx/security/keychain.h"
-#include "ndn.cxx/security/identity/osx-privatekey-storage.h"
+#include "ndn.cxx/security/identity/identity-manager.h"
 #include "ndn.cxx/security/policy/simple-policy-manager.h"
-#include "ndn.cxx/security/policy/identity-policy-rule.h"
-#include "ndn.cxx/security/identity/basic-identity-storage.h"
-#include "ndn.cxx/security/encryption/basic-encryption-manager.h"
-#include "ndn.cxx/security/cache/ttl-certificate-cache.h"
-#include "ndn.cxx/regex/regex.h"
 
 
 #include <sqlite3.h>
@@ -103,7 +98,9 @@ BOOST_AUTO_TEST_CASE(Real)
 
   publishIdentityCertificate(wrapper);
 
-  Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(Name("/ndn/ucla.edu/cathy/KEY/dsk-1382922089/ID-CERT/%FD%FF%FF%FF%FF%DBv%B2:")));
+  IdentityManager identityManager; 
+
+  Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(identityManager.getDefaultCertificateName()));
   Ptr<Closure> closure = Ptr<Closure> (new Closure(boost::bind(verifiedPrint, _1),
 						   boost::bind(timeout, _1, _2),
 						   boost::bind(verifiedError, _1))
