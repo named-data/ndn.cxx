@@ -98,6 +98,30 @@ namespace security
   IdentityCertificate::isIdentityCertificate(const Certificate& certificate)
   { return (isCorrectName(certificate.getName()) ? true : false); }
 
+  Name
+  IdentityCertificate::certificateNameToPublicKeyName(const Name& certName, bool hasVersion)
+  {
+    Name baseName;
+    if(hasVersion)
+      baseName = certName.getPrefix(certName.size()-1);
+    else
+      baseName = certName;
+
+    string keyStr("KEY");
+    int keyId = 0;
+    for(; keyId < baseName.size(); keyId++)
+      if(baseName.get(keyId).toUri() == keyStr)
+        break;
+
+    if(keyId >= baseName.size())
+      return Name();
+
+    Name keyName = baseName.getSubName(0, keyId);
+    keyName.append(baseName.getSubName(keyId+1, baseName.size()-2-keyId));
+    _LOG_DEBUG(keyName);
+    return keyName;
+  }
+
 }//security
 
 }//ndn

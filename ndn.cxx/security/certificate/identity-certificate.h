@@ -43,6 +43,9 @@ namespace security
     static bool
     isIdentityCertificate(const Certificate& certificate);
 
+    static Name
+    certificateNameToPublicKeyName(const Name& certName, bool hasVersion=false);
+
   private:
     static bool
     isCorrectName(const Name& name);
