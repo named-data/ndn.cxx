@@ -38,7 +38,7 @@ namespace ndn
         {
           if(dir.empty())
             {
-              boost::filesystem::path identityDir = boost::filesystem::path(getenv("HOME")) / ".ndn-identity" / "keys";
+              boost::filesystem::path identityDir = boost::filesystem::path(getenv("HOME")) / ".ndnx" / "ndnsec-keys";
               boost::filesystem::create_directories (identityDir);
               currentDir = string(identityDir.c_str ());
             }
