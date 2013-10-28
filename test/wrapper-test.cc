@@ -61,10 +61,10 @@ void
 publishIdentityCertificate(Ptr<Wrapper> wrapper)
 {
   sqlite3 * fakeDB;
-  fs::path identityDir = fs::path(getenv("HOME")) / ".ndn-identity";
+  fs::path identityDir = fs::path(getenv("HOME")) / ".ndnx";
   fs::create_directories (identityDir);
     
-  int res = sqlite3_open((identityDir / "identity.db").c_str (), &fakeDB);
+  int res = sqlite3_open((identityDir / "ndnsec-identity.db").c_str (), &fakeDB);
   
   sqlite3_stmt *stmt;
   sqlite3_prepare_v2 (fakeDB, "SELECT certificate_data FROM certificate", -1, &stmt, 0);
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(Real)
 
   publishIdentityCertificate(wrapper);
 
-  Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(Name("/ndn/ucla.edu/cathy/KEY/dsk-1382907978/ID-CERT/%FDRm%80K")));
+  Ptr<Interest> interestPtr = Ptr<Interest>(new Interest(Name("/ndn/ucla.edu/cathy/KEY/dsk-1382922089/ID-CERT/%FD%FF%FF%FF%FF%DBv%B2:")));
   Ptr<Closure> closure = Ptr<Closure> (new Closure(boost::bind(verifiedPrint, _1),
 						   boost::bind(timeout, _1, _2),
 						   boost::bind(verifiedError, _1))

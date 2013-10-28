@@ -85,10 +85,10 @@ namespace security
 
   BasicIdentityStorage::BasicIdentityStorage()
   {
-    fs::path identityDir = fs::path(getenv("HOME")) / ".ndn-identity";
+    fs::path identityDir = fs::path(getenv("HOME")) / ".ndnx";
     fs::create_directories (identityDir);
     
-    int res = sqlite3_open((identityDir / "identity.db").c_str (), &m_db);
+    int res = sqlite3_open((identityDir / "ndnsec-identity.db").c_str (), &m_db);
 
     if (res != SQLITE_OK)
       {
