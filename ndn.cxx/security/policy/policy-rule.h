@@ -14,8 +14,6 @@
 
 #include "ndn.cxx/data.h"
 
-#include <tinyxml.h>
-
 namespace ndn
 {
 
@@ -50,9 +48,6 @@ namespace security
 
     virtual bool
     satisfy(const Name & dataName, const Name & signerName) = 0;
-
-    virtual TiXmlElement *
-    toXmlElement() = 0;
 
     PolicyType 
     policyType()

@@ -50,12 +50,6 @@ namespace security
     virtual bool
     satisfy(const Name & dataName, const Name & signerName);
 
-    virtual TiXmlElement *
-    toXmlElement();
-
-    static Ptr<IdentityPolicyRule>
-    fromXmlElement(TiXmlElement * element);
-
   private:
     bool 
     compare(const Name & dataName, const Name & signerName);

@@ -200,43 +200,6 @@ namespace regex
       throw RegexException("wrong format of expand string!");
   }
 
-  TiXmlElement *
-  RegexTopMatcher::toXmlElement()
-  {
-    TiXmlElement * regex = new TiXmlElement("Regex");
-    
-    TiXmlElement * expr = new TiXmlElement("Expression");
-    expr->LinkEndChild(new TiXmlText(m_expr));
-    regex->LinkEndChild(expr);
-
-    TiXmlElement * expand = new TiXmlElement("Expand");
-    expand->LinkEndChild(new TiXmlText(m_expand));
-    regex->LinkEndChild(expand);
-    
-    return regex;
-  }
-  
-  Ptr<RegexTopMatcher>
-  RegexTopMatcher::fromXmlElement(TiXmlElement * element)
-  {
-    TiXmlNode * it = element->FirstChild();
-
-    string expr;
-    string expand;
-
-    while(it != NULL)
-      {
-        if(it->ValueStr() == string("Expression"))
-          expr = it->FirstChild()->ValueStr();
-        else if(it->ValueStr() == string("Expand"))
-          expand = it->FirstChild()->ValueStr();
-
-        it = it->NextSibling();
-      }
-
-    return Ptr<RegexTopMatcher>(new RegexTopMatcher (expr, expand));
-  }
-
   Ptr<RegexTopMatcher>
   RegexTopMatcher::fromName(const Name& name, bool hasAnchor)
   {
