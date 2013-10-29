@@ -13,10 +13,10 @@ def options(opt):
     opt.add_option('--encrypt_manager', dest='encrypt_manager', default='opt', help='''basic for BasicEncryptionManager; opt for optimal one based on system (default)''')
 
     opt.load('compiler_c compiler_cxx gnu_dirs c_osx')
-    opt.load('boost doxygen ndnx tinyxml cryptopp', tooldir=['waf-tools'])
+    opt.load('boost doxygen ndnx cryptopp', tooldir=['waf-tools'])
 
 def configure(conf):
-    conf.load("compiler_c compiler_cxx boost ndnx gnu_dirs tinyxml c_osx cryptopp")
+    conf.load("compiler_c compiler_cxx boost ndnx gnu_dirs c_osx cryptopp")
     try:
         conf.load("doxygen")
     except:
@@ -49,17 +49,13 @@ def configure(conf):
     conf.check_ndnx ()
     conf.check_openssl ()
     
-    conf.check_cfg(package='sqlite3', args=['--cflags', '--libs'], uselib_store='SQLITE3', mandatory=True)
     conf.check_cfg(package='libevent', args=['--cflags', '--libs'], uselib_store='LIBEVENT', mandatory=True)
     conf.check_cfg(package='libevent_pthreads', args=['--cflags', '--libs'], uselib_store='LIBEVENT_PTHREADS', mandatory=True)
-
-    conf.check_cfg(package="libcrypto",  args=['--cflags', '--libs'], uselib_store='CRYPTO', mandatory=True)
 
     if conf.options.log4cxx:
         conf.check_cfg(package='liblog4cxx', args=['--cflags', '--libs'], uselib_store='LOG4CXX', mandatory=True)
         conf.define ("HAVE_LOG4CXX", 1)
 
-    conf.check_tinyxml(path=conf.options.tinyxml_dir)
     conf.check_cryptopp(path=conf.options.cryptopp_dir)
 
     conf.check_boost(lib='system test iostreams filesystem thread date_time regex program_options')
@@ -76,6 +72,20 @@ def configure(conf):
     conf.write_config_header('config.h')
 
 def build (bld):
+    tinyxml = bld.objects(
+        target = "TINYXML",
+        features = ["cxx"],
+        cxxflags = "-fPIC",
+        source = bld.path.ant_glob(['contrib/tinyxml/*.cpp']),
+        )
+
+    sqlite3 = bld.objects(
+        target = "SQLITE3",
+        features = ["c"],
+        cxxflags = "-fPIC",
+        source = bld.path.ant_glob(['contrib/sqlite3/*.c']),
+        )
+
     executor = bld.objects (
         target = "executor",
         features = ["cxx"],
@@ -101,7 +111,7 @@ def build (bld):
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
         use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL NDNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
-        includes = ".",
+        includes = ". contrib/tinyxml contrib/sqlite3",
         )
 
     if Utils.unversioned_sys_platform () == "darwin":
