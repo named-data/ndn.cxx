@@ -72,12 +72,6 @@ def configure(conf):
     conf.write_config_header('config.h')
 
 def build (bld):
-    tinyxml = bld.objects(
-        target = "TINYXML",
-        features = ["cxx"],
-        cxxflags = "-fPIC",
-        source = bld.path.ant_glob(['contrib/tinyxml/*.cpp']),
-        )
 
     sqlite3 = bld.objects(
         target = "SQLITE3",
@@ -110,8 +104,8 @@ def build (bld):
         source = bld.path.ant_glob(['ndn.cxx/**/*.cpp', 'ndn.cxx/**/*.cc',
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
-        use = 'CRYPTO TINYXML BOOST BOOST_THREAD SSL NDNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
-        includes = ". contrib/tinyxml contrib/sqlite3",
+        use = 'CRYPTO BOOST BOOST_THREAD SSL NDNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
+        includes = ". contrib/sqlite3",
         )
 
     if Utils.unversioned_sys_platform () == "darwin":

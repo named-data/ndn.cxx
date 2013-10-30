@@ -159,7 +159,7 @@ namespace security
 
     _LOG_DEBUG("create sym key");
 
-    string xmlStr = symKeyPtr->toXmlStr();
+    string xmlStr = symKeyPtr->toStr();
     
     Name encryptName; 
     bool encryptSym;
@@ -276,7 +276,7 @@ namespace security
             Ptr<Blob> keyBlobPtr = m_privateStorage->decrypt(encryptKey, encryptedKeyBlob, encryptSym);
             if(KEY_TYPE_AES == keyType)
               {
-                Ptr<SymmetricKey> tmpKeyPtr = AesCipher::fromXmlStr(string(keyBlobPtr->buf(), keyBlobPtr->size()));
+                Ptr<SymmetricKey> tmpKeyPtr = AesCipher::fromStr(string(keyBlobPtr->buf(), keyBlobPtr->size()));
                 if(tmpKeyPtr->getKeyName() == keyName)
                   keyPtr = tmpKeyPtr;
               }

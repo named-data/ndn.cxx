@@ -31,11 +31,11 @@ namespace security
     ~AesCipher();
 
     virtual string
-    toXmlStr();
+    toStr();
 
     static Ptr<AesCipher>
-    fromXmlStr(const string & str);
-
+    fromStr(const string& str);
+    
     virtual Ptr<Blob>
     encrypt(const Blob & blob, EncryptMode em = EM_CFB_AES);
 

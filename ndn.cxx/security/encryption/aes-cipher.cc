@@ -16,7 +16,6 @@
 #include <cryptopp/osrng.h>
 #include <cryptopp/base64.h>
 #include <cryptopp/modes.h>
-#include <tinyxml.h>
 
 #include "logging.h"
 
@@ -61,79 +60,14 @@ namespace security
   }
 
   string
-  AesCipher::toXmlStr()
-  {
-    TiXmlDocument cipherDoc;
-    TiXmlElement * cipher = new TiXmlElement("CFB_AES_CIPHER");
-    cipherDoc.LinkEndChild(cipher);
-
-    TiXmlElement * keyName = new TiXmlElement("KEYNAME");
-    cipher->LinkEndChild(keyName);
-    TiXmlText * keyNameText = new TiXmlText(m_keyName);
-    keyName->LinkEndChild(keyNameText);
-
-    TiXmlElement * key = new TiXmlElement("KEY");
-    cipher->LinkEndChild(key);    
-    string encodedKey;
-    CryptoPP::StringSource kss(m_key, m_keySize, true,
-                              new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encodedKey)));
-    TiXmlText * keyText = new TiXmlText(encodedKey);
-    key->LinkEndChild(keyText);
-
-    TiXmlElement * iv = new TiXmlElement("IV");
-    cipher->LinkEndChild(iv);
-    string encodedIv;
-    CryptoPP::StringSource iss(m_iv, m_ivSize, true,
-                               new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encodedIv)));
-    TiXmlText * ivText = new TiXmlText(encodedIv);
-    iv->LinkEndChild(ivText);
-    
-    ostringstream oss;
-    oss << cipherDoc;
-
-    return oss.str();
-  }
+  AesCipher::toStr()
+  { return string(); }
 
   Ptr<AesCipher>
-  AesCipher::fromXmlStr(const string & str)
-  {
-    string base64Key;
-    string base64Iv;
-    string keyName;
+  AesCipher::fromStr(const string& str)
+  { return NULL; }
 
-    TiXmlDocument cipherDoc;
-    cipherDoc.Parse(str.c_str());
 
-    TiXmlNode * cipher = cipherDoc.FirstChild();
-
-    if(cipher->ValueStr() != string("CFB_AES_CIPHER"))
-      return NULL;
-    
-    TiXmlNode * it = cipher->FirstChild();
-    while(it != NULL)
-      {
-        if(it->ValueStr() == string("KEYNAME"))
-          keyName = it->FirstChild()->ValueStr();
-        if(it->ValueStr() == string("KEY"))
-          base64Key = it->FirstChild()->ValueStr();
-        if(it->ValueStr() == string("IV"))
-          base64Iv = it->FirstChild()->ValueStr();
-        it = it->NextSibling();
-      }
-    string key;
-    CryptoPP::StringSource ks(reinterpret_cast<const unsigned char *>(base64Key.c_str()), base64Key.size(), true,
-                              new CryptoPP::Base64Decoder(new CryptoPP::StringSink(key)));
-    string iv;
-    CryptoPP::StringSource is(reinterpret_cast<const unsigned char *>(base64Iv.c_str()), base64Iv.size(), true,
-                              new CryptoPP::Base64Decoder(new CryptoPP::StringSink(iv)));
-
-    
-    return Ptr<AesCipher>(new AesCipher(keyName,
-                                        reinterpret_cast<const unsigned char *>(key.c_str()), 
-                                        key.size(), 
-                                        reinterpret_cast<const unsigned char *>(iv.c_str()),
-                                        iv.size()));
-  }
 
   Ptr<Blob>
   AesCipher::encrypt(const Blob & blob, EncryptMode em)

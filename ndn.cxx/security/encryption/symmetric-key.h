@@ -40,7 +40,7 @@ namespace security
     const string & getKeyName() const {return m_keyName;}    
 
     virtual string
-    toXmlStr() = 0;
+    toStr() = 0;
 
     virtual Ptr<Blob>
     encrypt(const Blob & blob, EncryptMode em) = 0;

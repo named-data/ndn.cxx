@@ -3,7 +3,6 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <tinyxml.h>
 #include <cryptopp/rsa.h>
 #include <cryptopp/files.h>
 #include <cryptopp/base64.h>
@@ -96,40 +95,6 @@ BOOST_AUTO_TEST_CASE (Time)
   cout << to_iso_string(ts2 + seconds(315360000)) << endl;
 }
 
-BOOST_AUTO_TEST_CASE (TinyXML)
-{
-  TiXmlDocument doc;  
-  TiXmlElement* msg;
-  // TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "", "" );  
-  // doc.LinkEndChild( decl );  
- 
-  TiXmlElement * root = new TiXmlElement( "MyApp" );  
-  doc.LinkEndChild( root );  
-  
-  TiXmlComment * comment = new TiXmlComment();
-  comment->SetValue(" Settings for MyApp " );  
-  root->LinkEndChild( comment );  
- 
-  TiXmlElement * msgs = new TiXmlElement( "Messages" );  
-  root->LinkEndChild( msgs );  
-  
-  msg = new TiXmlElement( "Welcome" );  
-  msg->LinkEndChild( new TiXmlText( "Welcome to MyApp" ));  
-  msgs->LinkEndChild( msg );  
-  cout << *msg << endl;
-  
-  msg = new TiXmlElement( "Farewell" );  
-  msg->LinkEndChild( new TiXmlText( "Thank you for using MyApp" ));  
-  msgs->LinkEndChild( msg );  
-  
-  ostringstream oss;
-  oss << doc;
-  cout << oss.str() << endl;
-  
-  TiXmlDocument newDoc;
-  newDoc.Parse(oss.str().c_str());
-  cout << newDoc << endl;
-}
 
 BOOST_AUTO_TEST_CASE (Base64)
 {
