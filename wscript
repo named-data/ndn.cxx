@@ -48,7 +48,8 @@ def configure(conf):
 
     conf.check_ndnx ()
     conf.check_openssl ()
-    
+
+    conf.check_cfg(package='sqlite3', args=['--cflags', '--libs'], uselib_store='SQLITE3', mandatory=True)
     conf.check_cfg(package='libevent', args=['--cflags', '--libs'], uselib_store='LIBEVENT', mandatory=True)
     conf.check_cfg(package='libevent_pthreads', args=['--cflags', '--libs'], uselib_store='LIBEVENT_PTHREADS', mandatory=True)
 
@@ -72,13 +73,6 @@ def configure(conf):
     conf.write_config_header('config.h')
 
 def build (bld):
-
-    sqlite3 = bld.objects(
-        target = "SQLITE3",
-        features = ["c"],
-        cxxflags = "-fPIC",
-        source = bld.path.ant_glob(['contrib/sqlite3/*.c']),
-        )
 
     executor = bld.objects (
         target = "executor",
@@ -106,7 +100,7 @@ def build (bld):
                                     'logging.cc',
                                     'libndn.cxx.pc.in']),
         use = 'CRYPTO BOOST BOOST_THREAD SSL NDNX LOG4CXX scheduler executor CRYPTOPP SQLITE3',
-        includes = ". contrib/sqlite3",
+        includes = ".",
         )
 
     if Utils.unversioned_sys_platform () == "darwin":
