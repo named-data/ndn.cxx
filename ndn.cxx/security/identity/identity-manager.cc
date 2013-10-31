@@ -366,11 +366,39 @@ namespace security
 
     Ptr<Blob> unsignedData = certificate->encodeToUnsignedWire();
 
-    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName.toUri());
+    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName);
     
     sha256Sig->setSignatureBits(*sigBits);
 
     return certificate;
+  }
+
+  void
+  IdentityManager::selfSign (IdentityCertificate& identityCertificate)
+  {
+    Name keyName = identityCertificate.getPublicKeyName();
+
+    Ptr<Blob> keyBlob = m_publicStorage->getKey(keyName);
+    if(NULL == keyBlob)
+      throw SecException("No public key found!");
+    Ptr<Publickey> publickey = Publickey::fromDER(keyBlob);
+
+    Ptr<signature::Sha256WithRsa> sha256Sig = Ptr<signature::Sha256WithRsa>::Create();
+
+    KeyLocator keyLocator;    
+    keyLocator.setType (KeyLocator::KEYNAME);
+    keyLocator.setKeyName (identityCertificate.getName().getPrefix(identityCertificate.getName().size()-1));
+    
+    sha256Sig->setKeyLocator (keyLocator);
+    sha256Sig->setPublisherKeyDigest (*publickey->getDigest ());
+
+    identityCertificate.setSignature(sha256Sig);
+
+    Ptr<Blob> unsignedData = identityCertificate.encodeToUnsignedWire();
+
+    Ptr<Blob> sigBits = m_privateStorage->sign (*unsignedData, keyName);
+    
+    sha256Sig->setSignatureBits(*sigBits);
   }
 
   Name

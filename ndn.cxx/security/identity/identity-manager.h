@@ -242,6 +242,9 @@ namespace security
     Ptr<IdentityCertificate>
     selfSign (const Name & keyName);
 
+    void
+    selfSign (IdentityCertificate& identityCertificate);
+
     inline Ptr<IdentityStorage> 
     getPublicStorage()
     { return m_publicStorage; }
