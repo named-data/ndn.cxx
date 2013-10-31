@@ -1,5 +1,5 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
-VERSION='0.6.0'
+VERSION='1.0.0'
 
 from waflib import Build, Logs, Utils, Task, TaskGen, Configure
 
@@ -100,6 +100,7 @@ def build (bld):
 
     libndn_cxx = bld (
         target="ndn.cxx",
+        vnum = "1.0.0",
         features=['cxx', 'cxxshlib'],
         source = bld.path.ant_glob(['ndn.cxx/**/*.cpp', 'ndn.cxx/**/*.cc',
                                     'logging.cc',
