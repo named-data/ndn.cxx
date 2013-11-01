@@ -198,7 +198,7 @@ SimpleKeyStore::decrypt(const Name & keyName, const Blob & pData, bool sym)
           RSA::PrivateKey privateKey;
           privateKey.Load(bytes);
           string recovered;
-          RSAES_OAEP_SHA_Decryptor d( privateKey );
+          RSAES_PKCS1v15_Decryptor d( privateKey );
           StringSource( string(pData.buf(), pData.size()), true,
                         new PK_DecryptorFilter( rng, d,
                                                 new StringSink( recovered )
@@ -271,7 +271,7 @@ SimpleKeyStore::encrypt(const Name & keyName, const Blob & pData, bool sym)
           publicKey.Load(bytes);
 
           string cipher;
-          RSAES_OAEP_SHA_Encryptor e( publicKey );
+          RSAES_PKCS1v15_Encryptor e( publicKey );
 
           StringSource( plain, true, new PK_EncryptorFilter( rng, e,new StringSink( cipher )));
           Ptr<Blob> ret = Ptr<Blob>(new Blob(cipher.c_str (), cipher.size()));
