@@ -154,7 +154,7 @@ SimpleKeyStore::sign(const Blob & pData, const Name & keyName, DigestAlgorithm d
       //Sign message
       if (digestAlgo == DIGEST_SHA256)
         {
-          RSASS<PSS, SHA256>::Signer signer(privateKey);
+          RSASS<PKCS1v15, SHA256>::Signer signer(privateKey);
           size_t length = signer.MaxSignatureLength();
           SecByteBlock signature(length);
           signer.SignMessage(rng, (const byte*) strContents.c_str(),
