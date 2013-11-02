@@ -24,8 +24,9 @@
 #include <boost/throw_exception.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
-#include <openssl/evp.h>
 #include <fstream>
+
+#include <cryptopp/sha.h>
 
 typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info_str;
 typedef boost::error_info<struct tag_errmsg, int> errmsg_info_int;
@@ -37,22 +38,20 @@ using namespace boost::archive::iterators;
 using namespace std;
 namespace fs = boost::filesystem;
 
-// Other options: VP_md2, EVP_md5, EVP_sha, EVP_sha1, EVP_sha256, EVP_dss, EVP_dss1, EVP_mdc2, EVP_ripemd160
-#define HASH_FUNCTION EVP_sha256
-
 namespace ndn
 {
 
 std::ostream &
 operator << (std::ostream &os, const Hash &hash)
 {
-  if (hash.m_length == 0)
+  if (hash.m_hash.empty())
     return os;
 
   ostreambuf_iterator<char> out_it (os); // ostream iterator
   // need to encode to base64
-  copy (detail::string_from_binary (reinterpret_cast<const char*> (hash.m_buf)),
-        detail::string_from_binary (reinterpret_cast<const char*> (hash.m_buf+hash.m_length)),
+
+  copy (detail::string_from_binary (hash.m_hash.begin()),
+        detail::string_from_binary (hash.m_hash.end()),
         out_it);
 
   return os;
@@ -71,53 +70,45 @@ HashPtr Hash::Origin(new Hash(&Hash::_origin, sizeof(unsigned char)));
 HashPtr
 Hash::FromString (const std::string &hashInTextEncoding)
 {
-  HashPtr retval = make_shared<Hash> (reinterpret_cast<void*> (0), 0);
+  HashPtr retval = boost::make_shared<Hash> ();
 
   if (hashInTextEncoding.size () == 0)
     {
       return retval;
     }
 
-  if (hashInTextEncoding.size () > EVP_MAX_MD_SIZE * 2)
+  if (hashInTextEncoding.size () > CryptoPP::SHA256::DIGESTSIZE * 2)
     {
       cerr << "Input hash is too long. Returning an empty hash" << endl;
       return retval;
     }
 
-  retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
+  retval->m_hash.resize (CryptoPP::SHA256::DIGESTSIZE);
 
-  unsigned char *end = copy (detail::string_to_binary (hashInTextEncoding.begin ()),
-                             detail::string_to_binary (hashInTextEncoding.end ()),
-                             retval->m_buf);
-
-  retval->m_length = end - retval->m_buf;
-
+  copy (detail::string_to_binary (hashInTextEncoding.begin ()),
+        detail::string_to_binary (hashInTextEncoding.end ()),
+        retval->m_hash.begin ());
+  
   return retval;
 }
 
 HashPtr
 Hash::FromFileContent (const fs::path &filename)
 {
-  HashPtr retval = make_shared<Hash> (reinterpret_cast<void*> (0), 0);
-  retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
+  HashPtr retval = boost::make_shared<Hash> ();
 
-  EVP_MD_CTX *hash_context = EVP_MD_CTX_create ();
-  EVP_DigestInit_ex (hash_context, HASH_FUNCTION (), 0);
+  CryptoPP::SHA256 hash;
+  retval->m_hash.resize (CryptoPP::SHA256::DIGESTSIZE);
 
   fs::ifstream iff (filename, std::ios::in | std::ios::binary);
   while (iff.good ())
     {
       char buf[1024];
       iff.read (buf, 1024);
-      EVP_DigestUpdate (hash_context, buf, iff.gcount ());
+
+      hash.Update (reinterpret_cast<const unsigned char*> (buf), iff.gcount ());
     }
-
-  retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
-
-  EVP_DigestFinal_ex (hash_context,
-                      retval->m_buf, &retval->m_length);
-
-  EVP_MD_CTX_destroy (hash_context);
+  hash.Final (reinterpret_cast<unsigned char*> (&retval->m_hash[0]));
 
   return retval;
 }
@@ -125,21 +116,12 @@ Hash::FromFileContent (const fs::path &filename)
 HashPtr
 Hash::FromBytes (const ndn::Blob &bytes)
 {
-  HashPtr retval = make_shared<Hash> (reinterpret_cast<void*> (0), 0);
-  retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
+  HashPtr retval = boost::make_shared<Hash> ();
+  retval->m_hash.resize (CryptoPP::SHA256::DIGESTSIZE);
 
-  EVP_MD_CTX *hash_context = EVP_MD_CTX_create ();
-  EVP_DigestInit_ex (hash_context, HASH_FUNCTION (), 0);
-
-  // not sure whether it's bad to do so if bytes.size is huge
-  EVP_DigestUpdate(hash_context, bytes.buf (), bytes.size());
-
-  retval->m_buf = new unsigned char [EVP_MAX_MD_SIZE];
-
-  EVP_DigestFinal_ex (hash_context,
-                      retval->m_buf, &retval->m_length);
-
-  EVP_MD_CTX_destroy (hash_context);
+  CryptoPP::SHA256 hash;
+  hash.CalculateDigest (reinterpret_cast<unsigned char*> (&retval->m_hash[0]),
+                        reinterpret_cast<const unsigned char*> (bytes.buf()), bytes.size());
 
   return retval;
 }

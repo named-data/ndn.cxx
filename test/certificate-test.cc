@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <tinyxml.h>
 #include <cryptopp/rsa.h>
 #include <cryptopp/files.h>
 
