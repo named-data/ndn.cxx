@@ -49,8 +49,8 @@ struct hex_from_4_bit
   }
 };
 
-typedef boost::transform_iterator<hex_from_4_bit<std::string::const_iterator::value_type>,
-                                  boost::archive::iterators::transform_width<std::string::const_iterator, 4, 8, std::string::const_iterator::value_type> > string_from_binary;
+typedef boost::transform_iterator<hex_from_4_bit<std::vector<char>::const_iterator::value_type>,
+                                  boost::archive::iterators::transform_width<std::vector<char>::const_iterator, 4, 8, std::vector<char>::const_iterator::value_type> > string_from_binary;
 
 
 
