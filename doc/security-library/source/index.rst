@@ -30,6 +30,7 @@ PolicyManager manages the process of verification, therefore it reflects the tru
 EncryptionManager is responsible for data encryption/decryption.
 Unlike IdentityManager and PolicyManager which are required in a KeyChain object, EncryptionManager is optional. 
 
+Keychain has a default constructor which initializes the the three components according to the operating system.
 
 A KeyChain object is involved in data publishing and receiving.
 An application, when publishing a data packet, can explicitly ask a KeyChain object to sign the data packet and publish it via an NDN Face object (which is used for NDN communication)
@@ -48,22 +49,19 @@ Or it can do it implicitly by associating the KeyChain object with the Face obje
 
 .. code-block:: c++
 
-   Face::send(Data& data)
+   Face::send(Data& data, Name& certificateName/*=default certificate*/)
    {
      ...
-     if(data.isSigned())
-       /* send data out directly */
-       ...
-     else{
-       m_keyChain.sign(data);
-       /* send signed data out */
-       ...
-     }
+     if(!data.isSigned())
+       m_keyChain.sign(data, certificateName);
+     /* send signed data out */
      ...
    }
 
 When the application publishes a data packet via the Face object, the Face object will check whether the data packet has been signed. 
 If the packet is not signed, the Face object will ask its associated KeyChain object to sign the data packet according to the signing inferences specified by the application.
+If signing certificate name is not provided, the default key will be used to sign the data packet,
+and the corresponding default certificate name will be put into the KeyLocator field of the Data packet.
 
 Applications receive data packet through Face object as well. 
 On receiving a data packet, the face object will ask the associated Keychain object to validate the data packet.
@@ -140,11 +138,14 @@ Although public keys may be fetched offline, it is more common to fetch public k
 Since public keys are carried by data packets and every data packet is signed, a data packets carrying a public key becomes a certificate.
 Among these data packets (or certificate), a special type of data packets is named after the key name, and carries the public key bits and some other necessary meta-information.
 Such data packets are called *Identity Certificate*.
-The data name is constructed via concatenating the key name, a special certificate type name component "ID-CERT", and a sequence number,
-for example, "/ndn/ucla.edu/alice/DSK-1376698604/ID-CERT/1376698630".
+The data name is constructed via concatenating the key name inserted with a "KEY" component, a special certificate type name component "ID-CERT", and a sequence number,
+for example, "/ndn/ucla.edu/KEY/alice/DSK-1376698604/ID-CERT/1376698630".
 The producer of such a data packet certifies that the published public key bits corresponds the private key suggested by the data name.
 Any one can issue an identity certificate, as a result, a public key may have multiple identity ceritificates issued by different producers.
 The last component of certificate name, the sequence number, is used to distinguish the certificates issued for the same public key.
+
+The "KEY" component in the identity certificate name indicates that the certificate is served by an application called "KEY", 
+and the prefix before "KEY" is the routable prefix of the certificate server.
 
 Identity-based Signing Mechanism
 ++++++++++++++++++++++++++++++++
@@ -226,9 +227,8 @@ An identity instance can be created in an IdentityManager by calling the ``creat
 An identity, however, as we discussed before, only refers to a name space,
 an identity is not useful without corresponding keys and certificates. 
 By calling ``createIdentity`` method, the IdentityManager will create an internal record of the identity,
-generate a Key-Signing-Key pair for this identity as the default key of the identity,
-and create a self-signed identity certificate as the default certificate of the KSK.
-The return value of ``createIdentity`` method is the name of the self-signed certificate.
+generate a Key-Signing-Key pair for this identity as the default key of the identity.
+The return value of ``createIdentity`` method is the name of the generated KSK.
 
 Generate Key Pair
 +++++++++++++++++
@@ -258,24 +258,23 @@ For this simple use case, IdentityManager provides ``createIdentityCertificate``
 
 .. code-block:: c++
 
-   Name
-   IdentityManager::createIdentityCertificate (const Name& keyName, 
+   shared_ptr<IdentityCertificate>
+   IdentityManager::createIdentityCertificate (const Name& certificatePrefix, 
                                                const Name& signerCertificateName, 
 					       const Time& notBefore, 
 					       const Time& notAfter);
 
-``createIdentityCertificate`` will construct an unsigned identity certificate using the public key indicated by ``keyName`` and validity information ``notBefore`` and ``notAfter``.
+``createIdentityCertificate`` will construct an unsigned identity certificate using the public key indicated by ``certificatePrefix`` which has already contains the "KEY" component, and validity information ``notBefore`` and ``notAfter``.
 After that, the private key, which corresponds to the certificate with the name indicated by ``signerCertificateName``, will be used to sign the identity certificate.
 The return value of ``createIdentityCertificate`` is the name of the generated identity certificate.
 
-The argument ``keyName`` refers to a public key managed by the IdentityManager. 
 If the public key to be signed is managed by others, one must supply the public key bits.
 And the return value of ``createIdentityCertificate`` is the generated identity certificate.
  
 .. code-block:: c++
 
    shared_ptr<Certificate>
-   IdentityManager::createIdentityCertificate (const Name& keyName,
+   IdentityManager::createIdentityCertificate (const Name& certificatePrefix,
                                                const Publickey& publickey,
                                                const Name& signerCertificateName, 
 					       const Time& notBefore, 
@@ -307,7 +306,7 @@ Once the requested certificate is obtained, it can be installed via calling ``in
 .. code-block:: c++
    
    void
-   IdentityManager::addIdentityCertificate (const Certificate& certificate);
+   IdentityManager::addCertificate (const IdentityCertificate& certificate);
 
 Example
 +++++++
@@ -320,25 +319,24 @@ Here is an example showing how to set identity, key, and identity certificate.
 
    Name alice("/ndn/ucla.edu/alice");
   
-   /* create the identity and the initial KSK and self-signed certificate */
-   Name aliceKSKCertName = identityManager.createIdentity(alice);
+   /* create the identity and the initial KSK */
+   Name aliceKskName = identityManager.createIdentity(alice);
    
-   /* get the public key bits of KSK (the default key for now) for signing */
-   Name aliceKSKName = identityManager.getDefaultKeyNameForIdentity(alice);
-   shared_ptr<Publickey> aliceKSK = identityManager.getPublickey(aliceKSKName);
+   /* get the self-signed identity certificate of the KSK (the default key for now) for signing */
+   shared_ptr<IdentityCertificate> aliceKskSelfSignedCert = identityManager.selfSign(aliceKskName);
 
    /* ask operators of "/ndn/ucla.edu/" to generate an identity certificate of the KSK, and install the certificate*/
    ... 
    identityManager.addCertificate(aliceKSKCert);
 
    /* generate a RSA key pair as DSK */
-   Name aliceDSKName = identityManager.generateRSAKeyPair(alice, false, 2048); 
+   Name aliceDskName = identityManager.generateRSAKeyPair(alice, false, 2048); 
 
    Time notBefore(...);
    Time notAfter(...);
 
    /* create an identity certificate for the DSK, signed by the KSK */
-   shared_ptr<Certificate> aliceDSKCert = identityManager.createIdentityCertificate(aliceDSKName, aliceKSKCertName, notBefore, notAfter); 
+   shared_ptr<IdentityCertificate> aliceDSKCert = identityManager.createIdentityCertificate(aliceDskCertPrefix, aliceKskCertName, notBefore, notAfter); 
 
    /* install the identity certificate */
    identityManager.addCertificate(*aliceDSKCert);
