@@ -73,6 +73,10 @@ namespace security
     { m_subjectList.push_back(description); }
 
     inline const SubDescryptList& 
+    getSubjectDescriptionList() const
+    { return m_subjectList; }
+
+    inline SubDescryptList& 
     getSubjectDescriptionList()
     { return m_subjectList; }
    
@@ -85,6 +89,10 @@ namespace security
     { m_extnList.push_back(extension); }
 
     inline const ExtensionList&
+    getExtensionList() const
+    { return m_extnList;}
+
+    inline ExtensionList&
     getExtensionList()
     { return m_extnList;}
 

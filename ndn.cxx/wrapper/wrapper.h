@@ -41,7 +41,7 @@ namespace ndn {
     const static int DEFAULT_FRESHNESS = 60;
     typedef boost::function<void (Ptr<Interest>)> InterestCallback;
 
-    Wrapper(Ptr<security::Keychain> keychain = NULL);
+    Wrapper(Ptr<security::Keychain> keychain = Ptr<security::Keychain>::Create());
     ~Wrapper();
     
     void
