@@ -124,14 +124,23 @@ namespace security
           UniqueRecLock lock(m_mutex);
           // _LOG_DEBUG("Round: " << boost::posix_time::to_iso_string(now));
           Cache::iterator it = m_cache.begin();
-          for(;it != m_cache.end(); it++)
+          while(it != m_cache.end())
             {
               // _LOG_DEBUG("size: " << m_cache.size() << " " << it->second.m_it->toUri() << " timestamp: " << boost::posix_time::to_iso_string(it->second.m_timestamp));
               if(now > it->second.m_timestamp)
                 {
+                  Cache::iterator tmp = it;
+                  tmp++;
+                  
                   // _LOG_DEBUG("ERASE");
                   m_lruList.erase(it->second.m_it);
                   m_cache.erase(it);
+
+                  it = tmp;
+                }
+              else
+                {
+                  it ++;
                 }
             }
         }        
