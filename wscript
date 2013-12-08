@@ -60,7 +60,10 @@ def configure(conf):
 
     conf.check_cryptopp(path=conf.options.cryptopp_dir)
 
-    conf.check_boost(lib='system test iostreams filesystem thread date_time regex program_options')
+    boost_libs='system iostreams filesystem thread date_time regex program_options'
+    if conf.options._test:
+        boost_libs+=' unit_test_framework'
+    conf.check_boost(lib=boost_libs)
 
     boost_version = conf.env.BOOST_VERSION.split('_')
     if int(boost_version[0]) < 1 or int(boost_version[1]) < 46:
@@ -116,7 +119,7 @@ def build (bld):
           features = "cxx cxxprogram",
           defines = "WAF",
           source = bld.path.ant_glob(['test/*.cc']),
-          use = 'BOOST_TEST BOOST_FILESYSTEM BOOST_DATE_TIME BOOST_REGEX LOG4CXX ndn.cxx CRYPTOPP',
+          use = 'BOOST_UNIT_TEST_FRAMEWORK BOOST_FILESYSTEM BOOST_DATE_TIME BOOST_REGEX LOG4CXX ndn.cxx CRYPTOPP',
           includes = ".",
           install_prefix = None,
           )
